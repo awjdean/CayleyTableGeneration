@@ -3,40 +3,58 @@ This function checks if the size of the Cayley table changes if the order of the
 
 """
 ##############################################
-from CayleyAgent import CayleyAgent
+from CayleyTable import CayleyTable
 from gridworld2D import Gridworld2D
 import itertools
 
 ##############################################
 
-minimum_actions = ['1', 'R', 'U', 'L', 'D']
-
-information = {}
-
-for permutation in itertools.permutations(minimum_actions, len(minimum_actions)):
-
-    params = {'initial_agent_position': (0, 0),
-              'table_size': 3,
-              'minimum_actions': list(permutation),
+parameters = {'minimum_actions': ['1', 'R', 'U', 'L', 'D'],
+              'initial_agent_state': (0, 0),
               'world': Gridworld2D(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
-              'show_calculation': False,
-              }
+              'show_calculation': False}  # TODO: remove from here and put in a print function.
 
-    agent = CayleyAgent(**params)
-    table, state_labelling = agent.generateCayleyTable()
-    information[permutation] = table.shape
 
-print(information)
+##############################################
 
-table_size_comparison = {}
+def checkMinimumActionOrderAffectOnTableSize(**parameters):
+    minimum_actions = parameters['minimum_actions']
+    initial_agent_state = parameters['initial_agent_state']
+    world = parameters['world']
+    show_calculation = parameters['show_calculation']
 
-for key, value in information.items():
-    if value not in table_size_comparison.keys():
-        table_size_comparison[value] = []
-    table_size_comparison[value].append(key)
+    results = {}
 
-print_str = ''
-for key in table_size_comparison:
-    print_str += '{0}, '.format(key)
+    for permutation in itertools.permutations(minimum_actions, len(minimum_actions)):
+        params = {'initial_agent_state': initial_agent_state,
+                  'minimum_actions': list(permutation),
+                  'world': world,
+                  'show_calculation': show_calculation,
+                  }
 
-print('\n Cayley table sizes: {0}'.format(print_str))
+        table = CayleyTable()
+        table.generateCayleyTable(**params)
+
+        results[permutation] = table.cayley_table_actions.shape
+
+    return results
+
+
+##############################################
+
+if __name__ == "__main__":
+    results = checkMinimumActionOrderAffectOnTableSize(**parameters)
+    print(results)
+
+    ### Print all the different sizes of Cayley table.
+    table_size_comparison = {}
+    for key, value in results.items():
+        if value not in table_size_comparison.keys():
+            table_size_comparison[value] = []
+        table_size_comparison[value].append(key)
+
+    print_str = ''
+    for key in table_size_comparison:
+        print_str += '{0}, '.format(key)
+
+    print('\n Cayley table sizes: {0}'.format(print_str))
