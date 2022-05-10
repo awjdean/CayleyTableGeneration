@@ -232,6 +232,9 @@ class CayleyTable:
                               'right_identities': right_identities,
                               'identities': identities}
 
+    def checkInverse(self):
+        pass
+
 
 #######################################################
 
@@ -247,3 +250,4 @@ if __name__ == "__main__":
     print(table.cayley_table_actions)
     table.checkIdentity()
     print('\n identity_info: {0}'.format(table.identity_info))
+
