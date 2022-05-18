@@ -6,7 +6,7 @@
 
 * *Commit:* git commit -m "insert notes here"
 
-* *Branches:* git branch -M main
+* *BrancAhes:* git branch -M main
   - *Create new branch:* git checkout -b <branch_name>
   * *Merge branches:*
     1. Switch to main branch: git checkout main

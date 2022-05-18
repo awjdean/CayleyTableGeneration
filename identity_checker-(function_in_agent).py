@@ -44,10 +44,10 @@ left_identities = copy.deepcopy(list(cayley_table.cayley_table_actions.index))
 for e in cayley_table.cayley_table_actions.index:
     for a in cayley_table.cayley_table_actions.index:
         # Find the outcome of the LHS of the left identity equation.
-        left_outcome_state = cayley_table.findOutcome(left_action=e, right_action=a, return_state_outcome=True)
+        left_outcome_state = cayley_table.findOutcomeCayley(left_action=e, right_action=a, return_state_outcome=True)
 
         # Find the outcome of the RHS of the left identity equation.
-        right_outcome_state = cayley_table.findOutcome(left_action=a, return_state_outcome=True)
+        right_outcome_state = cayley_table.findOutcomeCayley(left_action=a, return_state_outcome=True)
 
         # If the left identity equation is not satisfied, then e is not a left identity element and so remove e from
         # the list of possible left identities and stop checking if e satisfies the left identity equation by
@@ -66,10 +66,10 @@ right_identities = copy.deepcopy(list(cayley_table.cayley_table_actions.index))
 for e in cayley_table.cayley_table_actions.index:
     for a in cayley_table.cayley_table_actions.index:
         # Find the outcome of the LHS of the right identity equation.
-        left_outcome_state = cayley_table.findOutcome(left_action=a, right_action=e, return_state_outcome=True)
+        left_outcome_state = cayley_table.findOutcomeCayley(left_action=a, right_action=e, return_state_outcome=True)
 
         # Find the outcome of the RHS of the right identity equation.
-        right_outcome_state = cayley_table.findOutcome(left_action=a, return_state_outcome=True)
+        right_outcome_state = cayley_table.findOutcomeCayley(left_action=a, return_state_outcome=True)
 
         # If the right identity equation is not satisfied, then e is not a right identity element and so remove e
         # from the list of possible right identities and stop checking if e satisfies the right identity equation by

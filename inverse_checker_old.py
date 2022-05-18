@@ -29,7 +29,7 @@ table, state_labelling = agent.generateCayleyTable()
 left_inverses = copy.deepcopy(list(table.index))
 for a in table.index:       # Test in e is left identity (a * inv_a = e)
     for inv_a in table.index:
-        left_outcome_action = table.findOutcome(first_action=e, second_action=a)
+        left_outcome_action = table.findOutcomeCayley(first_action=e, second_action=a)
         left_outcome_state = table.action_label_to_state(action_label=left_outcome_action)
 
         right_outcome_state = table.action_label_to_state(action_label=a)                     #TODO: check issues if e.g., 1 ~ R
@@ -43,7 +43,7 @@ right_identities = copy.deepcopy(list(table.index))
 for e in table.index:       # Test in e is right identity (a * e = a)
     right_identity = True
     for a in table.index:
-        left_outcome_action = table.findOutcome(first_action=a, second_action=e)
+        left_outcome_action = table.findOutcomeCayley(first_action=a, second_action=e)
         left_outcome_state = table.action_label_to_state(action_label=left_outcome_action)
 
         right_outcome_state = table.action_label_to_state(action_label=a)                     #TODO: check issues if e.g., 1 ~ R

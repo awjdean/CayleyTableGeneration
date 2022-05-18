@@ -54,7 +54,6 @@ class CayleyTable:
         self.state_to_action_label = None
         self.action_label_to_state = None
         self.action_to_state = None
-        self.equivalence_classes = None
         self.world_params = None
 
         # checkIdentity
@@ -83,27 +82,24 @@ class CayleyTable:
                                                  index=copy.deepcopy(minimum_actions))
 
         # Create dictionaries.
-        self.state_to_action_label = {}  # Keys: world states; Elements: actions labeling those world states.
-        self.action_label_to_state = {}  # Keys: actions labelling world states; Elements: world states those actions label.
-        self.action_to_state = {}  # Keys: actions; Elements: world states that the actions cause the agent to reach when the actions are performed on the initial world state.
-        self.equivalence_classes = {}  # Keys: actions labelling world states; Elements: actions that appear to be in the same equivalence class (weak equivalence) as the key action.
+        self.state_to_action_label = {}
+        self.action_label_to_state = {}
+        self.action_to_state = {}
 
         ### Label states with minimum actions (if possible).
         for action_sequence in minimum_actions:
-            end_world_state = self.findOutcomeAgent(action_sequence=action_sequence,
-                                                    initial_agent_state=initial_agent_state, world=world,
-                                                    return_state_outcome=True)
+            world.resetAgentState(position=initial_agent_state)
+            for action in action_sequence[::-1]:
+                world.applyAgentAction(action=action)
+            end_world_state = world.returnAgentPosition()
 
             if end_world_state not in self.state_to_action_label.keys():
                 # Update labelling dictionaries.
                 self.state_to_action_label[end_world_state] = action_sequence
                 self.action_label_to_state[action_sequence] = end_world_state
 
-                self.equivalence_classes[action_sequence] = []
-
             # Record the state that each action results in.
             self.action_to_state[action_sequence] = end_world_state
-            self.equivalence_classes[self.state_to_action_label[end_world_state]].append(action_sequence)
         ###
 
         ### Calculate outcomes for the Cayley table.
@@ -113,30 +109,6 @@ class CayleyTable:
             table_index = returnNextIndices(current_index=table_index, table_shape=self.cayley_table_actions.shape)
             if table_index == 'End':
                 break
-
-            right_action_sequence = self.cayley_table_actions.columns[
-                table_index[0]]  # right_action_sequence = row label.
-            if len(right_action_sequence) != 1:
-
-
-
-            left_action_sequence = self.cayley_table_actions.index[
-                table_index[1]]  # left_action_sequence = column label.
-
-
-
-
-
-
-
-######################################################
-        # ### Calculate outcomes for the Cayley table.
-        # table_index = None
-        # while True:
-        #     # Find which part of the table is being filled in next.
-        #     table_index = returnNextIndices(current_index=table_index, table_shape=self.cayley_table_actions.shape)
-        #     if table_index == 'End':
-        #         break
 
             # Create action sequence
             right_action_sequence = self.cayley_table_actions.columns[
@@ -179,27 +151,7 @@ class CayleyTable:
                     end_world_state]
         ###
 
-    def findOutcomeAgent(self, action_sequence, world, initial_agent_state, return_state_outcome=True):
-        """
-        #TODO:
-        :param action_sequence:
-        :param world:
-        :param initial_agent_state:
-        :param return_state_outcome:
-        :return:
-        """
-
-        world.resetAgentState(position=initial_agent_state)
-        for action in action_sequence[::-1]:
-            world.applyAgentAction(action=action)
-        end_world_state = world.returnAgentPosition()
-
-        if return_state_outcome:
-            return end_world_state
-        else:
-            return self.state_to_action_label
-
-    def findOutcomeCayley(self, left_action, right_action=None, return_state_outcome=False):
+    def findOutcome(self, left_action, right_action=None, return_state_outcome=False):
         """
         Uses the Cayley table to find the outcome of the action sequence: right_action \cdot left_action. The
         outcome is given as the action that labels the state that the action sequence (right_action \cdot
@@ -233,10 +185,10 @@ class CayleyTable:
         for e in self.cayley_table_actions.index:
             for a in self.cayley_table_actions.index:
                 # Find the outcome of the LHS of the left identity equation.
-                left_outcome_state = self.findOutcomeCayley(left_action=e, right_action=a, return_state_outcome=True)
+                left_outcome_state = self.findOutcome(left_action=e, right_action=a, return_state_outcome=True)
 
                 # Find the outcome of the RHS of the left identity equation.
-                right_outcome_state = self.findOutcomeCayley(left_action=a, return_state_outcome=True)
+                right_outcome_state = self.findOutcome(left_action=a, return_state_outcome=True)
 
                 # If the left identity equation is not satisfied, then e is not a left identity element and so remove
                 # e from the list of possible left identities and stop checking if e satisfies the left identity
@@ -255,10 +207,10 @@ class CayleyTable:
         for e in self.cayley_table_actions.index:
             for a in self.cayley_table_actions.index:
                 # Find the outcome of the LHS of the right identity equation.
-                left_outcome_state = self.findOutcomeCayley(left_action=a, right_action=e, return_state_outcome=True)
+                left_outcome_state = self.findOutcome(left_action=a, right_action=e, return_state_outcome=True)
 
                 # Find the outcome of the RHS of the right identity equation.
-                right_outcome_state = self.findOutcomeCayley(left_action=a, return_state_outcome=True)
+                right_outcome_state = self.findOutcome(left_action=a, return_state_outcome=True)
 
                 # If the right identity equation is not satisfied, then e is not a right identity element and so
                 # remove e from the list of possible right identities and stop checking if e satisfies the right
@@ -298,3 +250,4 @@ if __name__ == "__main__":
     print(table.cayley_table_actions)
     table.checkIdentity()
     print('\n identity_info: {0}'.format(table.identity_info))
+
