@@ -50,6 +50,7 @@ class CayleyTable:
     def __init__(self):
 
         # generateCayleyTable
+        self.cayley_table_states = None
         self.cayley_table_actions = None
         self.state_to_action_label = None
         self.action_label_to_state = None
@@ -70,58 +71,87 @@ class CayleyTable:
             raise Exception('Cayley table already generated. World used: {0}'.format(self.world_params))
 
         # Unpack function arguments.
-        minimum_actions = parameters['minimum_actions']
-        initial_agent_state = parameters['initial_agent_state']
-        world = parameters['world']
+        self.minimum_actions = parameters['minimum_actions']
+        self.initial_agent_state = parameters['initial_agent_state']
+        self.world = parameters['world']
         show_calculation = parameters['show_calculation']  # TODO: remove from here and put in a print function.
 
         # Save world parameters.
         self.world_params = parameters
 
-        # Create initial Cayley Table using the minimum actions as rows and columns.
-        self.cayley_table_actions = pd.DataFrame(columns=copy.deepcopy(minimum_actions),
-                                                 index=copy.deepcopy(minimum_actions))
+        remaining_minimum_actions = copy.deepcopy(self.minimum_actions)
+        visited_world_states = set()
 
         # Create dictionaries.
-        self.state_to_action_label = {}  # Keys: world states; Elements: actions labeling those world states.
-        self.action_label_to_state = {}  # Keys: actions labelling world states; Elements: world states those actions label.
-        self.action_to_state = {}  # Keys: actions; Elements: world states that the actions cause the agent to reach when the actions are performed on the initial world state.
         self.equivalence_classes = {}  # Keys: actions labelling world states; Elements: actions that appear to be in the same equivalence class (weak equivalence) as the key action.
-
-        ### Label states with minimum actions (if possible).
-        for action_sequence in minimum_actions:
-            end_world_state = self.findOutcomeAgent(action_sequence=action_sequence,
-                                                    initial_agent_state=initial_agent_state, world=world,
-                                                    return_state_outcome=True)
-
-            if end_world_state not in self.state_to_action_label.keys():
-                # Update labelling dictionaries.
-                self.state_to_action_label[end_world_state] = action_sequence
-                self.action_label_to_state[action_sequence] = end_world_state
-
-                self.equivalence_classes[action_sequence] = []
-
-            # Record the state that each action results in.
-            self.action_to_state[action_sequence] = end_world_state
-            self.equivalence_classes[self.state_to_action_label[end_world_state]].append(action_sequence)
-        ###
-
-        ### Calculate outcomes for the Cayley table.
-        table_index = None
-        while True:
-            # Find which part of the table is being filled in next.
-            table_index = returnNextIndices(current_index=table_index, table_shape=self.cayley_table_actions.shape)
-            if table_index == 'End':
-                break
-
-            right_action_sequence = self.cayley_table_actions.columns[
-                table_index[0]]  # right_action_sequence = row label.
-            if len(right_action_sequence) != 1:
+        # self.action_to_state = {}  # Keys: actions; Elements: world states that the actions cause the agent to reach when the actions are performed on the initial world state.
+        # self.action_label_to_state = {}  # Keys: actions labelling world states; Elements: world states those actions label.
+        # self.state_to_action_label = {}  # Keys: world states; Elements: actions labeling those world states.
 
 
 
-            left_action_sequence = self.cayley_table_actions.index[
-                table_index[1]]  # left_action_sequence = column label.
+        ##### Create initial Cayley table using minimum actions.
+        self.cayley_table_actions = pd.DataFrame(columns=copy.deepcopy(self.minimum_actions),
+                                                 index=copy.deepcopy(self.minimum_actions))
+        self.cayley_table_states = pd.DataFrame(columns=copy.deepcopy(self.minimum_actions),
+                                                index=copy.deepcopy(self.minimum_actions))
+
+        ## Fill initial state Cayley table.
+        for table_index_row in range(len(self.cayley_table_states.index)):
+            for table_index_column in range(len(self.cayley_table_states.index)):
+
+                right_action_sequence = self.cayley_table_states.index[table_index_row]         # TODO: check these are the correct way around.
+                left_action_sequence = self.cayley_table_states.columns[table_index_column]
+                action_sequence = left_action_sequence + right_action_sequence
+
+                end_world_state = self.findOutcomeAgent(action_sequence=action_sequence,
+                                                        initial_agent_state=self.initial_agent_state,
+                                                        world=self.world,
+                                                        return_state_outcome=True)
+
+                # Fill in state Cayley table.
+                self.cayley_table_states.iat[table_index_row, table_index_column] = end_world_state     # TODO: check indexes are correct way around.
+
+
+        ## Look for equivalent elements in the state Cayley table.
+        equivalents_found = {}
+        for element_index in range(len(self.cayley_table_states.index)):
+            if element_index in equivalents_found.keys():
+                continue
+
+            element_row = list(self.cayley_table_states.iloc[element_index])
+            element_column = list(self.cayley_table_states.iloc[:, element_index])
+
+            for comparison_element_index in range(len(self.cayley_table_states.index)):
+                if (comparison_element_index == element_index) or (comparison_element_index in equivalents_found.keys()):
+                    continue
+
+                comparison_element_row = list(self.cayley_table_states.iloc[comparison_element_index])
+                comparison_element_column = list(self.cayley_table_states.iloc[:, comparison_element_index])
+
+                if (comparison_element_row == element_row) and (comparison_element_column == element_column):
+                    equivalents_found[comparison_element_index] = element_index
+        ##
+
+        ## Create initial equivalence classes.
+        for i in range(len(self.minimum_actions)):
+            if i not in equivalents_found.keys():
+                end_world_state = self.findOutcomeAgent(action_sequence=self.minimum_actions[i],
+                                                        initial_agent_state=self.initial_agent_state,
+                                                        world=self.world,
+                                                        return_state_outcome=True)
+                self.equivalence_classes[i] = {'end_world_state': end_world_state,
+                                               'class_elements': [i]}
+                visited_world_states.add(end_world_state)
+            else:
+                self.equivalence_classes[equivalents_found[i]]['class_elements'].append(i)
+                # TODO: Remove equivalent elements from Cayley table
+
+
+        pass
+        ## Identify newly discovered states in states Cayley table
+
+                # Go through Cayley table, when a new state is found, add the relevant action sequence to a list.
 
 
 
@@ -129,55 +159,145 @@ class CayleyTable:
 
 
 
-######################################################
+
+
+
+
+
+
+
+
+
+        # # Create initial 1x1 Cayley Table using first minimum action as row and column.
+        # action_sequence = remaining_minimum_actions.pop(0)
+        # self.cayley_table_actions = pd.DataFrame(columns=[action_sequence],
+        #                                          index=[action_sequence])
+        # self.cayley_table_states = pd.DataFrame(columns=[action_sequence],
+        #                                         index=[action_sequence])
+        #
+        # ### Create equivalence class for first minimum action
+        # end_world_state = self.findOutcomeAgent(action_sequence=action_sequence,
+        #                                         initial_agent_state=self.initial_agent_state,
+        #                                         world=self.world,
+        #                                         return_state_outcome=True)
+        #
+        # self.equivalence_classes[action_sequence] = {'end_world_state': end_world_state,
+        #                                              'class_elements': [action_sequence]}
+        # visited_world_states.append(end_world_state)
+        # ###
+        #
         # ### Calculate outcomes for the Cayley table.
         # table_index = None
         # while True:
         #     # Find which part of the table is being filled in next.
         #     table_index = returnNextIndices(current_index=table_index, table_shape=self.cayley_table_actions.shape)
         #     if table_index == 'End':
-        #         break
+        #         break  # TODO: select next action from remaining_minimum_actions
+        #
+        #     right_action_sequence = self.cayley_table_actions.columns[table_index[0]]  # right_action_sequence = row labels.
+        #     left_action_sequence = self.cayley_table_actions.index[table_index[1]]  # left_action_sequence = column labels.
+        #     action_sequence = left_action_sequence + right_action_sequence
+        #
+        #     end_world_state = self.findOutcomeAgent(action_sequence=action_sequence,
+        #                                             initial_agent_state=self.initial_agent_state,
+        #                                             world=self.world,
+        #                                             return_state_outcome=True)
+        #     # Fill in state Cayley table.
+        #     self.cayley_table_states.iat[table_index[0], table_index[1]] = end_world_state
 
-            # Create action sequence
-            right_action_sequence = self.cayley_table_actions.columns[
-                table_index[0]]  # right_action_sequence = row label.
-            left_action_sequence = self.cayley_table_actions.index[
-                table_index[1]]  # left_action_sequence = column label.
-            action_sequence = left_action_sequence + right_action_sequence
+
+
+
+    def checkIfInEquivalenceClass(self, action_sequence, end_world_state, equivalence_classes, visited_world_states):
+        """
+        Checks if action_sequence should be in any of the equivalence classes in equivalence_classes.
+        :param action_sequence:
+        :param end_world_state:
+        :param equivalence_classes:
+        :param visited_world_states:
+        :return: 'None' if not in equivalence class,
+        """
+
+        if end_world_state not in visited_world_states:
+            # If action_sequence leads to a previously unseen world state then action_sequence must be in its own equivalence class.
+            return None
+        else:
+            # Calculate the state Cayley table row and column for action_sequence as if it was in the state Cayley table:
+            new_cayley_row = []
+
+
+
+
+
+
+
+
+
+
+
+            # for i in (self.cayley_table_actions.columns + [action_sequence]):
+            #     self.findOutcomeAgent(action_sequence=i,
+            #                           initial_agent_state=self.initial_agent_state,
+            #                           world=self.world,
+            #                           return_state_outcome=True)
+            #
+            # new_cayley_column = None
+
+    def isMinimumAction(self, action):
+        if action in self.minimum_actions:
+            return True
+        else:
+            return False
+
+            ######################################################
+            # ### Calculate outcomes for the Cayley table.
+            # table_index = None
+            # while True:
+            #     # Find which part of the table is being filled in next.
+            #     table_index = returnNextIndices(current_index=table_index, table_shape=self.cayley_table_actions.shape)
+            #     if table_index == 'End':
+            #         break
+
+            # # Create action sequence
+            # right_action_sequence = self.cayley_table_actions.columns[
+            #     table_index[0]]  # right_action_sequence = row label.
+            # left_action_sequence = self.cayley_table_actions.index[
+            #     table_index[1]]  # left_action_sequence = column label.
+            # action_sequence = left_action_sequence + right_action_sequence
 
             # Fine outcome of action sequence as a world state.
-            world.resetAgentState()
-            for action in action_sequence[::-1]:
-                world.applyAgentAction(action=action)
-            end_world_state = world.returnAgentPosition()
-
-            if end_world_state not in self.state_to_action_label.keys():
-                # Add extra column and extra row to Cayley table for the action action_sequence,
-                # since action_sequence has resulted in encountering a new world state.
-                row_column_name = copy.deepcopy(action_sequence)
-                new_row_column = pd.DataFrame(data=([np.nan]),
-                                              columns=[row_column_name],
-                                              index=[row_column_name])
-                self.cayley_table_actions = pd.concat([self.cayley_table_actions, new_row_column])
-
-                # Update labelling dictionaries.
-                self.state_to_action_label[end_world_state] = action_sequence
-                self.action_label_to_state[action_sequence] = end_world_state
-
-            # Record the state that each action results in.
-            self.action_to_state[action_sequence] = end_world_state
-
-            # Insert outcome in the Cayley table (as an action sequence)
-            if show_calculation:  # TODO: remove from here and put in a print function.
-                self.cayley_table_actions.iat[table_index[0], table_index[1]] = '{0}.{1} ~ {2}'.format(
-                    left_action_sequence,
-                    right_action_sequence,
-                    self.state_to_action_label[
-                        end_world_state])
-            else:
-                self.cayley_table_actions.iat[table_index[0], table_index[1]] = self.state_to_action_label[
-                    end_world_state]
-        ###
+        #     world.resetAgentState()
+        #     for action in action_sequence[::-1]:
+        #         world.applyAgentAction(action=action)
+        #     end_world_state = world.returnAgentPosition()
+        #
+        #     if end_world_state not in self.state_to_action_label.keys():
+        #         # Add extra column and extra row to Cayley table for the action action_sequence,
+        #         # since action_sequence has resulted in encountering a new world state.
+        #         row_column_name = copy.deepcopy(action_sequence)
+        #         new_row_column = pd.DataFrame(data=([np.nan]),
+        #                                       columns=[row_column_name],
+        #                                       index=[row_column_name])
+        #         self.cayley_table_actions = pd.concat([self.cayley_table_actions, new_row_column])
+        #
+        #         # Update labelling dictionaries.
+        #         self.state_to_action_label[end_world_state] = action_sequence
+        #         self.action_label_to_state[action_sequence] = end_world_state
+        #
+        #     # Record the state that each action results in.
+        #     self.action_to_state[action_sequence] = end_world_state
+        #
+        #     # Insert outcome in the Cayley table (as an action sequence)
+        #     if show_calculation:  # TODO: remove from here and put in a print function.
+        #         self.cayley_table_actions.iat[table_index[0], table_index[1]] = '{0}.{1} ~ {2}'.format(
+        #             left_action_sequence,
+        #             right_action_sequence,
+        #             self.state_to_action_label[
+        #                 end_world_state])
+        #     else:
+        #         self.cayley_table_actions.iat[table_index[0], table_index[1]] = self.state_to_action_label[
+        #             end_world_state]
+        # ###
 
     def findOutcomeAgent(self, action_sequence, world, initial_agent_state, return_state_outcome=True):
         """
@@ -289,12 +409,12 @@ class CayleyTable:
 if __name__ == "__main__":
     table = CayleyTable()
 
-    parameters = {'minimum_actions': ['1', 'R', 'U', 'L', 'D'],
+    parameters = {'minimum_actions': ['1', 'U', 'R', 'L', 'D', 'D'],
                   'initial_agent_state': (0, 0),
-                  'world': Gridworld2D(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
+                  'world': Gridworld2D(grid_size=(2, 2), wall_positions=[(0.5, 0)]),
                   'show_calculation': False}  # TODO: remove from here and put in a print function. # TODO: Error when this is True.
     table.generateCayleyTable(**parameters)
     print('\n')
     print(table.cayley_table_actions)
-    table.checkIdentity()
+    # table.checkIdentity()
     print('\n identity_info: {0}'.format(table.identity_info))
