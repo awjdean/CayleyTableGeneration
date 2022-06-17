@@ -88,19 +88,14 @@ class CayleyTable:
         # self.action_label_to_state = {}  # Keys: actions labelling world states; Elements: world states those actions label.
         # self.state_to_action_label = {}  # Keys: world states; Elements: actions labeling those world states.
 
-
-
-        ##### Create initial Cayley table using minimum actions.
-        self.cayley_table_actions = pd.DataFrame(columns=copy.deepcopy(self.minimum_actions),
-                                                 index=copy.deepcopy(self.minimum_actions))
+        ###### Create initial state Cayley table using minimum actions.
         self.cayley_table_states = pd.DataFrame(columns=copy.deepcopy(self.minimum_actions),
                                                 index=copy.deepcopy(self.minimum_actions))
 
-        ## Fill initial state Cayley table.
+        ### Fill initial state Cayley table.
         for table_index_row in range(len(self.cayley_table_states.index)):
             for table_index_column in range(len(self.cayley_table_states.index)):
-
-                right_action_sequence = self.cayley_table_states.index[table_index_row]         # TODO: check these are the correct way around.
+                right_action_sequence = self.cayley_table_states.index[table_index_row]
                 left_action_sequence = self.cayley_table_states.columns[table_index_column]
                 action_sequence = left_action_sequence + right_action_sequence
 
@@ -110,10 +105,10 @@ class CayleyTable:
                                                         return_state_outcome=True)
 
                 # Fill in state Cayley table.
-                self.cayley_table_states.iat[table_index_row, table_index_column] = end_world_state     # TODO: check indexes are correct way around.
+                self.cayley_table_states.iat[table_index_row, table_index_column] = end_world_state
+        ###
 
-
-        ## Look for equivalent elements in the state Cayley table.
+        ### Look for equivalent elements in the state Cayley table.
         equivalents_found = {}
         for element_index in range(len(self.cayley_table_states.index)):
             if element_index in equivalents_found.keys():
@@ -123,7 +118,8 @@ class CayleyTable:
             element_column = list(self.cayley_table_states.iloc[:, element_index])
 
             for comparison_element_index in range(len(self.cayley_table_states.index)):
-                if (comparison_element_index == element_index) or (comparison_element_index in equivalents_found.keys()):
+                if (comparison_element_index == element_index) or (
+                        comparison_element_index in equivalents_found.keys()):
                     continue
 
                 comparison_element_row = list(self.cayley_table_states.iloc[comparison_element_index])
@@ -131,42 +127,127 @@ class CayleyTable:
 
                 if (comparison_element_row == element_row) and (comparison_element_column == element_column):
                     equivalents_found[comparison_element_index] = element_index
-        ##
+        ###
 
-        ## Create initial equivalence classes.
-        for i in range(len(self.minimum_actions)):
+        ### Create initial equivalence classes.
+        rows_columns_to_keep = list(range(self.cayley_table_states.shape[0]))
+        for i in range(self.cayley_table_states.shape[0]):
             if i not in equivalents_found.keys():
                 end_world_state = self.findOutcomeAgent(action_sequence=self.minimum_actions[i],
                                                         initial_agent_state=self.initial_agent_state,
                                                         world=self.world,
                                                         return_state_outcome=True)
-                self.equivalence_classes[i] = {'end_world_state': end_world_state,
-                                               'class_elements': [i]}
+                self.equivalence_classes[self.cayley_table_states.index[i]] = {
+                    'class_elements': [self.cayley_table_states.index[i]],  # TODO: change list to set().
+                    'end_world_state': end_world_state,
+                }
                 visited_world_states.add(end_world_state)
             else:
-                self.equivalence_classes[equivalents_found[i]]['class_elements'].append(i)
-                # TODO: Remove equivalent elements from Cayley table
+                self.equivalence_classes[self.cayley_table_states.index[equivalents_found[i]]]['class_elements'].append(
+                    self.cayley_table_states.index[i])
+                rows_columns_to_keep.remove(i)
 
+        # Remove equivalent elements from Cayley table.
+        self.cayley_table_states = self.cayley_table_states.iloc[rows_columns_to_keep, rows_columns_to_keep]
+        ###
+
+        ######
+
+        # Create initial actions Cayley table.
+        self.cayley_table_actions = pd.DataFrame(columns=copy.deepcopy(self.cayley_table_states.columns),
+                                                 index=copy.deepcopy(self.cayley_table_states.index))
+
+        ###### Fill action Cayley table and Identify newly discovered states in states Cayley table.
+        new_cayley_table_elements = []
+        for table_index_row in range(
+                len(self.cayley_table_actions.index)):  # TODO: change Cayley table fill to Cantor set covering method.
+            for table_index_column in range(len(self.cayley_table_actions.columns)):
+                # Get element from action Cayley table.
+                right_action_sequence = self.cayley_table_states.index[table_index_row]
+                left_action_sequence = self.cayley_table_states.columns[table_index_column]
+                action_sequence = left_action_sequence + right_action_sequence
+
+                # Find state Cayley table row for element.
+                state_cayley_table_row = []
+                for labelling_element in self.cayley_table_states.index:
+                    temp_action_sequence = labelling_element + action_sequence
+                    state_cayley_table_row.append(self.findOutcomeAgent(action_sequence=temp_action_sequence,
+                                                                        initial_agent_state=self.initial_agent_state,
+                                                                        world=self.world,
+                                                                        return_state_outcome=True))
+
+                # Find state Cayley table column for element.
+                state_cayley_table_column = []
+                for labelling_element in self.cayley_table_states.index:
+                    temp_action_sequence = action_sequence + labelling_element
+                    state_cayley_table_column.append(self.findOutcomeAgent(action_sequence=temp_action_sequence,
+                                                                           initial_agent_state=self.initial_agent_state,
+                                                                           world=self.world,
+                                                                           return_state_outcome=True))
+
+                equivalents_found = []
+                # Compare row ond column of this element to the rows and columns of the elements in the state Cayley table.
+                for comparison_element_index in range(len(self.cayley_table_states.index)):
+                    comparison_element_row = list(self.cayley_table_states.iloc[comparison_element_index])
+                    comparison_element_column = list(self.cayley_table_states.iloc[:, comparison_element_index])
+
+                    if (comparison_element_row == state_cayley_table_row) and (comparison_element_column == state_cayley_table_column):
+                        equivalents_found.append((self.cayley_table_states.index[comparison_element_index], action_sequence))
+
+                if len(equivalents_found) == 0:
+                    # Add to new elements list
+                    new_cayley_table_elements.append(action_sequence)
+                elif len(equivalents_found) == 1:
+                    # Add equivalent to the relevant equivalence class
+                    self.equivalence_classes[equivalents_found[0][0]]['class_elements'].append(equivalents_found[0][1])
+
+                    # Fill in equivalence table value with the equivalence class label.
+                    self.cayley_table_actions.iat[table_index_row, table_index_column] = equivalents_found[0][0]
+
+                else:
+                    raise Exception('Too many equivalents !')
 
         pass
-        ## Identify newly discovered states in states Cayley table
-
-                # Go through Cayley table, when a new state is found, add the relevant action sequence to a list.
 
 
-
-
-
-
-
-
-
+        # TODO: add each element to the Cayley table individually:
+        #  -1. Pop first element from new_cayley_table_elements.
+        #  0. Check element is not equivalent to other equivalent class labelling elements.
+        #  1. Check element doesn't break equivalence classes --> if it does then split those equivalence classes.
+        #  2. Add element to Cayley tables, fill in its state Cayley table entries, and give it an equivalence class.
+        #  3. Iterate through the NAN's in the action Cayley table and fill in entries if possible.
+        #      a. If new element(s) found, then append them to new_cayley_table_elements.
+        #  4. Stop while loop when len(new_cayley_table_elements) == 0.
 
 
 
 
+        # new_cayley_table_elements = []
+        # for table_index_row in range(len(self.cayley_table_states.index)):          # TODO: change Cayley table fill to Cantor set covering.
+        #     for table_index_column in range(len(self.cayley_table_states.index)):
+        #         # Get world state from state Cayley table.
+        #         end_world_state = self.cayley_table_states.iat[table_index_row, table_index_column]
+        #         right_action_sequence = self.cayley_table_states.index[table_index_row]
+        #         left_action_sequence = self.cayley_table_states.columns[table_index_column]
+        #         action_sequence = left_action_sequence + right_action_sequence
+        #
+        #         # Check if state visited
+        #         if end_world_state in visited_world_states:
+        #             # Find the equivalence class labelling element corresponding to that world state.
+        #             for equivalence_class_label in self.equivalence_classes.keys():
+        #                 if self.equivalence_classes[equivalence_class_label]['end_world_state'] == end_world_state:
+        #                     # Fill actions Cayley table
+        #                     self.cayley_table_actions.iat[table_index_row, table_index_column] = equivalence_class_label
+        #                     self.equivalence_classes[equivalence_class_label]['class_elements'].append(action_sequence)
+        #                     break
+        #
+        #         else:
+        #             # Add combined element to list of new Cayley table elements.
+        #             new_cayley_table_elements.append({action_sequence: end_world_state})
+        #
+        #             self.cayley_table_actions.iat[table_index_row, table_index_column] = action_sequence
 
-
+        ###
 
         # # Create initial 1x1 Cayley Table using first minimum action as row and column.
         # action_sequence = remaining_minimum_actions.pop(0)
@@ -205,9 +286,6 @@ class CayleyTable:
         #     # Fill in state Cayley table.
         #     self.cayley_table_states.iat[table_index[0], table_index[1]] = end_world_state
 
-
-
-
     def checkIfInEquivalenceClass(self, action_sequence, end_world_state, equivalence_classes, visited_world_states):
         """
         Checks if action_sequence should be in any of the equivalence classes in equivalence_classes.
@@ -224,16 +302,6 @@ class CayleyTable:
         else:
             # Calculate the state Cayley table row and column for action_sequence as if it was in the state Cayley table:
             new_cayley_row = []
-
-
-
-
-
-
-
-
-
-
 
             # for i in (self.cayley_table_actions.columns + [action_sequence]):
             #     self.findOutcomeAgent(action_sequence=i,
