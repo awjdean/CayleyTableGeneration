@@ -55,11 +55,8 @@ class CayleyTable:
         self.state_to_action_label = None
         self.action_label_to_state = None
         self.action_to_state = None
-        self.equivalence_classes = None
+        self.ecs = None
         self.world_params = None
-
-        # checkIdentity
-        self.identity_info = None
 
     def generateCayleyTable(self, **parameters):
         """
@@ -82,7 +79,7 @@ class CayleyTable:
         visited_world_states = set()
 
         # Create dictionaries.
-        self.equivalence_classes = {}  # Keys: actions labelling world states; Elements: actions that appear to be in the same equivalence class (weak equivalence) as the key action.
+        self.ecs = {}  # Keys: actions labelling world states; Elements: actions that appear to be in the same equivalence class (weak equivalence) as the key action.
 
         ################################################################################################################
         # Create initial state Cayley table using minimum actions.
@@ -135,13 +132,13 @@ class CayleyTable:
                                                         initial_agent_state=self.initial_agent_state,
                                                         world=self.world,
                                                         return_state_outcome=True)
-                self.equivalence_classes[self.cayley_table_states.index[i]] = {
+                self.ecs[self.cayley_table_states.index[i]] = {
                     'class_elements': set([self.cayley_table_states.index[i]]),
                     'end_world_state': end_world_state,
                 }
                 visited_world_states.add(end_world_state)
             else:
-                self.equivalence_classes[self.cayley_table_states.index[equivalents_found[i]]]['class_elements'].add(
+                self.ecs[self.cayley_table_states.index[equivalents_found[i]]]['class_elements'].add(
                     self.cayley_table_states.index[i])
                 rows_columns_to_keep.remove(i)
 
@@ -196,12 +193,7 @@ class CayleyTable:
                     cayley_table_candidate_elements.add(action_sequence)
                 elif len(equivalents_found) == 1:
                     # Add equivalent to the relevant equivalence class
-                    self.equivalence_classes[list(equivalents_found)[0][0]]['class_elements'].add(
-                        list(equivalents_found)[0][1])
-                    # self.equivalence_classes[equivalents_found[0][0]]['class_elements'].append(equivalents_found[0][1])
-
-                    # # Fill in action Cayley table value with the equivalence class label.
-                    # self.cayley_table_actions.iat[table_index_row, table_index_column] = equivalents_found[0][0]
+                    self.ecs[list(equivalents_found)[0][0]]['class_elements'].add(list(equivalents_found)[0][1])
                 else:
                     raise Exception('Too many equivalents !')
 
@@ -211,7 +203,7 @@ class CayleyTable:
         ################################################################################################################
 
         while len(cayley_table_candidate_elements) > 0:
-            print('Num cayley_table_candidate_elements: {0}'.format(len(cayley_table_candidate_elements)), end='\r')
+            print('Num cayley_table_candidate_elements remaining: {0}'.format(len(cayley_table_candidate_elements)), end='\r')
             candidate_element = cayley_table_candidate_elements.pop()
 
             ############################################################################################################
@@ -248,7 +240,7 @@ class CayleyTable:
 
             if len(equivalents_found) == 1:
                 # Add equivalent to the relevant equivalence class.
-                self.equivalence_classes[equivalents_found[0][0]]['class_elements'].add(equivalents_found[0][1])
+                self.ecs[equivalents_found[0][0]]['class_elements'].add(equivalents_found[0][1])
                 continue
             elif len(equivalents_found) > 1:
                 raise Exception('Too many equivalents: {0}'.format(equivalents_found))
@@ -264,9 +256,9 @@ class CayleyTable:
             #       class.
             ############################################################################################################
             temp_ecs = {}
-            for ec_label in self.equivalence_classes.keys():
+            for ec_label in self.ecs.keys():
                 # If equivalence class contains a single element, skip it because there are no equivalences to break.
-                if len(self.equivalence_classes[ec_label]['class_elements']) == 1:
+                if len(self.ecs[ec_label]['class_elements']) == 1:
                     continue
 
                 # Find outcome of equivalence class labelling element acting on w0 after the candidate element.     # TODO: do I already have this from the equivalence class check ?
@@ -278,7 +270,7 @@ class CayleyTable:
 
                 # Find outcome of each equivalence class element acting on w0 after the candidate element.
                 for ec_element in copy.deepcopy(
-                        self.equivalence_classes[ec_label]['class_elements']):  # TODO: convert to list ?
+                        self.ecs[ec_label]['class_elements']):  # TODO: convert to list ?
                     ec_element_outcome = self.findOutcomeAgent(
                         action_sequence=(ec_element + candidate_element),
                         initial_agent_state=self.initial_agent_state,
@@ -302,7 +294,7 @@ class CayleyTable:
 
                             if ec_element_outcome == temp_ec_label_outcome:
                                 # Remove ec_element from original equivalence class.
-                                self.equivalence_classes[ec_label]['class_elements'].remove(ec_element)
+                                self.ecs[ec_label]['class_elements'].remove(ec_element)
                                 # Add ec_element to temporary equivalence class
                                 temp_ecs[temp_ec_label]['class_elements'].add(ec_element)
                                 flag_temp_ec_found = True
@@ -311,16 +303,16 @@ class CayleyTable:
                         # If ec_element doesn't belong in any of the temporary equivalence classes, then create a new temporary equivalence class.
                         if not flag_temp_ec_found:
                             # Remove ec_element from original equivalence class.
-                            self.equivalence_classes[ec_label]['class_elements'].remove(ec_element)
+                            self.ecs[ec_label]['class_elements'].remove(ec_element)
 
                             # Create new temporary equivalence class labelled by ec_element.
                             temp_ecs[ec_element] = {
                                 'class_elements': set([ec_element]),
-                                'end_world_state': self.equivalence_classes[ec_label]['end_world_state'],
+                                'end_world_state': self.ecs[ec_label]['end_world_state'],
                                 'split_from': ec_label}
 
             ############################################################################################################
-            # Add broken equivalence classes to Cayley table and to self.equivalence_classes
+            # Add broken equivalence classes to Cayley table and to self.ecs
             ############################################################################################################
             # TODO: change so that this copies the rows and columns of the 'split_from' equivalence class ? --> remember to copy !
             for temp_ec_label in temp_ecs.keys():
@@ -367,7 +359,7 @@ class CayleyTable:
                 print('Equivalence class(es) split. Candidate element: {0}.\n    temp_ecs:'.format(candidate_element))
                 for i in temp_ecs.keys():
                     print('    {0}'.format(temp_ecs[i]))
-            self.equivalence_classes = self.equivalence_classes | temp_ecs
+            self.ecs = self.ecs | temp_ecs
 
             ############################################################################################################
             # Add candidate_element to the state Cayley table.
@@ -406,7 +398,7 @@ class CayleyTable:
             self.cayley_table_states = pd.concat([self.cayley_table_states, candidate_state_cayley_table_row])
 
             # Create equivalence class for candidate element.
-            self.equivalence_classes[candidate_element] = {'class_elements': set([candidate_element]),
+            self.ecs[candidate_element] = {'class_elements': set([candidate_element]),
                                                            'end_world_state': self.findOutcomeAgent(
                                                                action_sequence=candidate_element,
                                                                initial_agent_state=self.initial_agent_state,
@@ -459,9 +451,7 @@ class CayleyTable:
                         cayley_table_candidate_elements.add(action_sequence)
                     elif len(equivalents_found) == 1:
                         # Add equivalent to the relevant equivalence class
-                        self.equivalence_classes[list(equivalents_found)[0][0]]['class_elements'].add(
-                            list(equivalents_found)[0][1])
-
+                        self.ecs[list(equivalents_found)[0][0]]['class_elements'].add(list(equivalents_found)[0][1])
                     else:
                         raise Exception('Too many equivalents !')
             ############################################################################################################
@@ -496,30 +486,30 @@ class CayleyTable:
         ################################################################################################################
 
         ### Select element in equivalence class.
-        for labelling_element in self.equivalence_classes.keys():
-            for check_element in self.equivalence_classes[labelling_element]['class_elements']:
-                equivalence_class_of_matching_elements = []
+        for labelling_element in self.ecs.keys():
+            for check_element in self.ecs[labelling_element]['class_elements']:
+                ec_of_matching_elements = []
                 ###
                 ### Check if element is the same as any of the other elements in this equivalence class.
-                for comparison_element in self.equivalence_classes[labelling_element]['class_elements']:
+                for comparison_element in self.ecs[labelling_element]['class_elements']:
                     if check_element == comparison_element:
-                        equivalence_class_of_matching_elements.append(labelling_element)
+                        ec_of_matching_elements.append(labelling_element)
                 ###
 
                 # Check if element is in any other equivalence class.
-                for comparison_labelling_element in self.equivalence_classes.keys():
+                for comparison_labelling_element in self.ecs.keys():
                     # Already checked elements in same equivalence class.
                     if comparison_labelling_element == labelling_element:
                         continue
-                    for comparison_element in self.equivalence_classes[comparison_labelling_element]['class_elements']:
+                    for comparison_element in self.ecs[comparison_labelling_element]['class_elements']:
                         if check_element == comparison_element:
-                            equivalence_class_of_matching_elements.append(comparison_labelling_element)
+                            ec_of_matching_elements.append(comparison_labelling_element)
 
-                if (len(equivalence_class_of_matching_elements) != 1) and (
-                        equivalence_class_of_matching_elements[0] != labelling_element):
+                if (len(ec_of_matching_elements) != 1) and (
+                        ec_of_matching_elements[0] != labelling_element):
                     raise Exception(
                         'Element in more than one equivalence class. \nEquivalence_class_of_matching_elements = {0}'.format(
-                            equivalence_class_of_matching_elements))
+                            ec_of_matching_elements))
 
         ################################################################################################################
         # Label equivalence classes with their shortest label and change the relevant Cayley table row-column labels.
@@ -527,10 +517,10 @@ class CayleyTable:
 
         # TODO: also need to get a dictionary so can rename pandas dataframe labels --> https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html
         cayley_table_relabelling_dict = {}
-        old_ec_labels = list(self.equivalence_classes.keys())
+        old_ec_labels = list(self.ecs.keys())
         for ec_label in old_ec_labels:
             # Sort equivalence class elements by alphabetical order and length order.
-            sorted_ec_elements = sorted(list(self.equivalence_classes[ec_label]['class_elements']))
+            sorted_ec_elements = sorted(list(self.ecs[ec_label]['class_elements']))
             sorted_ec_elements = sorted(sorted_ec_elements, key=len)
 
             # New labelling element is first element in sorted_ec_elements.
@@ -540,8 +530,8 @@ class CayleyTable:
             cayley_table_relabelling_dict[ec_label] = new_ec_label
 
             # Relabel equivalence class.
-            self.equivalence_classes[new_ec_label] = self.equivalence_classes.pop(ec_label)
-            self.equivalence_classes[new_ec_label]['class_elements'] = sorted_ec_elements
+            self.ecs[new_ec_label] = self.ecs.pop(ec_label)
+            self.ecs[new_ec_label]['class_elements'] = sorted_ec_elements
 
         # Relabel state Cayley table.
         self.cayley_table_states = self.cayley_table_states.rename(columns=cayley_table_relabelling_dict,  # TODO: check this works.
@@ -554,6 +544,7 @@ class CayleyTable:
         # create action Cayley table.
         self.cayley_table_actions = pd.DataFrame(columns=self.cayley_table_states.columns,
                                                  index=self.cayley_table_states.index)
+        self.cayley_table_ecs = {}
 
         # Fill action Cayley table.
         for table_index_row in range(len(self.cayley_table_actions.index)):
@@ -565,14 +556,13 @@ class CayleyTable:
                 candidate_element = left_action_sequence + right_action_sequence
 
                 # Find label of equivalence class containing action_sequence, then use that label in the actions Cayley table.
-                for labelling_element in self.equivalence_classes.keys():
-                    for ec_element in self.equivalence_classes[labelling_element]['class_elements']:
+                for labelling_element in self.ecs.keys():
+                    for ec_element in self.ecs[labelling_element]['class_elements']:
                         if candidate_element == ec_element:
                             # Fill in action Cayley table value with the equivalence class label.
                             self.cayley_table_actions.iat[table_index_row, table_index_column] = labelling_element
                             is_filled_flag = True
                             break
-
                     if is_filled_flag:
                         break
 
@@ -612,13 +602,10 @@ class CayleyTable:
                     if len(equivalents_found) == 1:
                         # Fill in action Cayley table value with the equivalence class label.
                         self.cayley_table_actions.iat[table_index_row, table_index_column] = equivalents_found[0][0]
-
                         # Add equivalent to the relevant equivalence class.
-                        self.equivalence_classes[equivalents_found[0][0]]['class_elements'].append(equivalents_found[0][1])
-
+                        self.ecs[equivalents_found[0][0]]['class_elements'].append(equivalents_found[0][1])
                     elif len(equivalents_found) > 1:
                         raise Exception('Too many equivalents: {0}'.format(equivalents_found))
-
 
         print('Cayley table generated.')
         pass
@@ -637,7 +624,7 @@ class CayleyTable:
         #  2.1. (DONE) Fill in action Cayley table entries.
 
     # TODO: checks:
-    #  1. At end create new state Cayley table with the labelling rows and columns, then fill it in and compare to generated state Cayley table.
+    #  1. At end create new state Cayley table with the labelling rows and columns, then fill it in and compare to generated state Cayley table.    ---> This next. iterate through process, then set equivalence class labelling elements as minimum_actions, run again then check if two results are the same.
     #  2. (DONE) Look for equivalent elements in the state Cayley table.
     #  3. (DONE) Check that each element is present in only one equivalence class.
     #  4. Same algebra should be given for the same world if starting state is different.
@@ -649,7 +636,7 @@ class CayleyTable:
 
     def findOutcomeAgent(self, action_sequence, world, initial_agent_state, return_state_outcome=True):
         """
-        #TODO:
+        #TODO: fix for return_state_outcome = False
         :param action_sequence:
         :param world:
         :param initial_agent_state:
@@ -666,31 +653,19 @@ class CayleyTable:
         else:
             return self.state_to_action_label
 
-    def findOutcomeCayley(self, left_action, right_action=None, return_state_outcome=False):
+    def findOutcomeCayley(self, left_action, right_action):
         """
-        Uses the Cayley table to find the outcome of the action sequence: right_action \cdot left_action. The
-        outcome is given as the action that labels the state that the action sequence (right_action \cdot
-        left_action) would end up as if it was performed from the world state initial_agent_state.
+        Uses the Cayley table to find the outcome of the action sequence: left_action \cdot right_action.
 
-        NB: remember that the right action acts on the world state before the right action.
-
-        :return: Outcome of (right_action \cdot left_action) as the action that labels the state given by:
-         right_action \cdot left_action) * initial_agent_state
+        :return: Outcome of left_action \cdot right_action.
         """
-        if right_action is None:
-            state_outcome = self.action_to_state[left_action]
-            action_outcome = self.state_to_action_label[state_outcome]
-            if return_state_outcome:
-                return state_outcome
-            else:
-                return action_outcome
-        else:
-            action_outcome = self.cayley_table_actions[left_action][right_action]
-            if return_state_outcome:
-                state_outcome = self.action_label_to_state[action_outcome]
-                return state_outcome
-            else:
-                return action_outcome
+        if right_action not in self.cayley_table_actions.index:
+            raise Exception('Right action ({0}) not in Cayley table.'.format(right_action))
+        if left_action not in self.cayley_table_actions.columns:
+            raise Exception('left action ({0}) not in Cayley table.'.format(left_action))
+
+        outcome = self.cayley_table_actions.at[left_action, right_action]
+        return outcome
 
 
 #######################################################
@@ -725,5 +700,5 @@ if __name__ == "__main__":
     print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
     print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
     print('\nEquivalence classes:')
-    for i in table.equivalence_classes.keys():
-        print('    {0}:\t\t\t{1}'.format(i, table.equivalence_classes[i]))
+    for i in table.ecs.keys():
+        print('    {0}:\t\t\t{1}'.format(i, table.ecs[i]))
