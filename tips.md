@@ -1,4 +1,4 @@
-git
+pit pugit
 # GitHub
 
 * git add .
