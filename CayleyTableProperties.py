@@ -35,6 +35,10 @@ class CayleyTablePropertyChecker(CayleyTable):
         """
         Uses the action Cayley table to find identity elements, which are stored in self.identity_info.
         """
+        if self.cayley_table_actions is None:
+            raise Exception(
+                'Generate Cayley table using self.generateCayleyTable(parameters) before searching for identities.')
+
         self.identity_info = {}
 
         ################################################################################################################
@@ -99,6 +103,14 @@ class CayleyTablePropertyChecker(CayleyTable):
 
         :return:
         """
+
+        if self.cayley_table_actions is None:
+            raise Exception(
+                'Generate Cayley table using self.generateCayleyTable(parameters) before searching for inverses.')
+
+        if self.identity_info is None:
+            raise Exception('Find identities using self.checkInverse() before searching for inverses.')
+
         self.inverse_info = {}
 
         ################################################################################################################
@@ -184,12 +196,18 @@ class CayleyTablePropertyChecker(CayleyTable):
         self.inverse_info['inverses'] = inverses
 
     def checkAssociate(self):
-        pass
+        """
+
+        :return:
+        """
 
 
-    def print_info(self, print_info_params):
-        identity = print_info_params['identity']
-        inverse = print_info_params['inverse']
+
+
+
+    def printPropertiesInfo(self, **print_parameters):
+        identity = print_parameters['identity']
+        inverse = print_parameters['inverse']
 
         if identity:
             print('\n identity info:')
@@ -203,16 +221,22 @@ class CayleyTablePropertyChecker(CayleyTable):
 
 
 if __name__ == "__main__":
-    print('\nNo walls')
-    table = CayleyTable()
+    initial_agent_state = (0, 0)
+    grid_size = (4, 4)
 
-    parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
-                  'initial_agent_state': (0, 0),
-                  'world': Gridworld2D(grid_size=(2, 2),
-                                       # wall_positions=[(0.5, 0)]),
-                                       wall_positions=[]),
-                  }
-    table.generateCayleyTable(**parameters)
+    ####################################################################################################################
+    # No walls
+    ####################################################################################################################
+
+    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
+                               'initial_agent_state': initial_agent_state,
+                               'world': Gridworld2D(grid_size=grid_size,
+                                                    wall_positions=[]),
+                               }
+
+    print('\n{0} gridworld, no walls.'.format(str(grid_size)))
+    table = CayleyTable()
+    table.generateCayleyTable(**Cayley_table_parameters)
     table = CayleyTablePropertyChecker(cayley_table_instance=table)
 
     print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
@@ -223,22 +247,26 @@ if __name__ == "__main__":
     table.checkIdentity()
     table.checkInverse()
 
-    print_info_params = {'identity': True,
-                         'inverse': True,
-                         }
-    table.print_info(print_info_params)
+    print_parameters = {'identity': True,
+                        'inverse': True,
+                        }
+    table.printPropertiesInfo(**print_parameters)
 
+    ####################################################################################################################
+    # Walls
+    ####################################################################################################################
+    wall_positions = [(0.5, 0)]
 
-    print('\nWall at (0.5, 0)')
+    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
+                               'initial_agent_state': initial_agent_state,
+                               'world': Gridworld2D(grid_size=grid_size,
+                                                    wall_positions=wall_positions),
+                               }
+
+    print('\n{0} grid world, walls at {1}.'.format(str(grid_size), str(wall_positions)))
     table = CayleyTable()
 
-    parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
-                  'initial_agent_state': (0, 0),
-                  'world': Gridworld2D(grid_size=(2, 2),
-                                       wall_positions=[(0.5, 0)]),
-                                       # wall_positions=[]),
-                  }
-    table.generateCayleyTable(**parameters)
+    table.generateCayleyTable(**Cayley_table_parameters)
     table = CayleyTablePropertyChecker(cayley_table_instance=table)
 
     print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
@@ -249,7 +277,7 @@ if __name__ == "__main__":
     table.checkIdentity()
     table.checkInverse()
 
-    print_info_params = {'identity': True,
-                         'inverse': True,
-                         }
-    table.print_info(print_info_params)
+    print_parameters = {'identity': True,
+                        'inverse': True,
+                        }
+    table.printPropertiesInfo(**print_parameters)

@@ -29,7 +29,6 @@ def checkMinimumActionOrderAffectOnTableSize(**parameters):
         params = {'initial_agent_state': initial_agent_state,
                   'minimum_actions': list(permutation),
                   'world': world,
-                  'show_calculation': show_calculation,
                   }
 
         table = CayleyTable()
