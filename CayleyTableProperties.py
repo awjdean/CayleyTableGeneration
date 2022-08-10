@@ -27,9 +27,10 @@ class CayleyTablePropertyChecker(CayleyTable):
             self.ecs = cayley_table_instance.ecs
             self.world_params = cayley_table_instance.world_params
 
-        # checkIdentity
+        # Properties
         self.identity_info = None
         self.inverse_info = None
+        self.associativity_info = None
 
     def checkIdentity(self):
         """
@@ -195,34 +196,79 @@ class CayleyTablePropertyChecker(CayleyTable):
 
         self.inverse_info['inverses'] = inverses
 
-    def checkAssociate(self):
+    def checkAssociativity(self):
         """
 
         :return:
         """
 
+        if self.cayley_table_actions is None:
+            raise Exception(
+                'Generate Cayley table using self.generateCayleyTable(parameters) before checking associativity.')
 
+        self.associativity_info = {'is_associative_algebra': None,
+                                   'is_not_associative_elements': []
+                                   }
 
+        # Check associativity using associativity equation: a * (b * c) = (a * b) * c
+        # Select three elements
+        for a in self.cayley_table_actions.index:
+            for b in self.cayley_table_actions.index:
+                for c in self.cayley_table_actions.index:
+                    ####################################################################################################
+                    # Calculate LHS of associativity equation: a * (b * c).
+                    ####################################################################################################
+                    # Calculate (b * c).
+                    LHS_bracket_outcome = self.findOutcomeCayley(left_action=b, right_action=c)
+                    # Calculate a * (b * c).
+                    LHS_outcome = self.findOutcomeCayley(left_action=a, right_action=LHS_bracket_outcome)
 
+                    ####################################################################################################
+                    # Calculate RHS of associativity equation: (a * b) * c.
+                    ####################################################################################################
+                    # Calculate (a * b).
+                    RHS_bracket_outcome = self.findOutcomeCayley(left_action=a, right_action=b)
+                    # Calculate (a * b) * c.
+                    RHS_outcome = self.findOutcomeCayley(left_action=RHS_bracket_outcome, right_action=c)
+
+                    ####################################################################################################
+                    # Check associativity equation.
+                    ####################################################################################################
+
+                    # Check equation
+                    if LHS_outcome != RHS_outcome:
+                        self.associativity_info['is_not_associative_elements'].append((a, b, c))
+
+        # Check for overall associativity.
+        if len(self.associativity_info['is_not_associative_elements']) == 0:
+            self.associativity_info['is_associative_algebra'] = True
+        else:
+            self.associativity_info['is_associative_algebra'] = False
 
     def printPropertiesInfo(self, **print_parameters):
         identity = print_parameters['identity']
         inverse = print_parameters['inverse']
+        associativity = print_parameters['associativity']
 
         if identity:
             print('\n identity info:')
             for i in self.identity_info.keys():
-                print('    {0}:\t\t\t{1}'.format(i, self.identity_info[i]))
+                print('\t{0}:\t\t\t{1}'.format(i, self.identity_info[i]))
 
         if inverse:
             print('\n inverse info:')
             for i in self.inverse_info.keys():
-                print('    {0}:\t\t\t{1}'.format(i, self.inverse_info[i]))
+                print('\t{0}:\t\t\t{1}'.format(i, self.inverse_info[i]))
+
+        if associativity:
+            print('\n associativity info:')
+            print('\tassociative algebra: {0}'.format(self.associativity_info['is_associative_algebra']))
+            print('\tis_not_associative_elements: {0}'.format(self.associativity_info['is_not_associative_elements']))
 
 
 if __name__ == "__main__":
     initial_agent_state = (0, 0)
-    grid_size = (4, 4)
+    grid_size = (2, 2)
 
     ####################################################################################################################
     # No walls
@@ -239,23 +285,25 @@ if __name__ == "__main__":
     table.generateCayleyTable(**Cayley_table_parameters)
     table = CayleyTablePropertyChecker(cayley_table_instance=table)
 
-    print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
+    print('\nCayley table elements (total: {1}):\t{0}'.format(list(table.cayley_table_states.columns.values),
                                                                len(table.cayley_table_states.columns.values)))
     print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
     print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
 
     table.checkIdentity()
     table.checkInverse()
+    table.checkAssociativity()
 
     print_parameters = {'identity': True,
                         'inverse': True,
+                        'associativity': True,
                         }
     table.printPropertiesInfo(**print_parameters)
 
     ####################################################################################################################
     # Walls
     ####################################################################################################################
-    wall_positions = [(0.5, 0)]
+    wall_positions = [(0.5, 0), (1.5, 0)]
 
     Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
                                'initial_agent_state': initial_agent_state,
@@ -269,15 +317,17 @@ if __name__ == "__main__":
     table.generateCayleyTable(**Cayley_table_parameters)
     table = CayleyTablePropertyChecker(cayley_table_instance=table)
 
-    print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
+    print('\nCayley table elements (total: {1}):\t{0}'.format(list(table.cayley_table_states.columns.values),
                                                                len(table.cayley_table_states.columns.values)))
     print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
     print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
 
     table.checkIdentity()
     table.checkInverse()
+    table.checkAssociativity()
 
     print_parameters = {'identity': True,
                         'inverse': True,
+                        'associativity': True,
                         }
     table.printPropertiesInfo(**print_parameters)
