@@ -1,12 +1,15 @@
 """
 # TODO:
-    * turn into functions not a class ?
-    * Find outcome from Cayley table function
-
+    3. Improve efficiency of Cayley table generating code. --> NEXT
+        - Itertools instead of nested for loops.
+    4. Tests for Cayley table generating code.
+    5. Find disentangled subspaces (commuting subspaces).
 
 
 """
 import copy
+import itertools
+import time
 
 from CayleyTable import CayleyTable
 from gridworld2D import Gridworld2D
@@ -17,7 +20,6 @@ class CayleyTablePropertyChecker(CayleyTable):
         super().__init__()
 
         if cayley_table_instance is not None:
-            # TODO: load the cayley table instance as the instance of this function.
             # generateCayleyTable
             self.cayley_table_states = cayley_table_instance.cayley_table_states
             self.cayley_table_actions = cayley_table_instance.cayley_table_actions
@@ -31,6 +33,8 @@ class CayleyTablePropertyChecker(CayleyTable):
         self.identity_info = None
         self.inverse_info = None
         self.associativity_info = None
+        self.element_order_info = None
+        self.commutativity_info = None
 
     def checkIdentity(self):
         """
@@ -40,7 +44,7 @@ class CayleyTablePropertyChecker(CayleyTable):
             raise Exception(
                 'Generate Cayley table using self.generateCayleyTable(parameters) before searching for identities.')
 
-        self.identity_info = {}
+        self.identity_info = {'is_identity_algebra': None}
 
         ################################################################################################################
         # Find left identities.
@@ -99,12 +103,23 @@ class CayleyTablePropertyChecker(CayleyTable):
 
         self.identity_info['identities'] = identities
 
+        if len(self.identity_info['identities']) > 1:
+            raise Exception('More than one identity.\n\tidentities:\t\t{0}'.format(self.identity_info['identities']))
+
+        ################################################################################################################
+        # Check if algebra has an identity.
+        ################################################################################################################
+
+        if len(self.identity_info['identities']) == 0:
+            self.identity_info['is_identity_algebra'] = False
+        else:
+            self.identity_info['is_identity_algebra'] = True
+
     def checkInverse(self):
         """
 
         :return:
         """
-
         if self.cayley_table_actions is None:
             raise Exception(
                 'Generate Cayley table using self.generateCayleyTable(parameters) before searching for inverses.')
@@ -112,7 +127,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         if self.identity_info is None:
             raise Exception('Find identities using self.checkInverse() before searching for inverses.')
 
-        self.inverse_info = {}
+        self.inverse_info = {'is_inverse_algebra': None}
 
         ################################################################################################################
         # Find left inverses.
@@ -135,9 +150,6 @@ class CayleyTablePropertyChecker(CayleyTable):
                             left_inverses[a] = [(l_inv_a, e_R)]
                         # RHS outcome cannot be two different things, therefore break out of loop.
                         break
-            # # If no left inverse found for element a, set value in left_inverses to None.
-            # if a not in left_inverses.keys():
-            #     left_inverses[a] = None
 
         self.inverse_info['left_inverses'] = left_inverses
 
@@ -145,7 +157,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         # Find right inverses.
         ################################################################################################################
 
-        right_inverses = {}  # Structure: { a : [(r_inv_a, e_L), ((r_inv_a_2, e_L_2)...], a_2 : None, ...}
+        right_inverses = {}  # Structure: { a : [(r_inv_a, e_L), ((r_inv_a_2, e_L_2)...], }
 
         # Find right inverses for element a (a * r_inv_a = e_L).
         for a in self.cayley_table_actions.index:
@@ -165,17 +177,13 @@ class CayleyTablePropertyChecker(CayleyTable):
                             # RHS outcome cannot be two different things, therefore break out of loop.
                             break
 
-            # # If no right inverse found for element a, set value in right_inverses to None.
-            # if a not in right_inverses.keys():
-            #     right_inverses[a] = None
-
         self.inverse_info['right_inverses'] = right_inverses
 
         ################################################################################################################
         # Find inverses.
         ################################################################################################################
         # Inverses are elements that are both right inverses and left inverses for the same identity.
-        inverses = {}
+        inverses = {}  # Structure: { a : [(inv_a, e)], }
         for a in self.cayley_table_actions.index:
             if a not in (self.inverse_info['left_inverses'].keys() or self.inverse_info['right_inverses'].keys()):
                 continue
@@ -196,18 +204,26 @@ class CayleyTablePropertyChecker(CayleyTable):
 
         self.inverse_info['inverses'] = inverses
 
+        ################################################################################################################
+        # Check if algebra has inverses.
+        ################################################################################################################
+        self.inverse_info['is_inverse_algebra'] = True
+        for algebra_element in self.cayley_table_actions.index:
+            if algebra_element not in self.inverse_info['inverses']:
+                self.inverse_info['is_inverse_algebra'] = False
+                break
+
     def checkAssociativity(self):
         """
 
         :return:
         """
-
         if self.cayley_table_actions is None:
             raise Exception(
                 'Generate Cayley table using self.generateCayleyTable(parameters) before checking associativity.')
 
         self.associativity_info = {'is_associative_algebra': None,
-                                   'is_not_associative_elements': []
+                                   'non_associative_elements': [],
                                    }
 
         # Check associativity using associativity equation: a * (b * c) = (a * b) * c
@@ -237,42 +253,178 @@ class CayleyTablePropertyChecker(CayleyTable):
 
                     # Check equation
                     if LHS_outcome != RHS_outcome:
-                        self.associativity_info['is_not_associative_elements'].append((a, b, c))
+                        self.associativity_info['non_associative_elements'].append((a, b, c))
+
+        ################################################################################################################
+        # Check if algebra is associative.
+        ################################################################################################################
 
         # Check for overall associativity.
-        if len(self.associativity_info['is_not_associative_elements']) == 0:
+        if len(self.associativity_info['non_associative_elements']) == 0:
             self.associativity_info['is_associative_algebra'] = True
         else:
             self.associativity_info['is_associative_algebra'] = False
 
+    def findElementOrder(self):
+        """
+
+        :return:
+        """
+        if self.cayley_table_actions is None:
+            raise Exception(
+                'Generate Cayley table using self.generateCayleyTable(parameters) before finding element orders.')
+
+        if self.identity_info is None:
+            raise Exception('Find identities using self.checkInverse() before finding element orders.')
+
+        self.element_order_info = {}  # Structure: { a_1 : (order n, order_search), a_2 : (float('inf'), order_search, (cycle_start, cycle_length)) }
+
+        # Check if identity element exists.
+        if len(self.identity_info['identities']) == 0:
+            self.element_order_info = 'No identity, therefore cannot calculate element orders.'
+
+        # The maximum order an element can have, if it has a finite order, is the number of elements in the algebra.
+        # max_order = len(self.cayley_table_actions.index)
+        max_order = 1000
+        for a in self.cayley_table_actions.index:
+            for e in self.identity_info['identities']:
+                n = 1
+                order_search = [a]
+
+                # If an element is an identity element, then it has an order of 1.
+                if a == e:
+                    self.element_order_info[a] = (n, order_search)
+                    continue
+
+                a_outcome = a
+                while True:
+                    n += 1
+
+                    a_outcome = self.findOutcomeCayley(left_action=a, right_action=a_outcome)
+
+                    # If the element a_outcome is an identity element, then element a has an order of n.
+                    if a_outcome == e:
+                        self.element_order_info[a] = (n, order_search)
+                        order_search.append(a_outcome)
+                        break
+
+                    # If the element order search for element a returns to an element seen before without reaching an
+                    # identity, then the search for the order of a has hit a cycle and so a has infinite order.
+                    if a_outcome in order_search:
+                        cycle_start = a_outcome
+                        cycle_length = order_search[::-1].index(a_outcome) + 1
+                        self.element_order_info[a] = (float('inf'), order_search, (cycle_start, cycle_length))
+                        break
+
+                    order_search.append(a_outcome)
+
+                    # CHECK.
+                    if n > max_order:
+                        self.element_order_info[a] = ('$infty', 'max_order')
+                        raise Exception(
+                            'Max element order ({0}} reached. (a, order_search)'.format(max_order, a, order_search))
+
+    def checkCommutativity(self):
+        """
+
+        :return:
+        """
+        self.commutativity_info = {'is_commutative_algebra': None,
+                                   'commuting_elements': {},
+                                   'non_commuting_elements': {},
+                                   'commute_with_all': [],
+                                   }
+
+        ################################################################################################################
+        # Find commuting elements.
+        ################################################################################################################
+        # Two elements a,b commute if they satisfy the commutativity equation: a * b = b * a.
+        for a in self.cayley_table_actions.index:
+            self.commutativity_info['commuting_elements'][a] = []
+            self.commutativity_info['non_commuting_elements'][a] = []
+            for b in self.cayley_table_actions.index:
+                # Calculate the LHS of the commutativity equation (a * b).
+                LHS_outcome = self.findOutcomeCayley(left_action=a, right_action=b)
+
+                # Calculate the RHS of the commutativity equation (b * a).
+                RHS_outcome = self.findOutcomeCayley(left_action=b, right_action=a)
+
+                # If LHS_outcome = RHS_outcome, then store that a,b commute.
+                if LHS_outcome == RHS_outcome:
+                    self.commutativity_info['commuting_elements'][a].append(b)
+                else:
+                    self.commutativity_info['non_commuting_elements'][a].append(b)
+
+        ################################################################################################################
+        # Check if algebra is commutative.
+        ################################################################################################################
+        # For the algebra to be commutative, every pair of elements must commute.
+
+        if len(self.commutativity_info['non_commuting_elements'].keys()) > 0:
+            self.commutativity_info['is_commutative_algebra'] = True
+        else:
+            self.commutativity_info['is_commutative_algebra'] = False
+
+        ################################################################################################################
+        # Find elements that commute with all other elements.
+        ################################################################################################################
+        for a in self.cayley_table_actions.index:
+            if set(self.commutativity_info['commuting_elements'][a]) == set(self.cayley_table_actions.index):
+                self.commutativity_info['commute_with_all'].append(a)
+
     def printPropertiesInfo(self, **print_parameters):
+        """
+
+        :param print_parameters:
+        :return:
+        """
         identity = print_parameters['identity']
         inverse = print_parameters['inverse']
         associativity = print_parameters['associativity']
+        commutativity = print_parameters['commutativity']
+        element_order = print_parameters['element_order']
 
         if identity:
-            print('\n identity info:')
-            for i in self.identity_info.keys():
-                print('\t{0}:\t\t\t{1}'.format(i, self.identity_info[i]))
+            print('\nidentity info:')
+            print('\tis_identity_algebra:\t\t{0}'.format(self.identity_info['is_identity_algebra']))
+            print('\tleft_identities:\t\t\t{0}'.format(self.identity_info['left_identities']))
+            print('\tright_identities:\t\t\t{0}'.format(self.identity_info['right_identities']))
+            print('\tidentities:\t\t\t\t\t{0}'.format(self.identity_info['identities']))
 
         if inverse:
-            print('\n inverse info:')
-            for i in self.inverse_info.keys():
-                print('\t{0}:\t\t\t{1}'.format(i, self.inverse_info[i]))
+            print('\ninverse info:')
+            print('\tis_inverse_algebra:\t\t\t{0}'.format(self.inverse_info['is_inverse_algebra']))
+            print('\tleft_inverses:\t\t\t\t{0}'.format(self.inverse_info['left_inverses']))
+            print('\tright_inverses:\t\t\t\t{0}'.format(self.inverse_info['right_inverses']))
+            print('\tinverses:\t\t\t\t\t{0}'.format(self.inverse_info['inverses']))
 
         if associativity:
-            print('\n associativity info:')
-            print('\tassociative algebra: {0}'.format(self.associativity_info['is_associative_algebra']))
-            print('\tis_not_associative_elements: {0}'.format(self.associativity_info['is_not_associative_elements']))
+            print('\nassociativity info:')
+            print('\tis_associative_algebra:\t\t{0}'.format(self.associativity_info['is_associative_algebra']))
+            print('\tnon_associative_elements:\t{0}'.format(self.associativity_info['non_associative_elements']))
+
+        if commutativity:
+            print('\ncommutativity info:')
+            print('\tis_commutative_algebra:\t\t{0}'.format(self.commutativity_info['is_commutative_algebra']))
+            print('\tcommuting_elements:\t\t\t{0}'.format(self.commutativity_info['commuting_elements']))
+            print('\tnon_commuting_elements:\t\t{0}'.format(self.commutativity_info['non_commuting_elements']))
+            print('\tcommute_with_all:\t\t\t{0}'.format(self.commutativity_info['commute_with_all']))
+
+        if element_order:
+            print('\nelement order info:')
+            for i in self.element_order_info.keys():
+                print(
+                    '\t{0}:\t   {1},   \t{2}'.format(i, self.element_order_info[i][0], self.element_order_info[i][1:]))
 
 
 if __name__ == "__main__":
     initial_agent_state = (0, 0)
-    grid_size = (2, 2)
+    grid_size = (3, 2)
 
     ####################################################################################################################
     # No walls
     ####################################################################################################################
+    t0 = time.time()
 
     Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
                                'initial_agent_state': initial_agent_state,
@@ -286,24 +438,32 @@ if __name__ == "__main__":
     table = CayleyTablePropertyChecker(cayley_table_instance=table)
 
     print('\nCayley table elements (total: {1}):\t{0}'.format(list(table.cayley_table_states.columns.values),
-                                                               len(table.cayley_table_states.columns.values)))
+                                                              len(table.cayley_table_states.columns.values)))
     print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
     print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
 
     table.checkIdentity()
     table.checkInverse()
     table.checkAssociativity()
+    table.findElementOrder()
+    table.checkCommutativity()
 
     print_parameters = {'identity': True,
                         'inverse': True,
                         'associativity': True,
+                        'element_order': True,
+                        'commutativity': True,
                         }
     table.printPropertiesInfo(**print_parameters)
 
+    print('\nTime taken: {0:0.2f}s'.format(time.time()-t0))
+    print('\n#########################################################################################################')
     ####################################################################################################################
     # Walls
     ####################################################################################################################
-    wall_positions = [(0.5, 0), (1.5, 0)]
+    t0 = time.time()
+
+    wall_positions = [(0.5, 0)]
 
     Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
                                'initial_agent_state': initial_agent_state,
@@ -312,22 +472,22 @@ if __name__ == "__main__":
                                }
 
     print('\n{0} grid world, walls at {1}.'.format(str(grid_size), str(wall_positions)))
-    table = CayleyTable()
+    table2 = CayleyTable()
 
-    table.generateCayleyTable(**Cayley_table_parameters)
-    table = CayleyTablePropertyChecker(cayley_table_instance=table)
+    table2.generateCayleyTable(**Cayley_table_parameters)
+    table2 = CayleyTablePropertyChecker(cayley_table_instance=table2)
 
-    print('\nCayley table elements (total: {1}):\t{0}'.format(list(table.cayley_table_states.columns.values),
-                                                               len(table.cayley_table_states.columns.values)))
-    print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
-    print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
+    print('\nCayley table elements (total: {1}):\t{0}'.format(list(table2.cayley_table_states.columns.values),
+                                                              len(table2.cayley_table_states.columns.values)))
+    print('\nState Cayley table: \n{0}'.format(table2.cayley_table_states.to_string()))
+    print('\nAction Cayley table: \n{0}'.format((table2.cayley_table_actions.to_string())))
 
-    table.checkIdentity()
-    table.checkInverse()
-    table.checkAssociativity()
+    table2.checkIdentity()
+    table2.checkInverse()
+    table2.checkAssociativity()
+    table2.findElementOrder()
+    table2.checkCommutativity()
 
-    print_parameters = {'identity': True,
-                        'inverse': True,
-                        'associativity': True,
-                        }
-    table.printPropertiesInfo(**print_parameters)
+    table2.printPropertiesInfo(**print_parameters)
+
+    print('\nTime taken: {0:0.2f}s'.format(time.time() - t0))
