@@ -1,9 +1,24 @@
+"""
+# TODO:
+    2. Reorder actions Cayley table and state Cayley table.
+    3. Replace sets with ordered sets.
+    3. Improve efficiency of Cayley table generating code. --> NEXT
+        - Itertools instead of nested for loops.
+    4. Tests for Cayley table generating code.
+    5.
+"""
+
 from gridworld2D import Gridworld2D
 
 import itertools
 import copy
 import numpy as np
 import pandas as pd
+import os
+import pickle
+
+
+# from ordered-set import OrderedSet
 
 
 #######################################################
@@ -78,8 +93,9 @@ class CayleyTable:
         remaining_minimum_actions = copy.deepcopy(self.minimum_actions)
         visited_world_states = set()
 
-        # Create dictionaries.
-        self.ecs = {}  # Keys: actions labelling world states; Elements: actions that appear to be in the same equivalence class (weak equivalence) as the key action.
+        # Create dictionaries. Keys: actions labelling world states; Elements: actions that appear to be in the same
+        # equivalence class (weak equivalence) as the key action.
+        self.ecs = {}
 
         ################################################################################################################
         # Create initial state Cayley table using minimum actions.
@@ -203,7 +219,8 @@ class CayleyTable:
         ################################################################################################################
 
         while len(cayley_table_candidate_elements) > 0:
-            print('Num cayley_table_candidate_elements remaining: {0}'.format(len(cayley_table_candidate_elements)), end='\r')
+            print('Num cayley_table_candidate_elements remaining: {0}'.format(len(cayley_table_candidate_elements)),
+                  end='\r')
             candidate_element = cayley_table_candidate_elements.pop()
 
             ############################################################################################################
@@ -399,11 +416,11 @@ class CayleyTable:
 
             # Create equivalence class for candidate element.
             self.ecs[candidate_element] = {'class_elements': set([candidate_element]),
-                                                           'end_world_state': self.findOutcomeAgent(
-                                                               action_sequence=candidate_element,
-                                                               initial_agent_state=self.initial_agent_state,
-                                                               world=self.world,
-                                                               return_state_outcome=True)}
+                                           'end_world_state': self.findOutcomeAgent(
+                                               action_sequence=candidate_element,
+                                               initial_agent_state=self.initial_agent_state,
+                                               world=self.world,
+                                               return_state_outcome=True)}
 
             ############################################################################################################
             # Go through (entire) state Cayley table and find new elements          # TODO: this is a nasty brute force method --> should be improved.
@@ -512,10 +529,9 @@ class CayleyTable:
                             ec_of_matching_elements))
 
         ################################################################################################################
-        # Label equivalence classes with their shortest label and change the relevant Cayley table row-column labels.
+        # Relabel equivalence classes with their shortest label and change the relevant Cayley table row-column labels.
         ################################################################################################################
 
-        # TODO: also need to get a dictionary so can rename pandas dataframe labels --> https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.rename.html
         cayley_table_relabelling_dict = {}
         old_ec_labels = list(self.ecs.keys())
         for ec_label in old_ec_labels:
@@ -534,11 +550,22 @@ class CayleyTable:
             self.ecs[new_ec_label]['class_elements'] = sorted_ec_elements
 
         # Relabel state Cayley table.
-        self.cayley_table_states = self.cayley_table_states.rename(columns=cayley_table_relabelling_dict,  # TODO: check this works.
+        self.cayley_table_states = self.cayley_table_states.rename(columns=cayley_table_relabelling_dict,
+                                                                   # TODO: check this works.
                                                                    index=cayley_table_relabelling_dict)
 
         ################################################################################################################
-        # Create and fill action Cayley table
+        # Order state Cayley table rows and columns according to same ordering as equivalence classes were relabeled.
+        ################################################################################################################
+        cayley_tables_row_columns = list(self.cayley_table_states.index)
+        sorted_cayley_tables_row_columns = sorted(cayley_tables_row_columns)
+        sorted_cayley_tables_row_columns = sorted(sorted_cayley_tables_row_columns, key=len)
+
+        self.cayley_table_states = self.cayley_table_states.reindex(index=sorted_cayley_tables_row_columns,
+                                                                    columns=sorted_cayley_tables_row_columns)
+
+        ################################################################################################################
+        # Create and fill action Cayley table.
         ################################################################################################################
 
         # create action Cayley table.
@@ -610,8 +637,6 @@ class CayleyTable:
         print('Cayley table generated.')
         pass
 
-
-
         # TODO: add each element to the Cayley table individually:
         #  1.-1. (DONE) Pop first element from cayley_table_candidate_elements.
         #  1.0. (DONE) Check element is not equivalent to other equivalent class labelling elements. If so, return to step -1.
@@ -667,6 +692,33 @@ class CayleyTable:
         outcome = self.cayley_table_actions.at[left_action, right_action]
         return outcome
 
+    def saveCayleyTable(self, file_name):
+
+        save_dict = {'cayley_table_states': self.cayley_table_states,
+                     'cayley_table_actions': self.cayley_table_actions,
+                     'equivalence_classes': self.ecs,
+                     }
+
+        path = './Saved Cayley tables'
+
+        if not os.path.exists(path):
+            os.makedirs('./Saved Cayley tables')
+
+        with open(path + '/' + file_name, 'wb') as f:
+            pickle.dump(save_dict, f, pickle.HIGHEST_PROTOCOL)
+
+        print('\n Cayley table saved as {0}'.format(file_name))
+
+    def loadCayleyTable(self, file_name):
+
+        path = './Saved Cayley tables'
+
+        with open(path + '/' + file_name, 'rb') as f:
+            save_dict = pickle.load(f)
+
+        self.cayley_table_states = save_dict['cayley_table_states']
+        self.cayley_table_actions = save_dict['cayley_table_actions']
+        self.ecs = save_dict['equivalence_classes']
 
 #######################################################
 
@@ -687,18 +739,32 @@ if __name__ == "__main__":
     # for i in table.equivalence_classes.keys():
     #     print('    {0}:\t\t\t{1}'.format(i, table.equivalence_classes[i]))
 
-    print('\nWall at (0.5, 0)')
-    table = CayleyTable()
-    parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
-                  'initial_agent_state': (0, 0),
-                  'world': Gridworld2D(grid_size=(2, 2), wall_positions=[(0.5, 0)]),
-                  'show_calculation': False}  # TODO: remove from here and put in a print function. # TODO: Error when this is True.
-    table.generateCayleyTable(**parameters)
-    print('\nNo walls')
-    print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
-                                                               len(table.cayley_table_states.columns.values)))
-    print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
-    print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
-    print('\nEquivalence classes:')
-    for i in table.ecs.keys():
-        print('    {0}:\t\t\t{1}'.format(i, table.ecs[i]))
+    def runCode():
+        print('\nWall at (0.5, 0)')
+        table = CayleyTable()
+        parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
+                      'initial_agent_state': (0, 0),
+                      'world': Gridworld2D(grid_size=(2, 2), wall_positions=[(0.5, 0)]),
+                      'show_calculation': False}  # TODO: remove from here and put in a print function. # TODO: Error when this is True.
+        table.generateCayleyTable(**parameters)
+        print('\nNo walls')
+        print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
+                                                                   len(table.cayley_table_states.columns.values)))
+        print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
+        print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
+        print('\nEquivalence classes:')
+        for i in table.ecs.keys():
+            print('    {0}:\t\t\t{1}'.format(i, table.ecs[i]))
+        return table
+
+
+    table1 = runCode()
+    table1.saveCayleyTable(file_name='table')
+    tables = [table1]
+
+    # for t1 in tables:
+    #     for t2 in tables:
+    #         if (t1.cayley_table_actions.equals(t2.cayley_table_actions) == False) or (
+    #                 t1.cayley_table_states.equals(t2.cayley_table_states) == False):
+    #             raise Exception(
+    #                 'Tables not equal:\nt1:\n{0}\nt2:\n{1}}'.format(t1.cayley_table_actions, t2.cayley_table_actions))

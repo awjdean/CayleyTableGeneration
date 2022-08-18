@@ -1,11 +1,6 @@
 """
 # TODO:
-    3. Improve efficiency of Cayley table generating code. --> NEXT
-        - Itertools instead of nested for loops.
-    4. Tests for Cayley table generating code.
     5. Find disentangled subspaces (commuting subspaces).
-
-
 """
 import copy
 import itertools
@@ -284,8 +279,7 @@ class CayleyTablePropertyChecker(CayleyTable):
             self.element_order_info = 'No identity, therefore cannot calculate element orders.'
 
         # The maximum order an element can have, if it has a finite order, is the number of elements in the algebra.
-        # max_order = len(self.cayley_table_actions.index)
-        max_order = 1000
+        max_order = len(self.cayley_table_actions.index)
         for a in self.cayley_table_actions.index:
             for e in self.identity_info['identities']:
                 n = 1
@@ -433,8 +427,11 @@ if __name__ == "__main__":
                                }
 
     print('\n{0} gridworld, no walls.'.format(str(grid_size)))
+    # Create Cayley table instance.
     table = CayleyTable()
+    # Generate Cayley table.
     table.generateCayleyTable(**Cayley_table_parameters)
+    # Load Cayley table into the property checker.
     table = CayleyTablePropertyChecker(cayley_table_instance=table)
 
     print('\nCayley table elements (total: {1}):\t{0}'.format(list(table.cayley_table_states.columns.values),
@@ -445,8 +442,8 @@ if __name__ == "__main__":
     table.checkIdentity()
     table.checkInverse()
     table.checkAssociativity()
-    table.findElementOrder()
     table.checkCommutativity()
+    table.findElementOrder()
 
     print_parameters = {'identity': True,
                         'inverse': True,
@@ -472,9 +469,11 @@ if __name__ == "__main__":
                                }
 
     print('\n{0} grid world, walls at {1}.'.format(str(grid_size), str(wall_positions)))
+    # Create Cayley table instance.
     table2 = CayleyTable()
-
+    # Generate Cayley table.
     table2.generateCayleyTable(**Cayley_table_parameters)
+    # Load Cayley table into the property checker.
     table2 = CayleyTablePropertyChecker(cayley_table_instance=table2)
 
     print('\nCayley table elements (total: {1}):\t{0}'.format(list(table2.cayley_table_states.columns.values),
@@ -485,8 +484,8 @@ if __name__ == "__main__":
     table2.checkIdentity()
     table2.checkInverse()
     table2.checkAssociativity()
-    table2.findElementOrder()
     table2.checkCommutativity()
+    table2.findElementOrder()
 
     table2.printPropertiesInfo(**print_parameters)
 
