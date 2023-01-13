@@ -22,7 +22,7 @@ class CayleyTablePropertyChecker(CayleyTable):
             self.action_label_to_state = cayley_table_instance.action_label_to_state
             self.action_to_state = cayley_table_instance.action_to_state
             self.ecs = cayley_table_instance.ecs
-            self.world_params = cayley_table_instance.world_params
+            self.world_params = cayley_table_instance.CAYLEY_TABLE_PARAMETERS
 
         # Properties
         self.identity_info = None
@@ -52,7 +52,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         for e_L in self.cayley_table_actions.index:
             for a in self.cayley_table_actions.index:
                 # Look up the outcome of the LHS of the left identity equation using the action Cayley table.
-                LHS_outcome = self.findOutcomeCayley(left_action=e_L, right_action=a)
+                LHS_outcome = self.find_outcome_cayley(left_action=e_L, right_action=a)
 
                 # Outcome for the RHS of the left identity equation is just the element a.
                 RHS_outcome = a
@@ -75,7 +75,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         for e_R in self.cayley_table_actions.index:
             for a in self.cayley_table_actions.index:
                 # Look up the outcome of the LHS of the right identity equation using the action Cayley table.
-                LHS_outcome = self.findOutcomeCayley(left_action=a, right_action=e_R)
+                LHS_outcome = self.find_outcome_cayley(left_action=a, right_action=e_R)
 
                 # Outcome for the RHS of the right identity equation is just the element a.
                 RHS_outcome = a
@@ -132,7 +132,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         for a in self.cayley_table_actions.index:
             for l_inv_a in self.cayley_table_actions.index:
                 # Look up the outcome of the LHS of the left inverse equation using the action Cayley table.
-                LHS_outcome = self.findOutcomeCayley(left_action=l_inv_a, right_action=a)
+                LHS_outcome = self.find_outcome_cayley(left_action=l_inv_a, right_action=a)
 
                 # RHS of left inverse equation could be any right identity.
                 for e_R in self.identity_info['right_identities']:
@@ -158,7 +158,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         for a in self.cayley_table_actions.index:
             for r_inv_a in self.cayley_table_actions.index:
                 # Look up the outcome of the LHS of the right inverse equation using the action Cayley table.
-                LHS_outcome = self.findOutcomeCayley(left_action=a, right_action=r_inv_a)
+                LHS_outcome = self.find_outcome_cayley(left_action=a, right_action=r_inv_a)
 
                 # RHS of right inverse equation could be any left identity.
                 for e_L in self.identity_info['left_identities']:
@@ -230,17 +230,17 @@ class CayleyTablePropertyChecker(CayleyTable):
                     # Calculate LHS of associativity equation: a * (b * c).
                     ####################################################################################################
                     # Calculate (b * c).
-                    LHS_bracket_outcome = self.findOutcomeCayley(left_action=b, right_action=c)
+                    LHS_bracket_outcome = self.find_outcome_cayley(left_action=b, right_action=c)
                     # Calculate a * (b * c).
-                    LHS_outcome = self.findOutcomeCayley(left_action=a, right_action=LHS_bracket_outcome)
+                    LHS_outcome = self.find_outcome_cayley(left_action=a, right_action=LHS_bracket_outcome)
 
                     ####################################################################################################
                     # Calculate RHS of associativity equation: (a * b) * c.
                     ####################################################################################################
                     # Calculate (a * b).
-                    RHS_bracket_outcome = self.findOutcomeCayley(left_action=a, right_action=b)
+                    RHS_bracket_outcome = self.find_outcome_cayley(left_action=a, right_action=b)
                     # Calculate (a * b) * c.
-                    RHS_outcome = self.findOutcomeCayley(left_action=RHS_bracket_outcome, right_action=c)
+                    RHS_outcome = self.find_outcome_cayley(left_action=RHS_bracket_outcome, right_action=c)
 
                     ####################################################################################################
                     # Check associativity equation.
@@ -294,7 +294,7 @@ class CayleyTablePropertyChecker(CayleyTable):
                 while True:
                     n += 1
 
-                    a_outcome = self.findOutcomeCayley(left_action=a, right_action=a_outcome)
+                    a_outcome = self.find_outcome_cayley(left_action=a, right_action=a_outcome)
 
                     # If the element a_outcome is an identity element, then element a has an order of n.
                     if a_outcome == e:
@@ -338,10 +338,10 @@ class CayleyTablePropertyChecker(CayleyTable):
             self.commutativity_info['non_commuting_elements'][a] = []
             for b in self.cayley_table_actions.index:
                 # Calculate the LHS of the commutativity equation (a * b).
-                LHS_outcome = self.findOutcomeCayley(left_action=a, right_action=b)
+                LHS_outcome = self.find_outcome_cayley(left_action=a, right_action=b)
 
                 # Calculate the RHS of the commutativity equation (b * a).
-                RHS_outcome = self.findOutcomeCayley(left_action=b, right_action=a)
+                RHS_outcome = self.find_outcome_cayley(left_action=b, right_action=a)
 
                 # If LHS_outcome = RHS_outcome, then store that a,b commute.
                 if LHS_outcome == RHS_outcome:
@@ -413,14 +413,14 @@ class CayleyTablePropertyChecker(CayleyTable):
 
 if __name__ == "__main__":
     initial_agent_state = (0, 0)
-    grid_size = (3, 2)
+    grid_size = (3, 3)
 
     ####################################################################################################################
     # No walls
     ####################################################################################################################
     t0 = time.time()
 
-    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
+    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', '1'],
                                'initial_agent_state': initial_agent_state,
                                'world': Gridworld2D(grid_size=grid_size,
                                                     wall_positions=[]),
@@ -430,7 +430,7 @@ if __name__ == "__main__":
     # Create Cayley table instance.
     table = CayleyTable()
     # Generate Cayley table.
-    table.generateCayleyTable(**Cayley_table_parameters)
+    table.generate_cayley_table(**Cayley_table_parameters)
     # Load Cayley table into the property checker.
     table = CayleyTablePropertyChecker(cayley_table_instance=table)
 
@@ -462,7 +462,7 @@ if __name__ == "__main__":
 
     wall_positions = [(0.5, 0)]
 
-    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', 'D', '1'],
+    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', '1'],
                                'initial_agent_state': initial_agent_state,
                                'world': Gridworld2D(grid_size=grid_size,
                                                     wall_positions=wall_positions),
@@ -472,7 +472,7 @@ if __name__ == "__main__":
     # Create Cayley table instance.
     table2 = CayleyTable()
     # Generate Cayley table.
-    table2.generateCayleyTable(**Cayley_table_parameters)
+    table2.generate_cayley_table(**Cayley_table_parameters)
     # Load Cayley table into the property checker.
     table2 = CayleyTablePropertyChecker(cayley_table_instance=table2)
 

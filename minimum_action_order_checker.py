@@ -32,7 +32,7 @@ def checkMinimumActionOrderAffectOnTableSize(**parameters):
                   }
 
         table = CayleyTable()
-        table.generateCayleyTable(**params)
+        table.generate_cayley_table(**params)
 
         results[permutation] = table.cayley_table_actions.shape
 

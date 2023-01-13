@@ -23,7 +23,7 @@ for permutation in itertools.permutations(minimum_actions, len(minimum_actions))
               }
 
     agent = CayleyAgent(**params)
-    table, state_labelling = agent.generateCayleyTable()
+    table, state_labelling = agent.generate_cayley_table()
     information[permutation] = table.shape
 
 print(information)

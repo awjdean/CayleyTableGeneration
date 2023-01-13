@@ -106,33 +106,34 @@ class Gridworld2D:
         self.wall_positions = wall_positions
 
         self.action_list = ['1', 'L', 'R', 'U', 'D']
-        self.__agent_position__ = None
+        self._agent_position = None
 
         self.states_list = []
         for i in range(grid_size[0]):
             for j in range(grid_size[1]):
                 self.states_list.append((i, j))
 
-        self.transition_matrix = generateTransitionMatrix(grid_size=grid_size, action_list=self.action_list,
+        self.transition_matrix = generateTransitionMatrix(grid_size=grid_size,
+                                                          action_list=self.action_list,
                                                           wall_positions=self.wall_positions)
 
     # (a % 0.5 == 0) and not (a % 1 == 0)
 
     def resetAgentState(self, position=(0, 0)):
-        self.__agent_position__ = position
+        self._agent_position = position
 
     def applyAgentAction(self, action):
         if action not in self.action_list:
             raise Exception('action "{}" does not exist.'.format(action))
 
-        self.__agent_position__ = self.transition_matrix[
-            (self.__agent_position__[0], self.__agent_position__[1], action)]
+        # self._agent_position = self.transition_matrix[(self._agent_position[0], self._agent_position[1], action)]
+        self._agent_position = self.transition_matrix[(*self._agent_position, action)]
 
     def returnAgentPosition(self):
         """
         Returns the current position of the agent.
         """
-        return self.__agent_position__
+        return self._agent_position
 
     def drawWorld(self):
         pass

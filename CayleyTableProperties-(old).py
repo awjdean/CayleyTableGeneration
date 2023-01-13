@@ -14,10 +14,10 @@ class CayleyTablePropertyChecker(CayleyTable):
         for e in self.cayley_table_actions.index:
             for a in self.cayley_table_actions.index:
                 # Find the outcome of the LHS of the left identity equation.
-                left_outcome_state = self.findOutcomeCayley(left_action=e, right_action=a, return_state_outcome=True)
+                left_outcome_state = self.find_outcome_cayley(left_action=e, right_action=a, return_state_outcome=True)
 
                 # Find the outcome of the RHS of the left identity equation.
-                right_outcome_state = self.findOutcomeCayley(left_action=a, return_state_outcome=True)
+                right_outcome_state = self.find_outcome_cayley(left_action=a, return_state_outcome=True)
 
                 # If the left identity equation is not satisfied, then e is not a left identity element and so remove
                 # e from the list of possible left identities and stop checking if e satisfies the left identity
@@ -36,10 +36,10 @@ class CayleyTablePropertyChecker(CayleyTable):
         for e in self.cayley_table_actions.index:
             for a in self.cayley_table_actions.index:
                 # Find the outcome of the LHS of the right identity equation.
-                left_outcome_state = self.findOutcomeCayley(left_action=a, right_action=e, return_state_outcome=True)
+                left_outcome_state = self.find_outcome_cayley(left_action=a, right_action=e, return_state_outcome=True)
 
                 # Find the outcome of the RHS of the right identity equation.
-                right_outcome_state = self.findOutcomeCayley(left_action=a, return_state_outcome=True)
+                right_outcome_state = self.find_outcome_cayley(left_action=a, return_state_outcome=True)
 
                 # If the right identity equation is not satisfied, then e is not a right identity element and so
                 # remove e from the list of possible right identities and stop checking if e satisfies the right
@@ -74,7 +74,7 @@ if __name__ == "__main__":
                   'initial_agent_state': (0, 0),
                   'world': Gridworld2D(grid_size=(2, 2), wall_positions=[(0.5, 0)]),
                   'show_calculation': False}  # TODO: remove from here and put in a print function. # TODO: Error when this is True.
-    table.generateCayleyTable(**parameters)
+    table.generate_cayley_table(**parameters)
     print('\n')
     print(table.cayley_table_actions)
     # table.checkIdentity()
