@@ -22,7 +22,7 @@ class CayleyTablePropertyChecker(CayleyTable):
             self.action_label_to_state = cayley_table_instance.action_label_to_state
             self.action_to_state = cayley_table_instance.action_to_state
             self.ecs = cayley_table_instance.ecs
-            self.world_params = cayley_table_instance.CAYLEY_TABLE_PARAMETERS
+            self.world_params = cayley_table_instance._cayley_table_parameters
 
         # Properties
         self.identity_info = None
