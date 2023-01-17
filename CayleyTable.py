@@ -76,6 +76,7 @@ def returnNextIndices(current_index, table_shape):
 
 
 ########################################################################################################################
+# TODO: parallelise this.
 def add_element_to_state_cayley_table(element,
                                       state_cayley_table,
                                       find_outcome_agent_function,
@@ -157,7 +158,100 @@ def find_outcome_agent(action_sequence, outcome_agent_params):
 
 
 ########################################################################################################################
+import concurrent.futures
+
 def find_element_equivalents_in_state_cayley_table(element, state_cayley_table, outcome_agent_params):
+    """
+    This attempt failed due to
+    Generates the state Cayley table row and column for the input element then
+    :param element:
+    :param state_cayley_table: pandas dataframe
+    :param outcome_agent_params:
+    :return:
+    """
+    # TODO: docstring function.
+    # TODO: improve efficiency of this.
+    # 1. Convert to numpy and use matrix operations ?
+    # 2. Store rows and columns for each matrix
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # TODO: change to function - also used in add_element_to_cayley_table function
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        element_row = list(executor.map(lambda column_label: find_outcome_agent(action_sequence=(column_label + element),
+                                                                                outcome_agent_params=outcome_agent_params),
+                                        state_cayley_table.columns))
+
+        element_column = list(executor.map(lambda row_label: find_outcome_agent(action_sequence=(element + row_label),
+                                                                                outcome_agent_params=outcome_agent_params),
+                                           state_cayley_table.index))
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    # Compare row and column of this element to the rows and columns of the elements in the state Cayley table.
+    equivalents_found = set()
+    for cayley_element_index in range(len(state_cayley_table.index)):
+        # TODO: check this
+        cayley_element_row = list(state_cayley_table.iloc[cayley_element_index])
+        cayley_element_column = list(state_cayley_table.iloc[:, cayley_element_index])
+
+        if (cayley_element_row == element_row) and (cayley_element_column == element_column):
+            equivalents_found.add((state_cayley_table.index[cayley_element_index], element))
+
+    return equivalents_found
+
+
+
+
+
+
+
+
+
+
+
+def old_2find_element_equivalents_in_state_cayley_table(element, state_cayley_table, outcome_agent_params):
+    """
+    This attempt failed due to
+    Generates the state Cayley table row and column for the input element then
+    :param element:
+    :param state_cayley_table: pandas dataframe
+    :param outcome_agent_params:
+    :return:
+    """
+    # TODO: docstring function.
+    # TODO: improve efficiency of this.
+    # 1. Convert to numpy and use matrix operations ?
+    # 2. Store rows and columns for each matrix
+
+    # ------------------------------------------------------------------------------------------------------------------
+    # TODO: change to function - also used in add_element_to_cayley_table function
+
+    with concurrent.futures.ThreadPoolExecutor() as executor:
+        element_row = list(executor.map(lambda column_label: find_outcome_agent(action_sequence=(column_label + element),
+                                                                                outcome_agent_params=outcome_agent_params),
+                                        state_cayley_table.columns))
+
+        element_column = list(executor.map(lambda row_label: find_outcome_agent(action_sequence=(element + row_label),
+                                                                                outcome_agent_params=outcome_agent_params),
+                                           state_cayley_table.index))
+
+    # ------------------------------------------------------------------------------------------------------------------
+
+    # Compare row and column of this element to the rows and columns of the elements in the state Cayley table.
+    equivalents_found = set()
+    for cayley_element_index in range(len(state_cayley_table.index)):
+        # TODO: check this
+        cayley_element_row = list(state_cayley_table.iloc[cayley_element_index])
+        cayley_element_column = list(state_cayley_table.iloc[:, cayley_element_index])
+
+        if (cayley_element_row == element_row) and (cayley_element_column == element_column):
+            equivalents_found.add((state_cayley_table.index[cayley_element_index], element))
+
+    return equivalents_found
+
+
+def old_find_element_equivalents_in_state_cayley_table(element, state_cayley_table, outcome_agent_params):
     """
     Generates the state Cayley table row and column for the input element then
     :param element:
@@ -200,7 +294,6 @@ def find_element_equivalents_in_state_cayley_table(element, state_cayley_table, 
             equivalents_found.add((state_cayley_table.index[cayley_element_index], element))
 
     return equivalents_found
-
 
 ########################################################################################################################
 def find_equivalents_in_state_cayley_table(state_cayley_table):
@@ -614,6 +707,7 @@ class CayleyTable:
         ################################################################################################################
         # Part V
         # Action Cayley table.
+        # TODO: need to check.
         ################################################################################################################
         print('\nGenerating action Cayley table.')
         tx = time.time()

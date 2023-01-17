@@ -1,0 +1,36 @@
+table1
+Equivalence class(es) split. Candidate element: RUR.
+
+table2
+Equivalence class(es) split. Candidate element: RURR.
+
+table3
+No equivalence classes split.
+
+table4
+Equivalence class(es) split. Candidate element: RU.
+
+table5
+Equivalence class(es) split. Candidate element: LU.
+
+table6
+No equivalence classes split. candidate elements high = 103
+
+table7
+No equivalence classes split. candidate elements high = 87
+
+
+
+table 6 vs table 7:
+
+table 6 has URL, table 7 has URR
+
+table 6 has URLU, table 7 has ULRU
+
+table 6 has ULUUR, table 7 has URRU
+
+table 6 has ULUULU, table 7 has ULUULUU
+
+Check if state Cayley tables are the same expect for labelling - if so, then this is just an action labelling issue.
+
+
