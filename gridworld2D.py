@@ -1,8 +1,6 @@
 # TODO: world drawer.
 
 
-import numpy as np
-
 
 def makeWorldCyclical(new_state, grid_size):
     if new_state[0] == -1:
@@ -97,15 +95,16 @@ class Gridworld2D:
     Walls have half integer positions to put them between states.
     """
 
-    def __init__(self, grid_size=(5, 5), wall_positions=[]):
+    def __init__(self, **kwargs):
         """
-
         :param grid_size: tuple
         :param wall_positions: list of tuples
         """
-        self.wall_positions = wall_positions
 
-        self.action_list = ['1', 'L', 'R', 'U', 'D']
+        self.wall_positions = kwargs.get('wall_positions', [])
+        grid_size = kwargs.get('grid_size', (2, 2))
+
+        self._action_list = ['1', 'L', 'R', 'U', 'D']
         self._agent_position = None
 
         self.states_list = []
@@ -114,16 +113,14 @@ class Gridworld2D:
                 self.states_list.append((i, j))
 
         self.transition_matrix = generateTransitionMatrix(grid_size=grid_size,
-                                                          action_list=self.action_list,
+                                                          action_list=self._action_list,
                                                           wall_positions=self.wall_positions)
-
-    # (a % 0.5 == 0) and not (a % 1 == 0)
 
     def resetAgentState(self, position=(0, 0)):
         self._agent_position = position
 
     def applyAgentAction(self, action):
-        if action not in self.action_list:
+        if action not in self._action_list:
             raise Exception('action "{}" does not exist.'.format(action))
 
         # self._agent_position = self.transition_matrix[(self._agent_position[0], self._agent_position[1], action)]
