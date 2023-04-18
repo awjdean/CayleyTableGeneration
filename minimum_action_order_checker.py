@@ -4,7 +4,7 @@ This function checks if the size of the Cayley table changes if the order of the
 """
 ##############################################
 from CayleyTable import CayleyTable
-from gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D
 import itertools
 
 ##############################################

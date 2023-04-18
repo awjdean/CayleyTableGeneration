@@ -1,7 +1,6 @@
-import numpy as np
 import itertools
 
-from gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D
 
 
 ###
@@ -29,12 +28,12 @@ def calculateEquivalenceClasses(**parameters):
 
     # Find state outcome of action sequences.
     for action_sequence in words:
-        env.resetAgentState(position=initial_agent_position)
+        env.reset_agent_state(position=initial_agent_position)
 
         for action in action_sequence[::-1]:
-            env.applyAgentAction(action=action)
+            env.apply_minimum_agent_action(action=action)
 
-        information['equivalence classes'][env.returnAgentPosition()].append(action_sequence)
+        information['equivalence classes'][env.return_agent_position()].append(action_sequence)
 
     return information
 

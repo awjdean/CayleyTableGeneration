@@ -3,11 +3,9 @@
     5. Find disentangled subspaces (commuting subspaces).
 """
 import copy
-import itertools
 import time
 
 from CayleyTable import CayleyTable
-from gridworld2D import Gridworld2D
 
 
 class CayleyTablePropertyChecker(CayleyTable):
@@ -18,9 +16,6 @@ class CayleyTablePropertyChecker(CayleyTable):
             # generateCayleyTable
             self.cayley_table_states = cayley_table_instance.cayley_table_states
             self.cayley_table_actions = cayley_table_instance.cayley_table_actions
-            self.state_to_action_label = cayley_table_instance.state_to_action_label
-            self.action_label_to_state = cayley_table_instance.action_label_to_state
-            self.action_to_state = cayley_table_instance.action_to_state
             self.ecs = cayley_table_instance.ecs
             self.world_params = cayley_table_instance._cayley_table_parameters
 
@@ -366,17 +361,17 @@ class CayleyTablePropertyChecker(CayleyTable):
             if set(self.commutativity_info['commuting_elements'][a]) == set(self.cayley_table_actions.index):
                 self.commutativity_info['commute_with_all'].append(a)
 
-    def printPropertiesInfo(self, **print_parameters):
+    def printPropertiesInfo(self, **kwargs):
         """
 
         :param print_parameters:
         :return:
         """
-        identity = print_parameters['identity']
-        inverse = print_parameters['inverse']
-        associativity = print_parameters['associativity']
-        commutativity = print_parameters['commutativity']
-        element_order = print_parameters['element_order']
+        identity = kwargs.get('identity', True)
+        inverse = kwargs.get('inverse', True)
+        associativity = kwargs.get('associativity', True)
+        commutativity = kwargs.get('commutativity', True)
+        element_order = kwargs.get('element_order', True)
 
         if identity:
             print('\nidentity info:')
@@ -412,81 +407,110 @@ class CayleyTablePropertyChecker(CayleyTable):
 
 
 if __name__ == "__main__":
+    # initial_agent_state = (0, 0)
+    # grid_size = (3, 3)
+    #
+    # ####################################################################################################################
+    # # No walls
+    # ####################################################################################################################
+    # t0 = time.time()
+    #
+    # Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', '1'],
+    #                            'initial_agent_state': initial_agent_state,
+    #                            'world': Gridworld2D(grid_size=grid_size,
+    #                                                 wall_positions=[]),
+    #                            }
+    #
+    # print('\n{0} gridworld, no walls.'.format(str(grid_size)))
+    # # Create Cayley table instance.
+    # table = CayleyTable()
+    # # Generate Cayley table.
+    # table.generate_cayley_table(**Cayley_table_parameters)
+    # # Load Cayley table into the property checker.
+    # table = CayleyTablePropertyChecker(cayley_table_instance=table)
+    #
+    # print('\nCayley table elements (total: {1}):\t{0}'.format(list(table.cayley_table_states.columns.values),
+    #                                                           len(table.cayley_table_states.columns.values)))
+    # print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
+    # print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
+    #
+    # table.checkIdentity()
+    # table.checkInverse()
+    # table.checkAssociativity()
+    # table.checkCommutativity()
+    # table.findElementOrder()
+    #
+    # print_parameters = {'identity': True,
+    #                     'inverse': True,
+    #                     'associativity': True,
+    #                     'element_order': True,
+    #                     'commutativity': True,
+    #                     }
+    # table.printPropertiesInfo(**print_parameters)
+    #
+    # print('\nTime taken: {0:0.2f}s'.format(time.time()-t0))
+    # print('\n#########################################################################################################')
+    # ####################################################################################################################
+    # # Walls
+    # ####################################################################################################################
+    # t0 = time.time()
+    #
+    # wall_positions = [(0.5, 0)]
+    #
+    # Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', '1'],
+    #                            'initial_agent_state': initial_agent_state,
+    #                            'world': Gridworld2D(grid_size=grid_size,
+    #                                                 wall_positions=wall_positions),
+    #                            }
+    #
+    # print('\n{0} grid world, walls at {1}.'.format(str(grid_size), str(wall_positions)))
+    # # Create Cayley table instance.
+    # table2 = CayleyTable()
+    # # Generate Cayley table.
+    # table2.generate_cayley_table(**Cayley_table_parameters)
+    # # Load Cayley table into the property checker.
+    # table2 = CayleyTablePropertyChecker(cayley_table_instance=table2)
+    #
+    # print('\nCayley table elements (total: {1}):\t{0}'.format(list(table2.cayley_table_states.columns.values),
+    #                                                           len(table2.cayley_table_states.columns.values)))
+    # print('\nState Cayley table: \n{0}'.format(table2.cayley_table_states.to_string()))
+    # print('\nAction Cayley table: \n{0}'.format((table2.cayley_table_actions.to_string())))
+    #
+    # table2.checkIdentity()
+    # table2.checkInverse()
+    # table2.checkAssociativity()
+    # table2.checkCommutativity()
+    # table2.findElementOrder()
+    #
+    # table2.printPropertiesInfo(**print_parameters)
+    #
+    # print('\nTime taken: {0:0.2f}s'.format(time.time() - t0))
+
+    ####################################################################################################################
+    # Load table and perform tests
+    ####################################################################################################################
+
+    grid_size = (2, 2)
+    wall_positions = []
     initial_agent_state = (0, 0)
-    grid_size = (3, 3)
+    minimum_actions = ['U', 'R', 'L', 'D', 'D', '1']
 
-    ####################################################################################################################
-    # No walls
-    ####################################################################################################################
     t0 = time.time()
+    if len(wall_positions) == 0:
+        table_name = f"table_{grid_size[0]}x{grid_size[1]}_no_walls_w{str(initial_agent_state).replace(', ', '_')}"
+        # TODO: replace thing for agent state ?
+    else:
+        table_name = f"table_{grid_size[0]}x{grid_size[1]}_wall_{str(wall_positions).replace(', ', '_')}_identity_w{str(initial_agent_state).replace(', ', '_')}"
 
-    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', '1'],
-                               'initial_agent_state': initial_agent_state,
-                               'world': Gridworld2D(grid_size=grid_size,
-                                                    wall_positions=[]),
-                               }
-
-    print('\n{0} gridworld, no walls.'.format(str(grid_size)))
-    # Create Cayley table instance.
     table = CayleyTable()
-    # Generate Cayley table.
-    table.generate_cayley_table(**Cayley_table_parameters)
-    # Load Cayley table into the property checker.
-    table = CayleyTablePropertyChecker(cayley_table_instance=table)
+    table.load_cayley_table(file_name=table_name)
+    property_checker = CayleyTablePropertyChecker(cayley_table_instance=table)
+    property_checker.checkIdentity()
+    property_checker.checkInverse()
+    property_checker.checkAssociativity()
+    property_checker.checkCommutativity()
+    property_checker.findElementOrder()
 
-    print('\nCayley table elements (total: {1}):\t{0}'.format(list(table.cayley_table_states.columns.values),
-                                                              len(table.cayley_table_states.columns.values)))
-    print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
-    print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
-
-    table.checkIdentity()
-    table.checkInverse()
-    table.checkAssociativity()
-    table.checkCommutativity()
-    table.findElementOrder()
-
-    print_parameters = {'identity': True,
-                        'inverse': True,
-                        'associativity': True,
-                        'element_order': True,
-                        'commutativity': True,
-                        }
-    table.printPropertiesInfo(**print_parameters)
-
-    print('\nTime taken: {0:0.2f}s'.format(time.time()-t0))
-    print('\n#########################################################################################################')
-    ####################################################################################################################
-    # Walls
-    ####################################################################################################################
-    t0 = time.time()
-
-    wall_positions = [(0.5, 0)]
-
-    Cayley_table_parameters = {'minimum_actions': ['U', 'R', 'L', 'D', '1'],
-                               'initial_agent_state': initial_agent_state,
-                               'world': Gridworld2D(grid_size=grid_size,
-                                                    wall_positions=wall_positions),
-                               }
-
-    print('\n{0} grid world, walls at {1}.'.format(str(grid_size), str(wall_positions)))
-    # Create Cayley table instance.
-    table2 = CayleyTable()
-    # Generate Cayley table.
-    table2.generate_cayley_table(**Cayley_table_parameters)
-    # Load Cayley table into the property checker.
-    table2 = CayleyTablePropertyChecker(cayley_table_instance=table2)
-
-    print('\nCayley table elements (total: {1}):\t{0}'.format(list(table2.cayley_table_states.columns.values),
-                                                              len(table2.cayley_table_states.columns.values)))
-    print('\nState Cayley table: \n{0}'.format(table2.cayley_table_states.to_string()))
-    print('\nAction Cayley table: \n{0}'.format((table2.cayley_table_actions.to_string())))
-
-    table2.checkIdentity()
-    table2.checkInverse()
-    table2.checkAssociativity()
-    table2.checkCommutativity()
-    table2.findElementOrder()
-
-    table2.printPropertiesInfo(**print_parameters)
+    property_checker.printPropertiesInfo()
 
     print('\nTime taken: {0:0.2f}s'.format(time.time() - t0))

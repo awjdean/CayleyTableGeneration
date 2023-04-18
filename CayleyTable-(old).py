@@ -1,6 +1,5 @@
-from gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D
 
-import itertools
 import copy
 import numpy as np
 import pandas as pd
@@ -88,10 +87,10 @@ class CayleyTable:
 
         ### Label states with minimum actions (if possible).
         for action_sequence in minimum_actions:
-            world.resetAgentState(position=initial_agent_state)
+            world.reset_agent_state(position=initial_agent_state)
             for action in action_sequence[::-1]:
-                world.applyAgentAction(action=action)
-            end_world_state = world.returnAgentPosition()
+                world.apply_minimum_agent_action(action=action)
+            end_world_state = world.return_agent_position()
 
             if end_world_state not in self.state_to_action_label.keys():
                 # Update labelling dictionaries.
@@ -118,10 +117,10 @@ class CayleyTable:
             action_sequence = left_action_sequence + right_action_sequence
 
             # Fine outcome of action sequence as a world state.
-            world.resetAgentState()
+            world.reset_agent_state()
             for action in action_sequence[::-1]:
-                world.applyAgentAction(action=action)
-            end_world_state = world.returnAgentPosition()
+                world.apply_minimum_agent_action(action=action)
+            end_world_state = world.return_agent_position()
 
             if end_world_state not in self.state_to_action_label.keys():
                 # Add extra column and extra row to Cayley table for the action action_sequence,

@@ -23,7 +23,7 @@ RETURN: if identity element is present and what that identity element is.
 import copy
 
 from CayleyTable import CayleyTable
-from gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D
 
 ##############################################
 

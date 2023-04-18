@@ -59,7 +59,7 @@
     4. 3D gridworld.
     5. Graph world.
 """
-from gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D
 
 import itertools
 import copy
@@ -106,7 +106,6 @@ def returnNextIndices(current_index, table_shape):
 
 
 ########################################################################################################################
-from multiprocessing import Pool, cpu_count
 
 import concurrent.futures
 
@@ -260,11 +259,11 @@ def check_each_action_sequence_in_single_equivalence_class(equivalence_classes):
 ########################################################################################################################
 def find_outcome_agent(action_sequence, world, initial_agent_state):
     # TODO: remove need for reset - make world initialise with agent in initial_state + only copies of the world should be used in these functions.
-    world.resetAgentState(position=initial_agent_state)
+    world.reset_agent_state(position=initial_agent_state)
     for action in action_sequence[::-1]:
-        world.applyAgentAction(action=action)
+        world.apply_minimum_agent_action(action=action)
 
-    return world.returnAgentPosition()
+    return world.return_agent_position()
 
 
 ########################################################################################################################
@@ -342,9 +341,10 @@ def find_broken_equivalence_classes(candidate_element, ecs, world, initial_agent
     equivalence class and equivalence class element (e) needs to be split into its own equivalence
     class.
 
+    :param world:
+    :param initial_agent_state:
     :param candidate_element:
     :param ecs:
-    :param outcome_agent_params:
     :return:
     """
     temp_ecs = {}
@@ -935,11 +935,11 @@ if __name__ == "__main__":
     print('\nAction Cayley table equivalence classes:')
     for i in table.cayley_table_ecs.keys():
         print('    {0}:\t\t\t{1}'.format(i, table.cayley_table_ecs[i]))
-    table.save_cayley_table(file_name=f'table_{grid_size[0]}x{grid_size[1]}_no_walls_s4')
+    table.save_cayley_table(file_name=f"table_{grid_size[0]}x{grid_size[1]}_no_walls_w{str(initial_agent_state).replace(', ', '_')}")
     print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
 
     t0 = time.time()
-    print('\nWall at (0.5, 0)')
+    print('\nIdentity walls')
     table = CayleyTable()
     parameters = {'minimum_actions': minimum_actions,
                   'initial_agent_state': initial_agent_state,
@@ -956,6 +956,6 @@ if __name__ == "__main__":
     print('\nAction Cayley table equivalence classes:')
     for i in table.cayley_table_ecs.keys():
         print('    {0}:\t\t\t{1}'.format(i, table.cayley_table_ecs[i]))
-    file_name = f'table_{grid_size[0]}x{grid_size[1]}_wall_{str(wall_positions).replace(", ", "_")}_identity_s4'
+    file_name = f"table_{grid_size[0]}x{grid_size[1]}_wall_{str(wall_positions).replace(', ', '_')}_identity_w{str(initial_agent_state).replace(', ', '_')}"
     table.save_cayley_table(file_name=file_name)
     print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')

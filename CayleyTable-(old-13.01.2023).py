@@ -32,12 +32,11 @@
     1. Figure out
 """
 
-from gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D
 
 # from numba import jit
 import itertools
 import copy
-import numpy as np
 import pandas as pd
 import os
 import pickle
@@ -153,10 +152,10 @@ def find_outcome_agent(action_sequence, outcome_agent_params):
     initial_agent_state = outcome_agent_params['initial_agent_state']
     world = outcome_agent_params['world']
 
-    world.resetAgentState(position=initial_agent_state)
+    world.reset_agent_state(position=initial_agent_state)
     for action in action_sequence[::-1]:
-        world.applyAgentAction(action=action)
-    end_world_state = world.returnAgentPosition()
+        world.apply_minimum_agent_action(action=action)
+    end_world_state = world.return_agent_position()
 
     return end_world_state
 

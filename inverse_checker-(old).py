@@ -9,8 +9,7 @@ Inverse condition: for every element a, there exists an element inv_a such that:
 import copy
 
 from CayleyAgent import CayleyAgent
-from gridworld2D import Gridworld2D
-import itertools
+from Environments.gridworld2D import Gridworld2D
 
 ##############################################
 

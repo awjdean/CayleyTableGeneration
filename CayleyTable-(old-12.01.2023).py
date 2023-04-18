@@ -8,11 +8,9 @@
     5.
 """
 
-from gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D
 
-import itertools
 import copy
-import numpy as np
 import pandas as pd
 import os
 import pickle
@@ -702,10 +700,10 @@ class CayleyTable:
         :param return_state_outcome:
         :return:
         """
-        world.resetAgentState(position=initial_agent_state)
+        world.reset_agent_state(position=initial_agent_state)
         for action in action_sequence[::-1]:
-            world.applyAgentAction(action=action)
-        end_world_state = world.returnAgentPosition()
+            world.apply_minimum_agent_action(action=action)
+        end_world_state = world.return_agent_position()
 
         if return_state_outcome:
             return end_world_state
