@@ -29,6 +29,7 @@
     1. Work out theoretical maximum Cayley table size for 2D gridworlds --> provides an error check.
 
 # TODO (improving efficiency):
+    0. Use dictionaries instead of Pandas dataframes, then put final result into Pandas dataframe.
     1. Put generate_state_cayley_row and generate_state_cayley_column functions in action Cayley table generation section.
         - Looks like it's the find_element_equivalents_in_state_cayley_table function.
     2. Test parallelisation to find out which method is better.
@@ -42,24 +43,21 @@
     1. Check that there are no NAN's in action Cayley table.
     2. At end create new state Cayley table with the labelling rows and columns, then fill it in and compare to generated state Cayley table.
         - Iterate through process, then set equivalence class labelling elements as minimum_actions, run again then check if two results are the same.
-    3. Should be able to move from one algebra to another with a different initial state by applying the relevant operation to every elemetn in the Cayley table
+    3. Should be able to move from one algebra to another with a different initial state by applying the relevant operation to every element in the Cayley table
 
 # TODO (additional functionality):
-    1. World plotted for 2D gridworld.
-        - Plot the location of the agent in the world.
     2. Find out if two Cayley tables are equivalent
     3. Reproducing world structure from Cayley table.
         - Does the Cayley table hold all the information of the transition algebra ?
     4.
 
 # TODO (environments):
-    1. Environment for masked actions being undefined.
     2. Environment for agent moving block in 1D.
     3. Environment for agent moving block in 2D.
     4. 3D gridworld.
     5. Graph world.
 """
-from Environments.gridworld2D import Gridworld2D
+from Environments.gridworld2D import Gridworld2D, Strategy
 
 import itertools
 import copy
@@ -917,6 +915,7 @@ if __name__ == "__main__":
     print(f"\tinitial_agent_state: {initial_agent_state}")
     print(f"\tminimum_actions: {minimum_actions}")
 
+    # No walls.
     t0 = time.time()
     print('\nNo walls')
     table = CayleyTable()
@@ -938,12 +937,13 @@ if __name__ == "__main__":
     table.save_cayley_table(file_name=f"table_{grid_size[0]}x{grid_size[1]}_no_walls_w{str(initial_agent_state).replace(', ', '_')}")
     print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
 
+    # Masked walls.
     t0 = time.time()
     print('\nIdentity walls')
     table = CayleyTable()
     parameters = {'minimum_actions': minimum_actions,
                   'initial_agent_state': initial_agent_state,
-                  'world': Gridworld2D(grid_size=grid_size, wall_positions=wall_positions),
+                  'world': Gridworld2D(grid_size=grid_size, wall_positions=wall_positions, wall_strategy=Strategy.MASKED),
                   }
     table.generate_cayley_table(**parameters)
     print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),

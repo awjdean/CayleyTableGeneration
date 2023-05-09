@@ -1,12 +1,4 @@
-# TODO: change function names to fit PEP8.
-
 import itertools
-
-
-def make_world_cyclical(state, grid_size):
-    return state[0] % grid_size[0], state[1] % grid_size[1]
-
-
 from enum import Enum
 
 
@@ -15,23 +7,68 @@ class Strategy(Enum):
     MASKED = 'masked'
 
 
-def outcome_wall(wall_strategy: Strategy, agent_position):
+def check_variables(grid_size, **kwargs):
+    wall_positions = kwargs.get('wall_positions')
+    wall_strategy = kwargs.get('wall_strategy')
+
+    # Check wall positions are legal and wall strategy is provided if walls provided.
+    if wall_positions is not None:
+        try:
+            assert len(wall_positions) == 0
+        except AssertionError:
+            # Check wall strategy provided.
+            try:
+                assert isinstance(wall_strategy, Strategy)
+            except AssertionError:
+                raise TypeError("Wall strategy does not exist. Please define a wall strategy.")
+
+            # Check wall positions are legal.
+            try:
+                for wall in wall_positions:
+                    assert (wall[0] % 1 == 0.5 and wall[1] % 1 == 0) or (wall[0] % 1 == 0 and wall[1] % 1 == 0.5)
+            except AssertionError:
+                raise ValueError(f"Wall position {wall} not legal.")
+
+
+def make_world_cyclical(state, grid_size):
+    """
+    Converts states that are out of the grid size to the relevant cyclical world states.
+    :param state:
+    :param grid_size:
+    :return:
+    """
+    # state[0] % grid_size[0], state[1] % grid_size[1]
+    return tuple(state[i] % grid_size[i] for i in range(len(grid_size)))
+
+
+def outcome_wall(wall_strategy, agent_position):
     if wall_strategy == Strategy.IDENTITY:
         # Moving into a wall is same as performing noop action.
         return agent_position
 
-    if wall_strategy == Strategy.MASKED:
+    elif wall_strategy == Strategy.MASKED:
         return None
+
+    else:
+        raise Exception(f"Wall strategy does not exist. Current wall_strategy: {wall_strategy}.")
 
 
 def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strategy, grid_size):
-
+    """
+    Modifies the no walls transition matrix by overwriting the elements in the transition matrix where the agent would
+     interact with a wall.
+    :param transition_matrix:
+    :param wall_positions:
+    :param wall_strategy:
+    :param grid_size:
+    :return:
+    """
     if len(wall_positions) > 0:
         for wall in wall_positions:
             # Moving into horizontal blocking wall.
             if wall[0] % 1 == 0.5:
                 # Moving right into wall.
-                agent_position = (wall[0] - 0.5, wall[1])
+                agent_position = (int(wall[0] - 0.5), wall[1])
                 # Ignore agent positions with x-values out of range of states.
                 if 0 <= agent_position[0] <= grid_size[0] - 1:
                     # Moving right into wall performing wall strategy outcome.
@@ -39,7 +76,7 @@ def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strat
                                                                              agent_position=agent_position)
 
                 # Moving left into wall.
-                agent_position = (wall[0] + 0.5, wall[1])
+                agent_position = (int(wall[0] + 0.5), wall[1])
                 # Ignore agent positions with x-values out of range of states.
                 if 0 <= agent_position[0] <= grid_size[0] - 1:
                     # Moving left into wall performing wall strategy outcome.
@@ -49,7 +86,7 @@ def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strat
             # Moving into vertical blocking wall.
             if wall[1] % 1 == 0.5:
                 # Moving up into wall.
-                agent_position = (wall[0], wall[1] - 0.5)
+                agent_position = (wall[0], int(wall[1] - 0.5))
                 # Ignore agent positions with y-values out of range of states.
                 if 0 <= agent_position[1] <= grid_size[1] - 1:
                     # Moving up into wall performing wall strategy outcome.
@@ -57,24 +94,17 @@ def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strat
                                                                              agent_position=agent_position)
 
                 # Moving down into wall.
-                agent_position = (wall[0], wall[1] + 0.5)
+                agent_position = (wall[0], int(wall[1] + 0.5))
                 # Ignore agent positions with y-values out of range of states.
                 if 0 <= agent_position[1] <= grid_size[1] - 1:
                     # Moving down into wall performing wall strategy outcome.
                     transition_matrix[(*agent_position, 'D')] = outcome_wall(wall_strategy=wall_strategy,
                                                                              agent_position=agent_position)
-
     return transition_matrix
 
 
-def generateTransitionMatrix(**kwargs):
-    grid_size = kwargs.get('grid_size')
-    action_list = kwargs.get('action_list')
-    wall_positions = kwargs.get('wall_positions')
-    wall_strategy = kwargs.get('wall_strategy')
-
-
-    # generate agent action look up table
+def generate_no_walls_transition_matrix(grid_size):
+    # Initialise agent action look up table
     transition_matrix = {}
 
     # no op action ('1')
@@ -110,7 +140,15 @@ def generateTransitionMatrix(**kwargs):
         new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
         transition_matrix[(i, j, action)] = new_state
 
-    # Walls.
+    return transition_matrix
+
+
+def generate_transition_matrix(grid_size, **kwargs):
+    action_list = kwargs.get('action_list')
+    wall_positions = kwargs.get('wall_positions')
+    wall_strategy = kwargs.get('wall_strategy')
+
+    transition_matrix = generate_no_walls_transition_matrix(grid_size=grid_size)
     transition_matrix = add_walls_to_transition_matrix(transition_matrix=transition_matrix,
                                                        wall_positions=wall_positions,
                                                        wall_strategy=wall_strategy,
@@ -119,76 +157,9 @@ def generateTransitionMatrix(**kwargs):
     return transition_matrix
 
 
-def generate_transition_matrix(**kwargs):
-    grid_size = kwargs.get('grid_size')
-    action_list = kwargs.get('action_list')
-    wall_positions = kwargs.get('wall_positions')
-
-    # generate agent action look up table.
-    transition_matrix = {}
-
-    ## no op action ('1')
-    action = '1'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        transition_matrix[(i, j, action)] = (i, j)
-
-    ## move left action ('L')
-    action = 'L'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i - 1, j)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-
-        if len(wall_positions) > 0:
-            for wall_position in wall_positions:
-                # if there is a wall to the left of the agent then L action is same as 1 action.
-                if wall_position == (i - 0.5, j):
-                    transition_matrix[(i, j, action)] = (i, j)
-                    break
-
-    ## move right action ('R')
-    action = 'R'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i + 1, j)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-
-        if len(wall_positions) > 0:
-            for wall_position in wall_positions:
-                # if there is a wall to the right of the agent then overwrite transition matrix entry.
-                if wall_position == (i + 0.5, j):
-                    transition_matrix[(i, j, action)] = (i, j)
-
-    ## move up action ('U')
-    action = 'U'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i, j + 1)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-        if len(wall_positions) > 0:
-            for wall_position in wall_positions:
-                # if there is a wall above the agent then overwrite transition matrix entry.
-                if wall_position == (i, j + 0.5):
-                    transition_matrix[(i, j, action)] = (i, j)
-
-    ## move down action ('D')
-    action = 'D'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i, j - 1)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-        if len(wall_positions) > 0:
-            for wall_position in wall_positions:
-                # if there is a wall below the agent then overwrite transition matrix entry.
-                if wall_position == (i, j - 0.5):
-                    transition_matrix[(i, j, action)] = (i, j)
-
-    return transition_matrix
-
-
-def make_walls_cyclical(wall_positions, grid_size):
+def create_cyclical_pseudo_walls(wall_positions, grid_size):
     """
-    Creates extra walls to exhibit the cyclical behaviour of the world.
+    Creates extra 'pseudo' walls to exhibit the cyclical behaviour of the world.
     :param wall_positions:
     :param grid_size:
     :return:
@@ -209,22 +180,23 @@ class Gridworld2D:
     Walls have a half integer position to put them between states.
     """
 
-    def __init__(self, **kwargs):
+    def __init__(self, grid_size, **kwargs):
         """
         :param grid_size: tuple
         :param wall_positions: list of tuples
         """
 
-        self.wall_strategy = kwargs.get('wall_strategy')
-        self._grid_size = kwargs.get('grid_size', (2, 2))
-
-        self._minimum_actions = ['1', 'L', 'R', 'U', 'D']
         self._agent_position = None
 
-        # TODO: legal wall position checker --> raise exceptions
+        check_variables(grid_size, **kwargs)
+        self.wall_strategy = kwargs.get('wall_strategy')
+        self._wall_positions = kwargs.get('wall_positions')
+        self._grid_size = grid_size
+        self._minimum_actions = kwargs.get('minimum_actions', ['1', 'L', 'R', 'U', 'D'])
+
         self._wall_positions = kwargs.get('wall_positions', [])
-        self._wall_positions = make_walls_cyclical(wall_positions=self._wall_positions,
-                                                   grid_size=self._grid_size)
+        self._wall_positions = create_cyclical_pseudo_walls(wall_positions=self._wall_positions,
+                                                            grid_size=self._grid_size)
 
         self.states_list = []
         for i in range(self._grid_size[0]):
@@ -233,10 +205,8 @@ class Gridworld2D:
 
         self.transition_matrix = generate_transition_matrix(grid_size=self._grid_size,
                                                             action_list=self._minimum_actions,
-                                                            wall_positions=self._wall_positions)
-        self.transition_matrix2 = generateTransitionMatrix(grid_size=self._grid_size,
-                                                           action_list=self._minimum_actions,
-                                                           wall_positions=self._wall_positions)
+                                                            wall_positions=self._wall_positions,
+                                                            wall_strategy=self.wall_strategy)
 
     def reset_agent_state(self, position=(0, 0)):
         self._agent_position = position
@@ -245,7 +215,9 @@ class Gridworld2D:
         if action not in self._minimum_actions:
             raise Exception('action "{}" does not exist.'.format(action))
 
-        self._agent_position = self.transition_matrix[(*self._agent_position, action)]
+        # Masked actions.
+        if self._agent_position is not None:
+            self._agent_position = self.transition_matrix[(*self._agent_position, action)]
 
     def return_agent_position(self):
         """
@@ -280,7 +252,7 @@ class Gridworld2D:
             ax.add_patch(circle)
             ax.text(*self._agent_position, 'A', fontsize=12, color='white', ha='center', va='center')
         else:
-            print('Agent position not set, so agent not drawn.')
+            print('Agent position not set so agent not drawn.')
 
         # Plot walls.
         wall_thickness = 0.25
@@ -327,11 +299,13 @@ if __name__ == '__main__':
     world = Gridworld2D(wall_positions=[(0, -0.5), (-0.5, 0)],
                         grid_size=(3, 2),
                         wall_strategy=Strategy.IDENTITY)
-    world.reset_agent_state(position=(0, 0))
-    world.draw_world()
 
+    world2 = Gridworld2D(wall_positions=[(0, -0.5), (-0.5, 0)],
+                         grid_size=(3, 2),
+                         wall_strategy=Strategy.MASKED)
 
-    if world.transition_matrix != world.transition_matrix2:
-        print(world.transition_matrix == world.transition_matrix2)
+    for key in world.transition_matrix.keys():
+        print(f"{key}: {world.transition_matrix[key]},\t{world2.transition_matrix[key]}")
 
-        print(f"Key differences:\n\t{world.transition_matrix.keys() - world.transition_matrix2.keys()}\n\t{world.transition_matrix2.keys() - world.transition_matrix.keys()}")
+    # world.reset_agent_state(position=(0, 0))
+    # world.draw_world()
