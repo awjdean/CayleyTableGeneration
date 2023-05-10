@@ -3,8 +3,8 @@ This function checks if the size of the Cayley table changes if the order of the
 
 """
 ##############################################
-from CayleyTable import CayleyTable
-from Environments.gridworld2D_walls import Gridworld2DWalls
+from cayley_table_generation import CayleyTable
+from Environments.gridworld2d_walls import Gridworld2DWalls
 import itertools
 
 ##############################################

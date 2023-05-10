@@ -5,7 +5,7 @@
 import copy
 import time
 
-from CayleyTable import CayleyTable
+from cayley_table_generation import CayleyTable
 
 
 class CayleyTablePropertyChecker(CayleyTable):

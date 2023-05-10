@@ -5,7 +5,7 @@
 
 """
 
-from CayleyTable import CayleyTable
+from cayley_table_generation import CayleyTable
 
 import copy
 

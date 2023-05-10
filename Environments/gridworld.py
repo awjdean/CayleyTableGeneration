@@ -1,32 +1,55 @@
-import itertools
+import numpy as np
+import matplotlib.pyplot as plt
+from enum import Enum
 
 
-class BaseEnvironment:
+class BaseGridworld:
 
-    def __init__(self):
-        self._agent_position = None
+    def __init__(self, grid_size):
+        self._current_state = None
         self._minimum_actions = None
         self.transition_matrix = None
+        self._grid_size = grid_size
 
-
-    def return_agent_position(self):
-        """
-        Returns the current position of the agent.
-        """
-        return self._agent_position
-
-    def reset_agent_state(self, position=(0, 0)):
-        self._agent_position = position
-
-    def apply_minimum_agent_action(self, action):
+    def apply_minimum_action(self, action):
         try:
             assert action in self._minimum_actions
         except AssertionError:
             raise Exception('action "{}" does not exist.'.format(action))
 
         # Masked actions.
-        if self._agent_position is not None:
-            self._agent_position = self.transition_matrix[(*self._agent_position, action)]
+        if self._current_state is not None:
+            self._current_state = self.transition_matrix[(*self._current_state, action)]
+
+    def return_state(self):
+        return self._current_state
+
+
+class Action2D(Enum):
+    """
+    # TODO: use this for gridworld2D_walls.
+    # TODO: change to N, S, E, W ?
+    """
+    NOOP = '1'
+    LEFT = 'L'
+    RIGHT = 'R'
+    UP = 'U'
+    DOWN = 'D'
+
+    def apply(self, position, grid_size):
+        if self == self.NOOP:
+            return position
+        elif self == self.LEFT:
+            position = position[0] - 1, position[1]
+        elif self == self.RIGHT:
+            position = position[0] + 1, position[1]
+        elif self == self.UP:
+            position = position[0], position[1] + 1
+        elif self == self.DOWN:
+            position = position[0], position[1] - 1
+
+        position = make_world_cyclical(position=position, grid_size=grid_size)
+        return position
 
 
 def make_world_cyclical(position, grid_size):
@@ -39,46 +62,49 @@ def make_world_cyclical(position, grid_size):
     return tuple(position[i] % grid_size[i] for i in range(len(grid_size)))
 
 
-def generate_no_walls_transition_matrix(grid_size):
-    """
-    Create transition matrix for 2D cyclical gridworld with no walls.
-    :param grid_size:
-    :return:
-    """
-    # Initialise agent action look up table
-    transition_matrix = {}
+def draw_base_gridworld2d(grid_size, agent_position):
+    # Create a grid of zeros
+    grid = np.zeros((grid_size[1], grid_size[0]))
 
-    # no op action ('1')
-    action = '1'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        transition_matrix[(i, j, action)] = (i, j)
+    # Plot the grid with a circular patch and a rectangle patch
+    fig, ax = plt.subplots()
+    ax.imshow(grid, cmap='binary', interpolation='nearest', origin='lower',
+              extent=[-0.5, grid_size[0] - 1 + 0.5, -0.5, grid_size[1] - 1 + 0.5],
+              aspect='equal', vmin=0, vmax=1)
 
-    # move left action ('L')
-    action = 'L'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i - 1, j)
-        new_state = make_world_cyclical(position=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
+    # Plot agent.
+    if agent_position is not None:
+        agent_plotting_kwargs = {'radius': 0.1,
+                                 'color': 'red',
+                                 'fill': True,
+                                 'linewidth': 2,
+                                 'zorder': 3
+                                 }
+        circle = plt.Circle(xy=agent_position, **agent_plotting_kwargs)
+        ax.add_patch(circle)
+        ax.text(*agent_position, 'A', fontsize=12, color='white', ha='center', va='center')
+    else:
+        print('Agent position not set so agent not drawn.')
 
-    # move right action ('R')
-    action = 'R'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i + 1, j)
-        new_state = make_world_cyclical(position=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
+    # Plot circles at integer coordinates.
+    circle_plotting_kwargs = {'radius': 0.1,
+                              'color': 'black',
+                              'zorder': 2
+                              }
+    for x in range(grid_size[0]):
+        for y in range(grid_size[1]):
+            circle = plt.Circle(xy=(x, y), **circle_plotting_kwargs)
+            ax.add_patch(circle)
 
-    # move up action ('U')
-    action = 'U'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i, j + 1)
-        new_state = make_world_cyclical(position=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
+    # Plot gridlines.
+    ax.set_xticks(np.arange(grid_size[0]))
+    ax.set_yticks(np.arange(grid_size[1]))
+    plt.grid(color='black', linewidth=1, linestyle='dotted')
 
-    # move down action ('D')
-    action = 'D'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i, j - 1)
-        new_state = make_world_cyclical(position=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
+    # Remove the axes lines
+    ax.spines['top'].set_visible(False)
+    ax.spines['bottom'].set_visible(False)
+    ax.spines['left'].set_visible(False)
+    ax.spines['right'].set_visible(False)
 
-    return transition_matrix
+    return ax
