@@ -57,7 +57,7 @@
     4. 3D gridworld.
     5. Graph world.
 """
-from Environments.gridworld2D import Gridworld2D, Strategy
+from Environments.gridworld2D_walls import Gridworld2DWalls, Strategy
 
 import itertools
 import copy
@@ -921,7 +921,7 @@ if __name__ == "__main__":
     table = CayleyTable()
     parameters = {'minimum_actions': minimum_actions,
                   'initial_agent_state': initial_agent_state,
-                  'world': Gridworld2D(grid_size=grid_size),
+                  'world': Gridworld2DWalls(grid_size=grid_size),
                   }
     table.generate_cayley_table(**parameters)
     print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
@@ -943,7 +943,7 @@ if __name__ == "__main__":
     table = CayleyTable()
     parameters = {'minimum_actions': minimum_actions,
                   'initial_agent_state': initial_agent_state,
-                  'world': Gridworld2D(grid_size=grid_size, wall_positions=wall_positions, wall_strategy=Strategy.MASKED),
+                  'world': Gridworld2DWalls(grid_size=grid_size, wall_positions=wall_positions, wall_strategy=Strategy.MASKED),
                   }
     table.generate_cayley_table(**parameters)
     print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),

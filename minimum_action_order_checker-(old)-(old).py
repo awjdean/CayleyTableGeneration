@@ -4,7 +4,7 @@ This function checks if the size of the Cayley table changes if the order of the
 """
 ##############################################
 from CayleyAgent import CayleyAgent
-from Environments.gridworld2D import Gridworld2D
+from Environments.gridworld2D_walls import Gridworld2DWalls
 import itertools
 
 ##############################################
@@ -18,7 +18,7 @@ for permutation in itertools.permutations(minimum_actions, len(minimum_actions))
     params = {'initial_agent_position': (0, 0),
               'table_size': 3,
               'minimum_actions': list(permutation),
-              'world': Gridworld2D(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
+              'world': Gridworld2DWalls(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
               'show_calculation': False,
               }
 

@@ -32,7 +32,7 @@
     1. Figure out
 """
 
-from Environments.gridworld2D import Gridworld2D
+from Environments.gridworld2D_walls import Gridworld2DWalls
 
 # from numba import jit
 import itertools
@@ -903,7 +903,7 @@ if __name__ == "__main__":
     table = CayleyTable()
     parameters = {'minimum_actions': minimum_actions,
                   'initial_agent_state': initial_agent_state,
-                  'world': Gridworld2D(grid_size=grid_size, wall_positions=[]),
+                  'world': Gridworld2DWalls(grid_size=grid_size, wall_positions=[]),
                   }
     table.generate_cayley_table(**parameters)
     print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
@@ -921,7 +921,7 @@ if __name__ == "__main__":
     table = CayleyTable()
     parameters = {'minimum_actions': minimum_actions,
                   'initial_agent_state': initial_agent_state,
-                  'world': Gridworld2D(grid_size=grid_size, wall_positions=wall_positions),
+                  'world': Gridworld2DWalls(grid_size=grid_size, wall_positions=wall_positions),
                   }
     table.generate_cayley_table(**parameters)
     print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),

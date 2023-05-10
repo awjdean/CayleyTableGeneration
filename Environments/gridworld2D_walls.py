@@ -1,6 +1,8 @@
 import itertools
 from enum import Enum
 
+from gridworld import BaseEnvironment, make_world_cyclical, generate_no_walls_transition_matrix
+
 
 class Strategy(Enum):
     IDENTITY = 'identity'
@@ -28,17 +30,6 @@ def check_variables(grid_size, **kwargs):
                     assert (wall[0] % 1 == 0.5 and wall[1] % 1 == 0) or (wall[0] % 1 == 0 and wall[1] % 1 == 0.5)
             except AssertionError:
                 raise ValueError(f"Wall position {wall} not legal.")
-
-
-def make_world_cyclical(state, grid_size):
-    """
-    Converts states that are out of the grid size to the relevant cyclical world states.
-    :param state:
-    :param grid_size:
-    :return:
-    """
-    # state[0] % grid_size[0], state[1] % grid_size[1]
-    return tuple(state[i] % grid_size[i] for i in range(len(grid_size)))
 
 
 def outcome_wall(wall_strategy, agent_position):
@@ -103,48 +94,7 @@ def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strat
     return transition_matrix
 
 
-def generate_no_walls_transition_matrix(grid_size):
-    # Initialise agent action look up table
-    transition_matrix = {}
-
-    # no op action ('1')
-    action = '1'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        transition_matrix[(i, j, action)] = (i, j)
-
-    # move left action ('L')
-    action = 'L'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i - 1, j)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-
-    # move right action ('R')
-    action = 'R'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i + 1, j)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-
-    # move up action ('U')
-    action = 'U'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i, j + 1)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-
-    # move down action ('D')
-    action = 'D'
-    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
-        new_state = (i, j - 1)
-        new_state = make_world_cyclical(state=new_state, grid_size=grid_size)
-        transition_matrix[(i, j, action)] = new_state
-
-    return transition_matrix
-
-
 def generate_transition_matrix(grid_size, **kwargs):
-    action_list = kwargs.get('action_list')
     wall_positions = kwargs.get('wall_positions')
     wall_strategy = kwargs.get('wall_strategy')
 
@@ -166,13 +116,26 @@ def create_cyclical_pseudo_walls(wall_positions, grid_size):
     """
     cyclical_pseudo_walls = []
     for wall in wall_positions:
-        cyclical_pseudo_walls.append(make_world_cyclical(state=wall, grid_size=grid_size))
+        cyclical_pseudo_walls.append(make_world_cyclical(position=wall, grid_size=grid_size))
     wall_positions += cyclical_pseudo_walls
     wall_positions = list(set(wall_positions))
     return wall_positions
 
 
-class Gridworld2D:
+def generate_possible_states(grid_size):
+    """
+    # TODO: generalise this to n-dimensional grid.
+    Creates a ist of all possible states.
+    :param grid_size:
+    :return:
+    """
+    possible_states = []
+    for i, j in itertools.product(range(grid_size[0]), range(grid_size[1])):
+        possible_states.append((i, j))
+
+    return possible_states
+
+class Gridworld2DWalls(BaseEnvironment):
     """
     2D gridworld, of size grid_size x grid_size, containing an agent that can take one of five actions:
         no op, move left, move right, move up, move down.
@@ -185,45 +148,24 @@ class Gridworld2D:
         :param grid_size: tuple
         :param wall_positions: list of tuples
         """
-
-        self._agent_position = None
+        super().__init__()
+        self._minimum_actions = kwargs.get('minimum_actions', ['1', 'L', 'R', 'U', 'D'])
 
         check_variables(grid_size, **kwargs)
         self.wall_strategy = kwargs.get('wall_strategy')
         self._wall_positions = kwargs.get('wall_positions')
         self._grid_size = grid_size
-        self._minimum_actions = kwargs.get('minimum_actions', ['1', 'L', 'R', 'U', 'D'])
 
+        # Walls.
         self._wall_positions = kwargs.get('wall_positions', [])
         self._wall_positions = create_cyclical_pseudo_walls(wall_positions=self._wall_positions,
                                                             grid_size=self._grid_size)
 
-        self.states_list = []
-        for i in range(self._grid_size[0]):
-            for j in range(self._grid_size[1]):
-                self.states_list.append((i, j))
+        self._possible_states = generate_possible_states(grid_size=self._grid_size)
 
         self.transition_matrix = generate_transition_matrix(grid_size=self._grid_size,
-                                                            action_list=self._minimum_actions,
                                                             wall_positions=self._wall_positions,
                                                             wall_strategy=self.wall_strategy)
-
-    def reset_agent_state(self, position=(0, 0)):
-        self._agent_position = position
-
-    def apply_minimum_agent_action(self, action):
-        if action not in self._minimum_actions:
-            raise Exception('action "{}" does not exist.'.format(action))
-
-        # Masked actions.
-        if self._agent_position is not None:
-            self._agent_position = self.transition_matrix[(*self._agent_position, action)]
-
-    def return_agent_position(self):
-        """
-        Returns the current position of the agent.
-        """
-        return self._agent_position
 
     def draw_world(self):
         import numpy as np
@@ -255,22 +197,23 @@ class Gridworld2D:
             print('Agent position not set so agent not drawn.')
 
         # Plot walls.
-        wall_thickness = 0.25
-        wall_plotting_kwargs = {'linewidth': 2,
-                                'edgecolor': 'blue',
-                                'facecolor': 'blue',
-                                'alpha': 1,
-                                'zorder': 3}
-        for wall in self._wall_positions:
-            if wall[0] // 1 != wall[0]:
-                wall_bottom_left = (wall[0] - wall_thickness / 2, wall[1] - 0.5)
-                rect = Rectangle(xy=wall_bottom_left, width=wall_thickness, height=1, **wall_plotting_kwargs)
-            elif wall[1] // 1 != wall[1]:
-                wall_bottom_left = (wall[0] - 0.5, wall[1] - wall_thickness / 2)
-                rect = Rectangle(xy=wall_bottom_left, width=1, height=wall_thickness, **wall_plotting_kwargs)
-            else:
-                raise Exception(f"Wall = {wall}.")
-            ax.add_patch(rect)
+        if self._wall_positions is not None:
+            wall_thickness = 0.25
+            wall_plotting_kwargs = {'linewidth': 2,
+                                    'edgecolor': 'blue',
+                                    'facecolor': 'blue',
+                                    'alpha': 1,
+                                    'zorder': 3}
+            for wall in self._wall_positions:
+                if wall[0] // 1 != wall[0]:
+                    wall_bottom_left = (wall[0] - wall_thickness / 2, wall[1] - 0.5)
+                    rect = Rectangle(xy=wall_bottom_left, width=wall_thickness, height=1, **wall_plotting_kwargs)
+                elif wall[1] // 1 != wall[1]:
+                    wall_bottom_left = (wall[0] - 0.5, wall[1] - wall_thickness / 2)
+                    rect = Rectangle(xy=wall_bottom_left, width=1, height=wall_thickness, **wall_plotting_kwargs)
+                else:
+                    raise Exception(f"Wall = {wall}.")
+                ax.add_patch(rect)
 
         # Plot circles at integer coordinates.
         circle_plotting_kwargs = {'radius': 0.1,
@@ -296,13 +239,13 @@ class Gridworld2D:
 
 
 if __name__ == '__main__':
-    world = Gridworld2D(wall_positions=[(0, -0.5), (-0.5, 0)],
-                        grid_size=(3, 2),
-                        wall_strategy=Strategy.IDENTITY)
+    world = Gridworld2DWalls(wall_positions=[],
+                             grid_size=(3, 2),
+                             wall_strategy=Strategy.IDENTITY)
 
-    world2 = Gridworld2D(wall_positions=[(0, -0.5), (-0.5, 0)],
-                         grid_size=(3, 2),
-                         wall_strategy=Strategy.MASKED)
+    world2 = Gridworld2DWalls(wall_positions=[(0, -0.5), (-0.5, 0)],
+                              grid_size=(3, 2),
+                              wall_strategy=Strategy.MASKED)
 
     for key in world.transition_matrix.keys():
         print(f"{key}: {world.transition_matrix[key]},\t{world2.transition_matrix[key]}")

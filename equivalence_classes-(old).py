@@ -1,6 +1,6 @@
 import itertools
 
-from Environments.gridworld2D import Gridworld2D
+from Environments.gridworld2D_walls import Gridworld2DWalls
 
 
 ###
@@ -41,7 +41,7 @@ def calculateEquivalenceClasses(**parameters):
 params = {'initial_agent_position': (0, 0),
           'table_size': 3,
           'minimum_actions': ['1', 'L', 'R', 'U', 'D'],
-          'world': Gridworld2D(grid_size=(3, 3), wall_positions=[(0.5, 1)])
+          'world': Gridworld2DWalls(grid_size=(3, 3), wall_positions=[(0.5, 1)])
           }
 
 information = calculateEquivalenceClasses(**params)
@@ -49,7 +49,7 @@ information = calculateEquivalenceClasses(**params)
 params2 = {'initial_agent_position': (0, 0),
            'table_size': 3,
            'minimum_actions': ['1', 'L', 'R', 'U', 'D'],
-           'world': Gridworld2D(grid_size=(3, 3), wall_positions=[])
+           'world': Gridworld2DWalls(grid_size=(3, 3), wall_positions=[])
            }
 
 information2 = calculateEquivalenceClasses(**params2)

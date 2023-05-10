@@ -9,7 +9,7 @@ Inverse condition: for every element a, there exists an element inv_a such that:
 import copy
 
 from CayleyAgent import CayleyAgent
-from Environments.gridworld2D import Gridworld2D
+from Environments.gridworld2D_walls import Gridworld2DWalls
 
 ##############################################
 
@@ -17,7 +17,7 @@ from Environments.gridworld2D import Gridworld2D
 params = {'initial_agent_position': (0, 0),
           'table_size': 3,
           'minimum_actions': ['1', 'R', 'U', 'L', 'D'],
-          'world': Gridworld2D(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
+          'world': Gridworld2DWalls(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
           'show_calculation': False,
           }
 

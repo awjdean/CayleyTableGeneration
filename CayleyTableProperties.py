@@ -105,7 +105,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         else:
             self.identity_info['is_identity_algebra'] = True
 
-    def checkInverse(self):
+    def check_inverse(self):
         """
 
         :return:
@@ -203,7 +203,7 @@ class CayleyTablePropertyChecker(CayleyTable):
                 self.inverse_info['is_inverse_algebra'] = False
                 break
 
-    def checkAssociativity(self):
+    def check_associativity(self):
         """
 
         :return:
@@ -506,8 +506,8 @@ if __name__ == "__main__":
     table.load_cayley_table(file_name=table_name)
     property_checker = CayleyTablePropertyChecker(cayley_table_instance=table)
     property_checker.checkIdentity()
-    property_checker.checkInverse()
-    property_checker.checkAssociativity()
+    property_checker.check_inverse()
+    property_checker.check_associativity()
     property_checker.checkCommutativity()
     property_checker.findElementOrder()
 

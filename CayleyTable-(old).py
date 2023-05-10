@@ -1,4 +1,4 @@
-from Environments.gridworld2D import Gridworld2D
+from Environments.gridworld2D_walls import Gridworld2DWalls
 
 import copy
 import numpy as np
@@ -242,7 +242,7 @@ if __name__ == "__main__":
 
     parameters = {'minimum_actions': ['1', 'R', 'U', 'L', 'D'],
                   'initial_agent_state': (0, 0),
-                  'world': Gridworld2D(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
+                  'world': Gridworld2DWalls(grid_size=(3, 3), wall_positions=[(0.5, 0)]),
                   'show_calculation': False}  # TODO: remove from here and put in a print function. # TODO: Error when this is True.
     table.generateCayleyTable(**parameters)
     print('\n')
