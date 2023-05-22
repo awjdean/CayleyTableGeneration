@@ -25,16 +25,32 @@ class BaseGridworld:
         return self._current_state
 
 
-class Action2D(Enum):
+class Strategy(Enum):
+    IDENTITY = 'identity'
+    MASKED = 'masked'
+    NO_STRATEGY = None
+
+    def apply(self, agent_position, grid_size):
+        if self == self.IDENTITY:
+            return MovementAction2D('1').apply(position=agent_position, grid_size=grid_size)
+
+        elif self == self.MASKED:
+            return None
+
+        elif self == self.NO_STRATEGY:
+            raise Exception("Should not be using Strategy.apply() because no Strategy given.")
+
+
+class MovementAction2D(Enum):
     """
     # TODO: use this for gridworld2D_walls.
-    # TODO: change to N, S, E, W ?
     """
     NOOP = '1'
-    LEFT = 'L'
-    RIGHT = 'R'
-    UP = 'U'
-    DOWN = 'D'
+    LEFT = 'W'
+    RIGHT = 'E'
+    UP = 'N'
+    DOWN = 'S'
+    CONSUME = 'C'
 
     def apply(self, position, grid_size):
         if self == self.NOOP:
@@ -78,11 +94,11 @@ def draw_base_gridworld2d(grid_size, agent_position):
                                  'color': 'red',
                                  'fill': True,
                                  'linewidth': 2,
-                                 'zorder': 3
+                                 'zorder': 10
                                  }
         circle = plt.Circle(xy=agent_position, **agent_plotting_kwargs)
         ax.add_patch(circle)
-        ax.text(*agent_position, 'A', fontsize=12, color='white', ha='center', va='center')
+        ax.text(*agent_position, "$A$", fontsize=12, color='white', ha='center', va='center', zorder=10)
     else:
         print('Agent position not set so agent not drawn.')
 
