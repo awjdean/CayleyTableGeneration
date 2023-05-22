@@ -1,7 +1,5 @@
 """
 # TODO order:
-    - Check 1.
-    - Efficiency 1.
     - Efficiency 0.
 
 
@@ -22,8 +20,6 @@
 
 # TODO (improving efficiency):
     0. Use dictionaries instead of Pandas dataframes, then put final result into Pandas dataframe.
-    1. Put generate_state_cayley_row and generate_state_cayley_column functions in action Cayley table generation section.
-        - Looks like it's the find_element_equivalents_in_state_cayley_table function.
     2. Test parallelisation to find out which method is better.
         - Set to use all available cores.
     3. Only check for elements in part of the Cayley table where elements haven't already been checked for.
@@ -31,7 +27,6 @@
     5. Implement split_form method for find_broken_equivalence_classes function (?).
 
 # TODO (checks):
-    1. Check that there are no NAN's in action Cayley table.
     2. At end create new state Cayley table with the labelling rows and columns, then fill it in and compare to generated state Cayley table.
         - Iterate through process, then set equivalence class labelling elements as minimum_actions, run again then check if two results are the same.
     3. Should be able to move from one algebra to another with a different initial state by applying the relevant operation to every element in the Cayley table
@@ -41,7 +36,6 @@
     3. Reproducing world structure from Cayley table.
         - Does the Cayley table hold all the information of the transition algebra ?
     4. Function to generate Cayley table from different initial position using a previously generated Cayley table.
-    5.
 
 # TODO (environments):
     4. 3D gridworld.
@@ -361,6 +355,12 @@ class CayleyTable:
                                                                            cayley_table_actions=self.cayley_table_actions,
                                                                            cayley_table_states=self.cayley_table_states)
 
+        # Check there are no NaNs in action Cayley table.
+        try:
+            assert not check_dataframe_for_nans(dataframe=self.cayley_table_actions)
+        except AssertionError:
+            raise Exception(f"NaNs found in action Cayley table:\n{self.cayley_table_states.to_string()}")
+
         print(f'Action Cayley table generated (time taken: {round(time.time() - tx, 2)}s).')
 
         # TODO: add each element to the Cayley table individually:
@@ -419,6 +419,18 @@ class CayleyTable:
         self.name = file_name
 
 
+def check_dataframe_for_nans(dataframe):
+    """
+    Checks pandas dataframe for NaNs. Returns True if NaN found, else returns False.
+    """
+    nan_values = dataframe.isna()
+
+    for row_index, column_index in itertools.product(range(len(nan_values.index)), range(len(nan_values.columns))):
+        if nan_values.iat[row_index, column_index]:
+            return True
+    return False
+
+
 def generate_action_cayley_equivalence_classes(equivalence_classes, cayley_table_actions, cayley_table_states):
     """
     Generate equivalence for action Cayley table elements only.
@@ -428,8 +440,8 @@ def generate_action_cayley_equivalence_classes(equivalence_classes, cayley_table
     # Create equivalence classes.
     for labelling_element in equivalence_classes.keys():
         cayley_table_ecs[labelling_element] = {'class_elements': [labelling_element],
-                                                    'end_world_state': equivalence_classes[labelling_element][
-                                                        'end_world_state']}
+                                               'end_world_state': equivalence_classes[labelling_element][
+                                                   'end_world_state']}
 
     for row_index, column_index in itertools.product(range(len(cayley_table_actions.index)),
                                                      range(len(cayley_table_actions.columns))):
@@ -452,8 +464,6 @@ def generate_action_cayley_equivalence_classes(equivalence_classes, cayley_table
                 break
 
     return cayley_table_ecs
-
-
 
 
 ########################################################################################################################
