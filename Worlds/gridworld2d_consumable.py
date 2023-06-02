@@ -2,7 +2,7 @@ import itertools
 
 import matplotlib.pyplot as plt
 
-from Environments.gridworld2D_base import BaseGridworld, draw_base_gridworld2d, MovementAction2D, Strategy
+from Worlds.gridworld2D_base import BaseGridworld, draw_base_gridworld2d, MovementAction2D, Strategy
 
 
 class Gridworld2DConsumables(BaseGridworld):

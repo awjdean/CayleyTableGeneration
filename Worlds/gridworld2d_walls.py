@@ -3,7 +3,7 @@ from enum import Enum
 import matplotlib.pyplot as plt
 from matplotlib.patches import Rectangle
 
-from Environments.gridworld2D_base import BaseGridworld, make_world_cyclical, draw_base_gridworld2d, MovementAction2D, \
+from Worlds.gridworld2D_base import BaseGridworld, make_world_cyclical, draw_base_gridworld2d, MovementAction2D, \
     Strategy
 
 
@@ -52,7 +52,6 @@ class Gridworld2DWalls(BaseGridworld):
         return self._current_state
 
     def draw_world(self):
-
         ax = draw_base_gridworld2d(grid_size=self._grid_size, agent_position=self._current_state)
 
         # Draw walls.
@@ -109,6 +108,8 @@ def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strat
     :param wall_strategy:
     :param grid_size:
     :return:
+
+    # TODO: fix this.
     """
     if len(wall_positions) > 0:
         for wall in wall_positions:
@@ -120,16 +121,18 @@ def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strat
                 if 0 <= agent_position[0] <= grid_size[
                     0] - 1:  # TODO: if this necessary since pseudo walls have been added ? - will this cause incorrect transitions ?
                     # Moving right into wall performing wall strategy outcome.
-                    transition_matrix[(*agent_position, 'R')] = wall_strategy.apply(agent_position=agent_position,
-                                                                                    grid_size=grid_size)
+                    transition_matrix[(*agent_position, MovementAction2D.RIGHT.value)] = wall_strategy.apply(
+                        agent_position=agent_position,
+                        grid_size=grid_size)
 
                 # Moving left into wall.
                 agent_position = (int(wall[0] + 0.5), wall[1])
                 # Ignore agent positions with x-values out of range of states.
                 if 0 <= agent_position[0] <= grid_size[0] - 1:
                     # Moving left into wall performing wall strategy outcome.
-                    transition_matrix[(*agent_position, 'L')] = wall_strategy.apply(agent_position=agent_position,
-                                                                                    grid_size=grid_size)
+                    transition_matrix[(*agent_position, MovementAction2D.LEFT.value)] = wall_strategy.apply(
+                        agent_position=agent_position,
+                        grid_size=grid_size)
 
             # Moving into vertical blocking wall.
             if wall[1] % 1 == 0.5:
@@ -138,16 +141,18 @@ def add_walls_to_transition_matrix(transition_matrix, wall_positions, wall_strat
                 # Ignore agent positions with y-values out of range of states.
                 if 0 <= agent_position[1] <= grid_size[1] - 1:
                     # Moving up into wall performing wall strategy outcome.
-                    transition_matrix[(*agent_position, 'U')] = wall_strategy.apply(agent_position=agent_position,
-                                                                                    grid_size=grid_size)
+                    transition_matrix[(*agent_position, MovementAction2D.UP.value)] = wall_strategy.apply(
+                        agent_position=agent_position,
+                        grid_size=grid_size)
 
                 # Moving down into wall.
                 agent_position = (wall[0], int(wall[1] + 0.5))
                 # Ignore agent positions with y-values out of range of states.
                 if 0 <= agent_position[1] <= grid_size[1] - 1:
                     # Moving down into wall performing wall strategy outcome.
-                    transition_matrix[(*agent_position, 'D')] = wall_strategy.apply(agent_position=agent_position,
-                                                                                    grid_size=grid_size)
+                    transition_matrix[(*agent_position, MovementAction2D.DOWN.value)] = wall_strategy.apply(
+                        agent_position=agent_position,
+                        grid_size=grid_size)
     return transition_matrix
 
 
@@ -210,7 +215,6 @@ def generate_no_walls_transition_matrix(all_states, minimum_actions, grid_size):
     transition_matrix = {}
     for state, action in itertools.product(all_states, minimum_actions):
         transition_matrix[*state, action] = MovementAction2D(action).apply(position=state, grid_size=grid_size)
-
     return transition_matrix
 
 

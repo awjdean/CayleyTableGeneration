@@ -5,7 +5,7 @@
 import copy
 import time
 
-from cayley_table_generation import CayleyTable
+from OLD_cayley_table_generation import CayleyTable
 
 
 class CayleyTablePropertyChecker(CayleyTable):
@@ -26,28 +26,28 @@ class CayleyTablePropertyChecker(CayleyTable):
         self.element_order_info = None
         self.commutativity_info = None
 
-    def checkIdentity(self):
+    def check_identity(cayley_table):
         """
         Uses the action Cayley table to find identity elements, which are stored in self.identity_info.
         """
-        if self.cayley_table_actions is None:
+        if cayley_table.cayley_table_actions is None:
             raise Exception(
                 'Generate Cayley table using self.generateCayleyTable(parameters) before searching for identities.')
 
-        self.identity_info = {'is_identity_algebra': None}
+        cayley_table.identity_info = {'is_identity_algebra': None}
 
         ################################################################################################################
         # Find left identities.
         ################################################################################################################
 
         # Create list of potential left identities (e) from the rows/column headings of the Cayley table.
-        left_identities = list(copy.deepcopy(self.cayley_table_actions.index))
+        left_identities = list(copy.deepcopy(cayley_table.cayley_table_actions.index))
 
         ### Test if e is a left identity (e_L * a = a).
-        for e_L in self.cayley_table_actions.index:
-            for a in self.cayley_table_actions.index:
+        for e_L in cayley_table.cayley_table_actions.index:
+            for a in cayley_table.cayley_table_actions.index:
                 # Look up the outcome of the LHS of the left identity equation using the action Cayley table.
-                LHS_outcome = self.find_outcome_cayley(left_action=e_L, right_action=a)
+                LHS_outcome = cayley_table.find_outcome_cayley(left_action=e_L, right_action=a)
 
                 # Outcome for the RHS of the left identity equation is just the element a.
                 RHS_outcome = a
@@ -57,20 +57,20 @@ class CayleyTablePropertyChecker(CayleyTable):
                     left_identities.remove(e_L)
                     break
 
-        self.identity_info['left_identities'] = left_identities
+        cayley_table.identity_info['left_identities'] = left_identities
 
         ################################################################################################################
         # Find right identities.
         ################################################################################################################
 
         # Create list of potential right identities (e) from the rows/column headings of the Cayley table.
-        right_identities = list(copy.deepcopy(self.cayley_table_actions.index))
+        right_identities = list(copy.deepcopy(cayley_table.cayley_table_actions.index))
 
         ### Test if e is a right identity (a * e_R = a)
-        for e_R in self.cayley_table_actions.index:
-            for a in self.cayley_table_actions.index:
+        for e_R in cayley_table.cayley_table_actions.index:
+            for a in cayley_table.cayley_table_actions.index:
                 # Look up the outcome of the LHS of the right identity equation using the action Cayley table.
-                LHS_outcome = self.find_outcome_cayley(left_action=a, right_action=e_R)
+                LHS_outcome = cayley_table.find_outcome_cayley(left_action=a, right_action=e_R)
 
                 # Outcome for the RHS of the right identity equation is just the element a.
                 RHS_outcome = a
@@ -80,7 +80,7 @@ class CayleyTablePropertyChecker(CayleyTable):
                     right_identities.remove(e_R)
                     break
 
-        self.identity_info['right_identities'] = right_identities
+        cayley_table.identity_info['right_identities'] = right_identities
 
         ################################################################################################################
         # Find identities.
@@ -91,19 +91,19 @@ class CayleyTablePropertyChecker(CayleyTable):
             if candidate_identity in right_identities:
                 identities.append(candidate_identity)
 
-        self.identity_info['identities'] = identities
+        cayley_table.identity_info['identities'] = identities
 
-        if len(self.identity_info['identities']) > 1:
-            raise Exception('More than one identity.\n\tidentities:\t\t{0}'.format(self.identity_info['identities']))
+        if len(cayley_table.identity_info['identities']) > 1:
+            raise Exception('More than one identity.\n\tidentities:\t\t{0}'.format(cayley_table.identity_info['identities']))
 
         ################################################################################################################
         # Check if algebra has an identity.
         ################################################################################################################
 
-        if len(self.identity_info['identities']) == 0:
-            self.identity_info['is_identity_algebra'] = False
+        if len(cayley_table.identity_info['identities']) == 0:
+            cayley_table.identity_info['is_identity_algebra'] = False
         else:
-            self.identity_info['is_identity_algebra'] = True
+            cayley_table.identity_info['is_identity_algebra'] = True
 
     def check_inverse(self):
         """
@@ -255,7 +255,7 @@ class CayleyTablePropertyChecker(CayleyTable):
         else:
             self.associativity_info['is_associative_algebra'] = False
 
-    def findElementOrder(self):
+    def find_element_order(self):
         """
 
         :return:
@@ -313,7 +313,7 @@ class CayleyTablePropertyChecker(CayleyTable):
                         raise Exception(
                             'Max element order ({0}} reached. (a, order_search)'.format(max_order, a, order_search))
 
-    def checkCommutativity(self):
+    def check_commutativity(self):
         """
 
         :return:
@@ -361,7 +361,7 @@ class CayleyTablePropertyChecker(CayleyTable):
             if set(self.commutativity_info['commuting_elements'][a]) == set(self.cayley_table_actions.index):
                 self.commutativity_info['commute_with_all'].append(a)
 
-    def printPropertiesInfo(self, **kwargs):
+    def print_properties_info(self, **kwargs):
         """
 
         :param print_parameters:
@@ -505,12 +505,12 @@ if __name__ == "__main__":
     table = CayleyTable()
     table.load_cayley_table(file_name=table_name)
     property_checker = CayleyTablePropertyChecker(cayley_table_instance=table)
-    property_checker.checkIdentity()
+    property_checker.check_identity()
     property_checker.check_inverse()
     property_checker.check_associativity()
-    property_checker.checkCommutativity()
-    property_checker.findElementOrder()
+    property_checker.check_commutativity()
+    property_checker.find_element_order()
 
-    property_checker.printPropertiesInfo()
+    property_checker.print_properties_info()
 
     print('\nTime taken: {0:0.2f}s'.format(time.time() - t0))
