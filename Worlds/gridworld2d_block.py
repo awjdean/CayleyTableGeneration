@@ -1,7 +1,7 @@
 import itertools
 import matplotlib.pyplot as plt
 
-from Environments.gridworld2D_base import BaseGridworld, draw_base_gridworld2d, MovementAction2D
+from Worlds.gridworld2D_base import BaseGridworld, draw_base_gridworld2d, MovementAction2D
 
 
 class Gridworld2DBlock(BaseGridworld):
