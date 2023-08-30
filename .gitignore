@@ -2,3 +2,5 @@
 /venv/
 /__pycache__/
 /.idea/
+/Worlds/__pycache__/
+/Cayley_Table_Properties/__pycache__/
