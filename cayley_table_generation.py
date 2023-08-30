@@ -208,7 +208,7 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
         # Merge temporary_equivalence classes into equivalence class dictionary.
         if len(temp_ecs.keys()) > 0:
             print(f'\tEquivalence class(es) split. Candidate element: {candidate_element}')
-            print('\ttemp_ecs:')
+            print('\t\ttemp_ecs:')
             for j in temp_ecs.keys():
                 print(f'\t\t{temp_ecs[j]}')
         cayley_table.ecs = cayley_table.ecs | temp_ecs
@@ -468,7 +468,7 @@ def generate_state_cayley_row(element, state_cayley_table, world):
     #         outcome = future.result()
     #         element_row[column_label] = outcome
 
-    # # Old method.
+    # Old method.
     element_row2 = {}
     for column_label2 in state_cayley_table.columns:
         outcome = find_outcome_agent(action_sequence=(column_label2 + element),
@@ -476,8 +476,8 @@ def generate_state_cayley_row(element, state_cayley_table, world):
         element_row2[column_label2] = outcome
     element_row = element_row2
     # Check if new method gives same result as old method.
-    if element_row != element_row2:
-        raise Exception(f"element_column != element_column2: \n{element_row}, \n{element_row2}")
+    # if element_row != element_row2:
+    #     raise Exception(f"element_column != element_column2: \n{element_row}, \n{element_row2}")
 
     return element_row
 
@@ -511,9 +511,9 @@ def generate_state_cayley_column(element, state_cayley_table, world):
                                      world=world)  # TODO: have removed deepcopy.
         element_column2[row_label2] = outcome
     element_column = element_column2
-    # Check if new method gives same result as old method.
-    if element_column != element_column2:
-        raise Exception(f"element_column != element_column2: \n{element_column}, \n{element_column2}")
+    # # Check if new method gives same result as old method.
+    # if element_column != element_column2:
+    #     raise Exception(f"element_column != element_column2: \n{element_column}, \n{element_column2}")
 
     return element_column
 

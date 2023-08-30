@@ -51,7 +51,10 @@ class Gridworld2DWalls(BaseGridworld):
         """
         return self._current_state
 
-    def draw_world(self):
+    def draw_world(self, rest_state=False):
+        if rest_state:
+            self.reset_state()
+
         ax = draw_base_gridworld2d(grid_size=self._grid_size, agent_position=self._current_state)
 
         # Draw walls.

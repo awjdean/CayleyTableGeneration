@@ -63,8 +63,7 @@ def generate_transition_matrix(possible_states, grid_size, minimum_actions):
         block_position = state[2:4]
         agent_position = state[0:2]
 
-
-
+        new_agent_position = MovementAction2D(action).apply(position=agent_position, grid_size=grid_size)
 
         # If the agent moves into the block, then move the block in the same direction as the agent.
         if new_agent_position == block_position:
@@ -98,8 +97,6 @@ def check_inputs(grid_size, initial_agent_position, initial_block_position, **kw
         assert initial_agent_position != initial_block_position
     except AssertionError:
         raise ValueError(f"Block cannot be in same position as agent.")
-
-
 
 
 if __name__ == '__main__':

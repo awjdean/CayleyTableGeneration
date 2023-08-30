@@ -7,12 +7,17 @@ import time
 
 from cayley_table_generation import generate_cayley_table
 from Cayley_Table_Properties.check_identity import check_identity
+from Cayley_Table_Properties.check_associativity import check_associativity
+from Cayley_Table_Properties.check_inverse import check_inverse
+from Cayley_Table_Properties.check_commutativity import check_commutativity
+from Cayley_Table_Properties.find_element_order import find_element_order
 
 
 ########################################################################################################################
 class CayleyTable:
 
     def __init__(self, name=None):
+        self._cayley_table_parameters = None
         self.name = name
 
         # Cayley table generation.
@@ -85,25 +90,23 @@ class CayleyTable:
         self.name = file_name
 
     def check_identity(self):
-        check_identity(cayley_table=self)
+        self.identity_info = check_identity(cayley_table=self)
 
     def check_inverse(self):
-        pass
+        self.inverse_info = check_inverse(cayley_table=self)
 
     def check_associativity(self):
-        pass
+        self.associativity_info = check_associativity(cayley_table=self)
 
     def check_commutativity(self):
-        pass
+        self.commutativity_info = check_commutativity(cayley_table=self)
 
     def find_element_order(self):
-        pass
+        self.element_order_info = find_element_order(cayley_table=self)
 
     def print_properties_info(self, **kwargs):
         """
 
-        :param print_parameters:
-        :return:
         """
         identity = kwargs.get('identity', True)
         inverse = kwargs.get('inverse', True)
@@ -112,35 +115,33 @@ class CayleyTable:
         element_order = kwargs.get('element_order', True)
 
         if identity:
-            print('\nidentity info:')
-            print('\tis_identity_algebra:\t\t{0}'.format(self.identity_info['is_identity_algebra']))
-            print('\tleft_identities:\t\t\t{0}'.format(self.identity_info['left_identities']))
-            print('\tright_identities:\t\t\t{0}'.format(self.identity_info['right_identities']))
-            print('\tidentities:\t\t\t\t\t{0}'.format(self.identity_info['identities']))
+            print("\nidentity info:")
+            print(f"\tis_identity_algebra:\t\t{self.identity_info['is_identity_algebra']}")
+            print(f"\tleft_identities:\t\t\t{self.identity_info['left_identities']}")
+            print(f"\tright_identities:\t\t\t{self.identity_info['right_identities']}")
+            print(f"\tidentities:\t\t\t\t\t{self.identity_info['identities']}")
 
         if inverse:
-            print('\ninverse info:')
-            print('\tis_inverse_algebra:\t\t\t{0}'.format(self.inverse_info['is_inverse_algebra']))
-            print('\tleft_inverses:\t\t\t\t{0}'.format(self.inverse_info['left_inverses']))
-            print('\tright_inverses:\t\t\t\t{0}'.format(self.inverse_info['right_inverses']))
-            print('\tinverses:\t\t\t\t\t{0}'.format(self.inverse_info['inverses']))
+            print("\ninverse info:")
+            print(f"\tis_inverse_algebra:\t\t\t{self.inverse_info['is_inverse_algebra']}")
+            print(f"\tleft_inverses:\t\t\t\t{self.inverse_info['left_inverses']}")
+            print(f"\tright_inverses:\t\t\t\t{self.inverse_info['right_inverses']}")
+            print(f"\tinverses:\t\t\t\t\t{self.inverse_info['inverses']}")
 
         if associativity:
-            print('\nassociativity info:')
-            print('\tis_associative_algebra:\t\t{0}'.format(self.associativity_info['is_associative_algebra']))
-            print('\tnon_associative_elements:\t{0}'.format(self.associativity_info['non_associative_elements']))
+            print("\nassociativity info:")
+            print(f"\tis_associative_algebra:\t\t{self.associativity_info['is_associative_algebra']}")
+            print(f"\tnon_associative_elements:\t{self.associativity_info['non_associative_elements']}")
 
         if commutativity:
-            print('\ncommutativity info:')
-            print('\tis_commutative_algebra:\t\t{0}'.format(self.commutativity_info['is_commutative_algebra']))
-            print('\tcommuting_elements:\t\t\t{0}'.format(self.commutativity_info['commuting_elements']))
-            print('\tnon_commuting_elements:\t\t{0}'.format(self.commutativity_info['non_commuting_elements']))
-            print('\tcommute_with_all:\t\t\t{0}'.format(self.commutativity_info['commute_with_all']))
+            print("\ncommutativity info:")
+            print(f"\tis_commutative_algebra:\t\t{self.commutativity_info['is_commutative_algebra']}")
+            print(f"\tcommuting_elements:\t\t\t{self.commutativity_info['commuting_elements']}")
+            print(f"\tnon_commuting_elements:\t\t{self.commutativity_info['non_commuting_elements']}")
+            print(f"\tcommute_with_all:\t\t\t{self.commutativity_info['commute_with_all']}")
 
         if element_order:
-            print('\nelement order info:')
+            print("\nelement order info:")
             for i in self.element_order_info.keys():
-                print(
-                    '\t{0}:\t   {1},   \t{2}'.format(i, self.element_order_info[i][0],
-                                                     self.element_order_info[i][1:]))
+                print(f"\t{i}:\t   {self.element_order_info[i][0]},   \t{self.element_order_info[i][1:]}")
 

@@ -5,80 +5,98 @@ from cayley_table import CayleyTable
 from Worlds.gridworld2d_walls import Gridworld2DWalls
 from Worlds.gridworld2d_block import Gridworld2DBlock
 from Worlds.gridworld2d_consumable import Gridworld2DConsumables
+
+from OLD_cayley_table_properties import CayleyTablePropertyChecker
+
+# ########################################################################################################################
+# def convert(elements):
+#     replacements = {'E': 'R', 'N': 'U', 'S': 'D', 'W': 'L'}
+#
+#     new_elements = []
+#     for element in elements:
+#         new_element = ''
+#         for char in element:
+#             if char in replacements:
+#                 new_element += replacements[char]
+#             else:
+#                 new_element += char
+#         new_elements.append(new_element)
+#     return new_elements
+
+
 ########################################################################################################################
-
-grid_size = (2, 2)
-initial_agent_position = (0, 0)
-minimum_actions = ['N', 'E', 'W', 'S', 'S', '1']
-
-# Walls
-wall_positions = [(0.5, 0)]
-wall_strategy = 'identity'
-
-# Block
-initial_block_position = (0, 1)
-
-# Consumables
-initial_consumable_positions = [(1, 0)]
-consumable_strategy = 'masked'
-
-print('Run details:')
-print(f"\tgrid_size: {grid_size}")
-print(f"\tinitial_agent_state: {initial_agent_position}")
-print(f"\tminimum_actions: {minimum_actions}")
+# grid_size = (4, 1)
+# initial_agent_position = (0, 0)
+# minimum_actions = ['N', 'E', 'W', 'S', 'S', '1']
+#
+# # Walls
+# wall_positions = [(0.5, 0)]
+# wall_strategy = 'masked'
+#
+# # Block
+# initial_block_position = (1, 0)
+#
+# # Consumables
+# initial_consumable_positions = [(1, 0)]         # TODO: check consumable positions are in grid.
+# consumable_strategy = 'identity'
+#
+# print('Run details:')
+# print(f"\tgrid_size: {grid_size}")
+# print(f"\tinitial_agent_state: {initial_agent_position}")
+# print(f"\tminimum_actions: {minimum_actions}")
 
 ####################################################################################################################
 # No walls.
 ####################################################################################################################
-t0 = time.time()
-print('\nNo walls')
-table = CayleyTable()
-parameters = {'minimum_actions': minimum_actions,
-              'world': Gridworld2DWalls(grid_size=grid_size,
-                                        initial_agent_position=initial_agent_position),
-              }
-table.generate_cayley_table(**parameters)
-print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
-                                                           len(table.cayley_table_states.columns.values)))
-print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
-print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
-print('\nEquivalence classes:')
-for i in table.ecs.keys():
-    print('    {0}:\t\t\t{1}'.format(i, table.ecs[i]))
-print('\nAction Cayley table equivalence classes:')
-for i in table.cayley_table_ecs.keys():
-    print('    {0}:\t\t\t{1}'.format(i, table.cayley_table_ecs[i]))
-table.save_cayley_table(
-    file_name=f"table_{grid_size[0]}x{grid_size[1]}_no_walls_w{str(initial_agent_position).replace(', ', '_')}")
-print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
+# t0 = time.time()
+# print('\nNo walls')
+# table = CayleyTable()
+# parameters = {'minimum_actions': minimum_actions,
+#               'world': Gridworld2DWalls(grid_size=grid_size,
+#                                         initial_agent_position=initial_agent_position),
+#               }
+# table.generate_cayley_table(**parameters)
+# print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
+#                                                            len(table.cayley_table_states.columns.values)))
+# print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
+# print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
+# print('\nEquivalence classes:')
+# for i in table.ecs.keys():
+#     print('    {0}:\t\t\t{1}'.format(i, table.ecs[i]))
+# print('\nAction Cayley table equivalence classes:')
+# for i in table.cayley_table_ecs.keys():
+#     print('    {0}:\t\t\t{1}'.format(i, table.cayley_table_ecs[i]))
+# table.save_cayley_table(
+#     file_name=f"table_{grid_size[0]}x{grid_size[1]}_no_walls_w{str(initial_agent_position).replace(', ', '_')}")
+# print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
 
 ####################################################################################################################
 # Walls.
 ####################################################################################################################
-t0 = time.time()
-print(f"\n\nWalls - {wall_strategy}")
-print(f"\twall_positions: {wall_positions}")
-table = CayleyTable()
-parameters = {'minimum_actions': minimum_actions,
-              'world': Gridworld2DWalls(grid_size=grid_size,
-                                        initial_agent_position=initial_agent_position,
-                                        wall_positions=wall_positions,
-                                        wall_strategy=wall_strategy),
-              }
-table.generate_cayley_table(**parameters)
-print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
-                                                           len(table.cayley_table_states.columns.values)))
-print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
-print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
-print('\nEquivalence classes:')
-for i in table.ecs.keys():
-    print('\t{0}:\t\t\t{1}'.format(i, table.ecs[i]))
-print('\nAction Cayley table equivalence classes:')
-for i in table.cayley_table_ecs.keys():
-    print('    {0}:\t\t\t{1}'.format(i, table.cayley_table_ecs[i]))
-file_name = f"table_{grid_size[0]}x{grid_size[1]}_wall_{str(wall_positions).replace(', ', '_')}_{wall_strategy}_w{str(initial_agent_position).replace(', ', '_')}2"
-table.save_cayley_table(file_name=file_name)
-print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
+# t0 = time.time()
+# print(f"\n\nWalls - {wall_strategy}")
+# print(f"\twall_positions: {wall_positions}")
+# table = CayleyTable()
+# parameters = {'minimum_actions': minimum_actions,
+#               'world': Gridworld2DWalls(grid_size=grid_size,
+#                                         initial_agent_position=initial_agent_position,
+#                                         wall_positions=wall_positions,
+#                                         wall_strategy=wall_strategy),
+#               }
+# table.generate_cayley_table(**parameters)
+# print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
+#                                                            len(table.cayley_table_states.columns.values)))
+# print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
+# print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
+# print('\nEquivalence classes:')
+# for i in table.ecs.keys():
+#     print('\t{0}:\t\t\t{1}'.format(i, table.ecs[i]))
+# print('\nAction Cayley table equivalence classes:')
+# for i in table.cayley_table_ecs.keys():
+#     print('    {0}:\t\t\t{1}'.format(i, table.cayley_table_ecs[i]))
+# file_name = f"table_{grid_size[0]}x{grid_size[1]}_wall_{str(wall_positions).replace(', ', '_')}_{wall_strategy}_w{str(initial_agent_position).replace(', ', '_')}2"
+# table.save_cayley_table(file_name=file_name)
+# print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
 
 ####################################################################################################################
 # Block.
@@ -133,3 +151,49 @@ print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
 # file_name = f"table_{grid_size[0]}x{grid_size[1]}_consumables_{consumable_strategy}_w{str((*initial_agent_position, *tuple(initial_consumable_positions))).replace(', ', '_')}"
 # table.save_cayley_table(file_name=file_name)
 # print(f'\nTotal time taken: {round(time.time() - t0, 2)}s')
+
+
+
+
+
+####################################################################################################################
+# Laure potential counter example
+####################################################################################################################
+from Worlds.laure_potential_counterexample import GraphWorld1
+
+t0 = time.time()
+print("\n\nLaure potential counter example")
+table = CayleyTable()
+parameters = {'minimum_actions': ['1', 'a', 'b'],
+              'world': GraphWorld1(initial_agent_state=(3,))}
+table.generate_cayley_table(**parameters)
+
+# Printing results.
+print('\nCayley table elements (total: {1}): \n{0}'.format(list(table.cayley_table_states.columns.values),
+                                                           len(table.cayley_table_states.columns.values)))
+print('\nState Cayley table: \n{0}'.format(table.cayley_table_states.to_string()))
+print('\nAction Cayley table: \n{0}'.format((table.cayley_table_actions.to_string())))
+print('\nEquivalence classes:')
+for i in table.ecs.keys():
+    print('\t{0}:\t\t\t{1}'.format(i, table.ecs[i]))
+print('\nAction Cayley table equivalence classes:')
+for i in table.cayley_table_ecs.keys():
+    print('    {0}:\t\t\t{1}'.format(i, table.cayley_table_ecs[i]))
+
+
+
+
+
+####################################################################################################################
+# Property checker.
+####################################################################################################################
+
+table.check_identity()
+table.check_inverse()
+table.check_commutativity()
+table.check_associativity()
+table.find_element_order()
+table.print_properties_info()
+
+
+

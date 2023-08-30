@@ -4,34 +4,32 @@ import itertools
 
 def check_identity(cayley_table):
     """
-    Uses the action Cayley table to find identity elements, which are stored in self.identity_info.
+    Uses the action Cayley table to find identity elements, which are stored in identity_info.
     """
     if cayley_table.cayley_table_actions is None:
         raise Exception(
             'Generate Cayley table using self.generateCayleyTable(parameters) before searching for identities.')
 
-    cayley_table.identity_info = {'is_identity_algebra': None}
-
-    # Find left identities.
-    cayley_table.identity_info['left_identities'] = find_left_identities(cayley_table=cayley_table)
-
-    # Find right identities.
-    cayley_table.identity_info['right_identities'] = find_right_identities(cayley_table=cayley_table)
+    identity_info = {'is_identity_algebra': None,
+                                  'left_identities': find_left_identities(cayley_table=cayley_table),
+                                  'right_identities': find_right_identities(cayley_table=cayley_table)}
 
     # Find identities.
-    cayley_table.identity_info['identities'] = find_identities(
-        left_identities=cayley_table.identity_info['left_identities'],
-        right_identities=cayley_table.identity_info['right_identities'])
+    identity_info['identities'] = find_identities(
+        left_identities=identity_info['left_identities'],
+        right_identities=identity_info['right_identities'])
 
     # Check there is only a single identity.
-    if len(cayley_table.identity_info['identities']) > 1:
-        raise Exception(f"More than one identity.\n\tidentities:\t\t{cayley_table.identity_info['identities']}")
+    if len(identity_info['identities']) > 1:
+        raise Exception(f"More than one identity.\n\tidentities:\t\t{identity_info['identities']}")
 
     # Record if algebra has an identity.
-    if len(cayley_table.identity_info['identities']) == 0:
-        cayley_table.identity_info['is_identity_algebra'] = False
+    if len(identity_info['identities']) == 0:
+        identity_info['is_identity_algebra'] = False
     else:
-        cayley_table.identity_info['is_identity_algebra'] = True
+        identity_info['is_identity_algebra'] = True
+
+    return identity_info
 
 
 def find_left_identities(cayley_table):
@@ -39,18 +37,19 @@ def find_left_identities(cayley_table):
     left_identities = list(copy.deepcopy(cayley_table.cayley_table_actions.index))
 
     # Test if e is a left identity (e_L * a = a).
-    for e_L, a in itertools.product(cayley_table.cayley_table_actions.index,
-                                    cayley_table.cayley_table_actions.index):  # TODO: make one into columns.
-        # Look up the outcome of the LHS of the left identity equation using the action Cayley table.
-        LHS_outcome = cayley_table.find_outcome_cayley(left_action=e_L, right_action=a)
+    for e_L in cayley_table.cayley_table_actions.index:
+        for a in cayley_table.cayley_table_actions.index:
+            # Look up the outcome of the LHS of the left identity equation using the action Cayley table.
+            LHS_outcome = cayley_table.find_outcome_cayley(left_action=e_L, right_action=a)
 
-        # Outcome for the RHS of the left identity equation is just the element a.
-        RHS_outcome = a
+            # Outcome for the RHS of the left identity equation is just the element a.
+            RHS_outcome = a
 
-        # If the left identity equation is not satisfied, then e is not a left identity.
-        if LHS_outcome != RHS_outcome:
-            left_identities.remove(e_L)
-            break
+            # If the left identity equation is not satisfied, then e_L is not a left identity.
+            if LHS_outcome != RHS_outcome:
+                left_identities.remove(e_L)
+                # Choose another candidate left inverse e_L.
+                break
 
     return left_identities
 
@@ -60,18 +59,19 @@ def find_right_identities(cayley_table):
     right_identities = list(copy.deepcopy(cayley_table.cayley_table_actions.index))
 
     # Test if e is a right identity (a * e_R = a)
-    for e_R, a in itertools.product(cayley_table.cayley_table_actions.index,
-                                    cayley_table.cayley_table_actions.index):   # TODO: make one into columns.
-        # Look up the outcome of the LHS of the right identity equation using the action Cayley table.
-        LHS_outcome = cayley_table.find_outcome_cayley(left_action=a, right_action=e_R)
+    for e_R in cayley_table.cayley_table_actions.index:
+        for a in cayley_table.cayley_table_actions.index:
+            # Look up the outcome of the LHS of the right identity equation using the action Cayley table.
+            LHS_outcome = cayley_table.find_outcome_cayley(left_action=a, right_action=e_R)
 
-        # Outcome for the RHS of the right identity equation is just the element a.
-        RHS_outcome = a
+            # Outcome for the RHS of the right identity equation is just the element a.
+            RHS_outcome = a
 
-        # If the right identity equation is not satisfied, then e is not a right identity.
-        if LHS_outcome != RHS_outcome:
-            right_identities.remove(e_R)
-            break
+            # If the right identity equation is not satisfied, then e_R is not a right identity.
+            if LHS_outcome != RHS_outcome:
+                right_identities.remove(e_R)
+                # Choose another candidate right inverse e_R.
+                break
 
     return right_identities
 
