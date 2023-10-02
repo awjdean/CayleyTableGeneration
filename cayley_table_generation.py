@@ -80,7 +80,7 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
     ################################################################################################################
     # PART I - # TODO: put into function - generate_initial_state_cayley_table
     # Use minimum actions to create the initial state Cayley table using minimum actions, then fill the table.
-    # TODO: Merge this into while loop:
+    # TODO: Merge this into while loop(?):
     #   1. Create state Cayley table using first element in _minimum_actions.
     #   2. Add the minimum actions to candidate_cayley_elements.
     #   3. Start the while loop.
@@ -88,7 +88,7 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
     ################################################################################################################
     # Create initial state Cayley table using minimum actions.
     ################################################################################################################
-    # TODO: pandas --> dict.
+    # TODO: pandas --> dict?
     cayley_table.cayley_table_states = pandas.DataFrame(columns=copy.deepcopy(minimum_actions),
                                                         index=copy.deepcopy(minimum_actions))
 
@@ -189,7 +189,6 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
         ############################################################################################################
         # Check if the candidate element breaks equivalence classes. If so, then split those equivalence classes.
         ############################################################################################################
-        # TODO: Write this function up in Overleaf notes.
         temp_ecs, cayley_table.ecs = find_broken_equivalence_classes(candidate_element=candidate_element,
                                                                      ecs=cayley_table.ecs,
                                                                      world=world)
