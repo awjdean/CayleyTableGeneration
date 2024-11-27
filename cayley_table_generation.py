@@ -62,9 +62,10 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
     """
 
     # Save Cayley table generation parameters.
-    cayley_table.cayley_table_generation_parameters = {'minimum_actions': minimum_actions,
-                                                       'world': world
-                                                       }
+    cayley_table.cayley_table_generation_parameters = {
+        "minimum_actions": minimum_actions,
+        "world": world,
+    }
 
     # TODO: remove ?
     visited_world_states = set()
@@ -75,7 +76,7 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
     cayley_table.ecs = {}
 
     ################################################################################################################
-    print('\nGenerating state Cayley table.')
+    print("\nGenerating state Cayley table.")
     t_generate_cayleys = time.time()
     ################################################################################################################
     # PART I - # TODO: put into function - generate_initial_state_cayley_table
@@ -89,20 +90,22 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
     # Create initial state Cayley table using minimum actions.
     ################################################################################################################
     # TODO: pandas --> dict?
-    cayley_table.cayley_table_states = pandas.DataFrame(columns=copy.deepcopy(minimum_actions),
-                                                        index=copy.deepcopy(minimum_actions))
+    cayley_table.cayley_table_states = pandas.DataFrame(
+        columns=copy.deepcopy(minimum_actions), index=copy.deepcopy(minimum_actions)
+    )
 
     ################################################################################################################
     # Fill initial state Cayley table.
     ################################################################################################################
-    for row_index, column_index in itertools.product(range(len(cayley_table.cayley_table_states.index)),
-                                                     range(len(cayley_table.cayley_table_states.columns))):
+    for row_index, column_index in itertools.product(
+        range(len(cayley_table.cayley_table_states.index)),
+        range(len(cayley_table.cayley_table_states.columns)),
+    ):
         right_action_sequence = cayley_table.cayley_table_states.index[row_index]
         left_action_sequence = cayley_table.cayley_table_states.columns[column_index]
         action_sequence = left_action_sequence + right_action_sequence
 
-        outcome = find_outcome_agent(action_sequence=action_sequence,
-                                     world=world)
+        outcome = find_outcome_agent(action_sequence=action_sequence, world=world)
 
         # Fill state Cayley table.
         cayley_table.cayley_table_states.iat[row_index, column_index] = outcome
@@ -111,26 +114,32 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
     # Create initial equivalence classes and remove equivalent elements from the state Cayley table.
     ################################################################################################################
     # Check if any of the elements in the state Cayley table are equivalent.
-    equivalents_found = find_equivalents_in_state_cayley_table(state_cayley_table=cayley_table.cayley_table_states)
+    equivalents_found = find_equivalents_in_state_cayley_table(
+        state_cayley_table=cayley_table.cayley_table_states
+    )
 
     # Create initial equivalence classes.
     rows_columns_to_keep = list(range(cayley_table.cayley_table_states.shape[0]))
     for i in range(len(cayley_table.cayley_table_states.index)):
         if i not in equivalents_found.keys():
-            outcome = find_outcome_agent(action_sequence=minimum_actions[i],
-                                         world=world)
+            outcome = find_outcome_agent(
+                action_sequence=minimum_actions[i], world=world
+            )
             cayley_table.ecs[cayley_table.cayley_table_states.index[i]] = {
-                'class_elements': set([cayley_table.cayley_table_states.index[i]]),
-                'end_world_state': outcome,
+                "class_elements": set([cayley_table.cayley_table_states.index[i]]),
+                "end_world_state": outcome,
             }
             visited_world_states.add(outcome)
         else:
-            cayley_table.ecs[cayley_table.cayley_table_states.index[equivalents_found[i]]]['class_elements'].add(
-                cayley_table.cayley_table_states.index[i])
+            cayley_table.ecs[
+                cayley_table.cayley_table_states.index[equivalents_found[i]]
+            ]["class_elements"].add(cayley_table.cayley_table_states.index[i])
             rows_columns_to_keep.remove(i)
 
     # Remove equivalent elements from state Cayley table.
-    cayley_table.cayley_table_states = cayley_table.cayley_table_states.iloc[rows_columns_to_keep, rows_columns_to_keep]
+    cayley_table.cayley_table_states = cayley_table.cayley_table_states.iloc[
+        rows_columns_to_keep, rows_columns_to_keep
+    ]
 
     ################################################################################################################
     # PART II
@@ -150,12 +159,16 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
         ############################################################################################################
         if len(candidate_cayley_table_elements) == 0:
             tx2 = time.time()
-            candidate_cayley_table_elements = search_state_cayley_table_for_new_candidate_elements(
-                cayley_table_states=cayley_table.cayley_table_states,
-                world=world,
-                equivalence_classes=cayley_table.ecs)
+            candidate_cayley_table_elements = (
+                search_state_cayley_table_for_new_candidate_elements(
+                    cayley_table_states=cayley_table.cayley_table_states,
+                    world=world,
+                    equivalence_classes=cayley_table.ecs,
+                )
+            )
             print(
-                f'\t{len(candidate_cayley_table_elements)} candidate elements found (time taken: {round(time.time() - tx2, 2)}s).')
+                f"\t{len(candidate_cayley_table_elements)} candidate elements found (time taken: {round(time.time() - tx2, 2)}s)."
+            )
 
         ############################################################################################################
         # If there are no candidate elements then the state Cayley table is complete.
@@ -165,9 +178,12 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
 
         # Select candidate_element.
         candidate_element = candidate_cayley_table_elements.pop()
-        print(f'\tNum candidate_cayley_table_elements remaining: {len(candidate_cayley_table_elements)}')
         print(
-            f'\t\t(Num state Cayley table elements, candidate, prev candidate time):\t({len(cayley_table.cayley_table_states.index)},\t{candidate_element},\t{round(time.time() - tx, 2)}s)')
+            f"\tNum candidate_cayley_table_elements remaining: {len(candidate_cayley_table_elements)}"
+        )
+        print(
+            f"\t\t(Num state Cayley table elements, candidate, prev candidate time):\t({len(cayley_table.cayley_table_states.index)},\t{candidate_element},\t{round(time.time() - tx, 2)}s)"
+        )
         tx = time.time()
         ############################################################################################################
         # Check if candidate element is equivalent to another equivalent class labelling element.
@@ -176,22 +192,23 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
         equivalents_found = find_element_equivalents_in_state_cayley_table(
             element=candidate_element,
             state_cayley_table=cayley_table.cayley_table_states,
-            world=world)
+            world=world,
+        )
 
         if len(equivalents_found) == 1:
             # Add equivalent to the relevant equivalence class, and move onto the next candidate element.
             equivalent = equivalents_found.pop()
-            cayley_table.ecs[equivalent[0]]['class_elements'].add(equivalent[1])
+            cayley_table.ecs[equivalent[0]]["class_elements"].add(equivalent[1])
             continue
         elif len(equivalents_found) > 1:
-            raise Exception('Too many equivalents: {0}'.format(equivalents_found))
+            raise Exception("Too many equivalents: {0}".format(equivalents_found))
 
         ############################################################################################################
         # Check if the candidate element breaks equivalence classes. If so, then split those equivalence classes.
         ############################################################################################################
-        temp_ecs, cayley_table.ecs = find_broken_equivalence_classes(candidate_element=candidate_element,
-                                                                     ecs=cayley_table.ecs,
-                                                                     world=world)
+        temp_ecs, cayley_table.ecs = find_broken_equivalence_classes(
+            candidate_element=candidate_element, ecs=cayley_table.ecs, world=world
+        )
 
         ############################################################################################################
         # Add broken equivalence classes to Cayley table and to main dictionary of equivalence classes.
@@ -200,103 +217,133 @@ def generate_cayley_table(cayley_table, minimum_actions: list, world):
         #  class ? --> remember to copy !
         for temp_ec_label in temp_ecs.keys():
             # Add temp_ec_label to state Cayley table.
-            cayley_table.cayley_table_states = add_element_to_state_cayley_table(element=temp_ec_label,
-                                                                                 state_cayley_table=cayley_table.cayley_table_states,
-                                                                                 world=world)
+            cayley_table.cayley_table_states = add_element_to_state_cayley_table(
+                element=temp_ec_label,
+                state_cayley_table=cayley_table.cayley_table_states,
+                world=world,
+            )
 
         # Merge temporary_equivalence classes into equivalence class dictionary.
         if len(temp_ecs.keys()) > 0:
-            print(f'\tEquivalence class(es) split. Candidate element: {candidate_element}')
-            print('\t\ttemp_ecs:')
+            print(
+                f"\tEquivalence class(es) split. Candidate element: {candidate_element}"
+            )
+            print("\t\ttemp_ecs:")
             for j in temp_ecs.keys():
-                print(f'\t\t{temp_ecs[j]}')
+                print(f"\t\t{temp_ecs[j]}")
         cayley_table.ecs = cayley_table.ecs | temp_ecs
 
         ############################################################################################################
         # Add candidate_element to the state Cayley table and to equivalence classes dictionary.
         ############################################################################################################
         # Add candidate element to state Cayley table.
-        cayley_table.cayley_table_states = add_element_to_state_cayley_table(element=candidate_element,
-                                                                             state_cayley_table=cayley_table.cayley_table_states,
-                                                                             world=world)
+        cayley_table.cayley_table_states = add_element_to_state_cayley_table(
+            element=candidate_element,
+            state_cayley_table=cayley_table.cayley_table_states,
+            world=world,
+        )
 
         # Create equivalence class for candidate element.
-        cayley_table.ecs[candidate_element] = {'class_elements': set([candidate_element]),
-                                               'end_world_state': find_outcome_agent(
-                                                   action_sequence=candidate_element,
-                                                   world=world)
-                                               }
+        cayley_table.ecs[candidate_element] = {
+            "class_elements": set([candidate_element]),
+            "end_world_state": find_outcome_agent(
+                action_sequence=candidate_element, world=world
+            ),
+        }
 
         ############################################################################################################
-    print(f'State Cayley table generated (time taken: {round(time.time() - t_generate_cayleys, 2)}s).')
+    print(
+        f"State Cayley table generated (time taken: {round(time.time() - t_generate_cayleys, 2)}s)."
+    )
     ################################################################################################################
     # Part III
     # Checks.
     ################################################################################################################
-    print('\nPerforming checks.')
+    print("\nPerforming checks.")
     tx = time.time()
     ################################################################################################################
     # CHECK for equivalent elements in the state Cayley table --> there should be none.
     ################################################################################################################
     try:
-        assert len(find_equivalents_in_state_cayley_table(state_cayley_table=cayley_table.cayley_table_states)) == 0
+        assert (
+            len(
+                find_equivalents_in_state_cayley_table(
+                    state_cayley_table=cayley_table.cayley_table_states
+                )
+            )
+            == 0
+        )
     except AssertionError:
         raise Exception(
-            f"Too many equivalents: {find_equivalents_in_state_cayley_table(state_cayley_table=cayley_table.cayley_table_states)}")
+            f"Too many equivalents: {find_equivalents_in_state_cayley_table(state_cayley_table=cayley_table.cayley_table_states)}"
+        )
 
     ################################################################################################################
     # CHECK that each element is only in one equivalence class.
     ################################################################################################################
-    check_each_action_sequence_in_single_equivalence_class(equivalence_classes=cayley_table.ecs)
+    check_each_action_sequence_in_single_equivalence_class(
+        equivalence_classes=cayley_table.ecs
+    )
 
-    print(f'Checks complete (time taken: {round(time.time() - tx, 2)}s).')
+    print(f"Checks complete (time taken: {round(time.time() - tx, 2)}s).")
 
     ################################################################################################################
     # Part IV
     # Action Cayley table.
     ################################################################################################################
-    print('\nGenerating action Cayley table.')
+    print("\nGenerating action Cayley table.")
     tx = time.time()
 
     # Relabel equivalence classes with their shortest label and change the relevant Cayley table row-column labels.
     cayley_table.ecs, cayley_table.cayley_table_states = relabel_equivalence_classes(
         equivalence_classes=cayley_table.ecs,
-        cayley_table_states=cayley_table.cayley_table_states)
+        cayley_table_states=cayley_table.cayley_table_states,
+    )
 
     # Create and fill action Cayley table.
     cayley_table.cayley_table_actions, cayley_table.ecs = generate_action_cayley_table(
         equivalence_classes=cayley_table.ecs,
         cayley_table_states=cayley_table.cayley_table_states,
-        world=world)
+        world=world,
+    )
 
     # Generate equivalence for action Cayley table elements only.
-    cayley_table.cayley_table_ecs = generate_action_cayley_equivalence_classes(equivalence_classes=cayley_table.ecs,
-                                                                               cayley_table_actions=cayley_table.cayley_table_actions,
-                                                                               cayley_table_states=cayley_table.cayley_table_states)
+    cayley_table.cayley_table_ecs = generate_action_cayley_equivalence_classes(
+        equivalence_classes=cayley_table.ecs,
+        cayley_table_actions=cayley_table.cayley_table_actions,
+        cayley_table_states=cayley_table.cayley_table_states,
+    )
 
     # Check there are no NaNs in action Cayley table.
     try:
         assert not check_dataframe_for_nans(dataframe=cayley_table.cayley_table_actions)
     except AssertionError:
-        raise Exception(f"NaNs found in action Cayley table:\n{cayley_table.cayley_table_states.to_string()}")
+        raise Exception(
+            f"NaNs found in action Cayley table:\n{cayley_table.cayley_table_states.to_string()}"
+        )
 
-    print(f'Action Cayley table generated (time taken: {round(time.time() - tx, 2)}s).')
+    print(f"Action Cayley table generated (time taken: {round(time.time() - tx, 2)}s).")
 
 
 ########################################################################################################################
-def search_state_cayley_table_for_new_candidate_elements(cayley_table_states, world, equivalence_classes):
+def search_state_cayley_table_for_new_candidate_elements(
+    cayley_table_states, world, equivalence_classes
+):
     """
     Search state Cayley table for new candidate elements.
     """
-    print(f'\tSearching for new candidate elements.')
+    print(f"\tSearching for new candidate elements.")
     candidate_cayley_table_elements = set()
-    for first_action_sequence, second_action_sequence in itertools.product(cayley_table_states.index,
-                                                                           cayley_table_states.columns):
+    for first_action_sequence, second_action_sequence in itertools.product(
+        cayley_table_states.index, cayley_table_states.columns
+    ):
         candidate_element = second_action_sequence + first_action_sequence
 
-        equivalents_found = find_element_equivalents_in_state_cayley_table(element=candidate_element,
-                                                                           state_cayley_table=cayley_table_states,
-                                                                           world=world)
+        equivalents_found = find_element_equivalents_in_state_cayley_table(
+            element=candidate_element,
+            state_cayley_table=cayley_table_states,
+            world=world,
+        )
 
         if len(equivalents_found) == 0:
             # Add to new elements list.
@@ -304,9 +351,9 @@ def search_state_cayley_table_for_new_candidate_elements(cayley_table_states, wo
         elif len(equivalents_found) == 1:
             # Add equivalent to the relevant equivalence class.
             equivalent = equivalents_found.pop()
-            equivalence_classes[equivalent[0]]['class_elements'].add(equivalent[1])
+            equivalence_classes[equivalent[0]]["class_elements"].add(equivalent[1])
         else:
-            raise Exception('Too many equivalents !')
+            raise Exception("Too many equivalents !")
 
     return candidate_cayley_table_elements
 
@@ -318,14 +365,18 @@ def check_dataframe_for_nans(dataframe):
     """
     nan_values = dataframe.isna()
 
-    for row_index, column_index in itertools.product(range(len(nan_values.index)), range(len(nan_values.columns))):
+    for row_index, column_index in itertools.product(
+        range(len(nan_values.index)), range(len(nan_values.columns))
+    ):
         if nan_values.iat[row_index, column_index]:
             return True
     return False
 
 
 ########################################################################################################################
-def generate_action_cayley_equivalence_classes(equivalence_classes, cayley_table_actions, cayley_table_states):
+def generate_action_cayley_equivalence_classes(
+    equivalence_classes, cayley_table_actions, cayley_table_states
+):
     """
     Generate equivalence for action Cayley table elements only.
     """
@@ -333,12 +384,16 @@ def generate_action_cayley_equivalence_classes(equivalence_classes, cayley_table
 
     # Create equivalence classes.
     for labelling_element in equivalence_classes.keys():
-        cayley_table_ecs[labelling_element] = {'class_elements': [labelling_element],
-                                               'end_world_state': equivalence_classes[labelling_element][
-                                                   'end_world_state']}
+        cayley_table_ecs[labelling_element] = {
+            "class_elements": [labelling_element],
+            "end_world_state": equivalence_classes[labelling_element][
+                "end_world_state"
+            ],
+        }
 
-    for row_index, column_index in itertools.product(range(len(cayley_table_actions.index)),
-                                                     range(len(cayley_table_actions.columns))):
+    for row_index, column_index in itertools.product(
+        range(len(cayley_table_actions.index)), range(len(cayley_table_actions.columns))
+    ):
         is_filled_flag = False
         # Get labelling elements from Cayley table.
         right_action_sequence = cayley_table_states.index[row_index]
@@ -348,10 +403,12 @@ def generate_action_cayley_equivalence_classes(equivalence_classes, cayley_table
         # Find label of equivalence class containing action_sequence, then use that label in the actions Cayley
         # table.
         for labelling_element in equivalence_classes.keys():
-            for ec_element in equivalence_classes[labelling_element]['class_elements']:
+            for ec_element in equivalence_classes[labelling_element]["class_elements"]:
                 if candidate_element == ec_element:
                     # Add ec_element to the equivalence class labelled by labelling_element.
-                    cayley_table_ecs[labelling_element]['class_elements'].append(candidate_element)
+                    cayley_table_ecs[labelling_element]["class_elements"].append(
+                        candidate_element
+                    )
                     is_filled_flag = True
                     break
             if is_filled_flag:
@@ -366,12 +423,14 @@ def generate_action_cayley_table(equivalence_classes, cayley_table_states, world
     Create and fill action Cayley table.
     """
     # create action Cayley table.
-    cayley_table_actions = pandas.DataFrame(columns=cayley_table_states.columns,
-                                            index=cayley_table_states.index)
+    cayley_table_actions = pandas.DataFrame(
+        columns=cayley_table_states.columns, index=cayley_table_states.index
+    )
 
     # Fill action Cayley table.
-    for row_index, column_index in itertools.product(range(len(cayley_table_actions.index)),
-                                                     range(len(cayley_table_actions.columns))):
+    for row_index, column_index in itertools.product(
+        range(len(cayley_table_actions.index)), range(len(cayley_table_actions.columns))
+    ):
         is_filled_flag = False
         # Get labelling elements from Cayley table.
         right_action_sequence = cayley_table_states.index[row_index]
@@ -381,10 +440,12 @@ def generate_action_cayley_table(equivalence_classes, cayley_table_states, world
         # Find label of equivalence class containing action_sequence, then use that label in the actions Cayley
         # table.
         for labelling_element in equivalence_classes.keys():
-            for ec_element in equivalence_classes[labelling_element]['class_elements']:
+            for ec_element in equivalence_classes[labelling_element]["class_elements"]:
                 if candidate_element == ec_element:
                     # Fill in action Cayley table value with the equivalence class label.
-                    cayley_table_actions.iat[row_index, column_index] = labelling_element
+                    cayley_table_actions.iat[row_index, column_index] = (
+                        labelling_element
+                    )
                     is_filled_flag = True
                     break
             if is_filled_flag:
@@ -393,17 +454,22 @@ def generate_action_cayley_table(equivalence_classes, cayley_table_states, world
         # If action Cayley table element (candidate_element) not a member of an equivalence class, then find its
         # equivalent in the state Cayley table.
         if not is_filled_flag:
-            equivalents_found = find_element_equivalents_in_state_cayley_table(element=candidate_element,
-                                                                               state_cayley_table=cayley_table_states,
-                                                                               world=world)
+            equivalents_found = find_element_equivalents_in_state_cayley_table(
+                element=candidate_element,
+                state_cayley_table=cayley_table_states,
+                world=world,
+            )
             if len(equivalents_found) == 1:
                 # Fill in action Cayley table value with the equivalence class label.
-                cayley_table_actions.iat[row_index, column_index] = list(equivalents_found)[0][0]
+                cayley_table_actions.iat[row_index, column_index] = list(
+                    equivalents_found
+                )[0][0]
                 # Add equivalent to the relevant equivalence class.
-                equivalence_classes[list(equivalents_found)[0][0]]['class_elements'].append(
-                    list(equivalents_found)[0][1])
+                equivalence_classes[list(equivalents_found)[0][0]][
+                    "class_elements"
+                ].append(list(equivalents_found)[0][1])
             elif len(equivalents_found) > 1:
-                raise Exception('Too many equivalents: {0}'.format(equivalents_found))
+                raise Exception("Too many equivalents: {0}".format(equivalents_found))
 
     return cayley_table_actions, equivalence_classes
 
@@ -417,7 +483,9 @@ def relabel_equivalence_classes(equivalence_classes, cayley_table_states):
     old_ec_labels = list(equivalence_classes.keys())
     for ec_label in old_ec_labels:
         # Sort equivalence class elements by alphabetical order and length order.
-        sorted_ec_elements = sorted(list(equivalence_classes[ec_label]['class_elements']))
+        sorted_ec_elements = sorted(
+            list(equivalence_classes[ec_label]["class_elements"])
+        )
         sorted_ec_elements = sorted(sorted_ec_elements, key=len)
 
         # New labelling element is first element in sorted_ec_elements.
@@ -428,19 +496,21 @@ def relabel_equivalence_classes(equivalence_classes, cayley_table_states):
 
         # Relabel equivalence class.
         equivalence_classes[new_ec_label] = equivalence_classes.pop(ec_label)
-        equivalence_classes[new_ec_label]['class_elements'] = sorted_ec_elements
+        equivalence_classes[new_ec_label]["class_elements"] = sorted_ec_elements
 
     # Relabel state Cayley table.
-    cayley_table_states = cayley_table_states.rename(columns=cayley_table_relabelling_dict,
-                                                     index=cayley_table_relabelling_dict)
+    cayley_table_states = cayley_table_states.rename(
+        columns=cayley_table_relabelling_dict, index=cayley_table_relabelling_dict
+    )
 
     # TODO: do this when generating pandas dataframe from dictionary?
     # Order state Cayley table rows and columns according to same ordering as equivalence classes were relabeled.
     cayley_tables_row_columns = list(cayley_table_states.index)
     sorted_cayley_tables_row_columns = sorted(cayley_tables_row_columns)
     sorted_cayley_tables_row_columns = sorted(sorted_cayley_tables_row_columns, key=len)
-    cayley_table_states = cayley_table_states.reindex(index=sorted_cayley_tables_row_columns,
-                                                      columns=sorted_cayley_tables_row_columns)
+    cayley_table_states = cayley_table_states.reindex(
+        index=sorted_cayley_tables_row_columns, columns=sorted_cayley_tables_row_columns
+    )
 
     return equivalence_classes, cayley_table_states
 
@@ -470,8 +540,9 @@ def generate_state_cayley_row(element, state_cayley_table, world):
     # Old method.
     element_row2 = {}
     for column_label2 in state_cayley_table.columns:
-        outcome = find_outcome_agent(action_sequence=(column_label2 + element),
-                                     world=world)  # TODO: have removed deepcopy.
+        outcome = find_outcome_agent(
+            action_sequence=(column_label2 + element), world=world
+        )  # TODO: have removed deepcopy.
         element_row2[column_label2] = outcome
     element_row = element_row2
     # Check if new method gives same result as old method.
@@ -506,8 +577,9 @@ def generate_state_cayley_column(element, state_cayley_table, world):
     # Old method.
     element_column2 = {}
     for row_label2 in state_cayley_table.index:
-        outcome = find_outcome_agent(action_sequence=(element + row_label2),
-                                     world=world)  # TODO: have removed deepcopy.
+        outcome = find_outcome_agent(
+            action_sequence=(element + row_label2), world=world
+        )  # TODO: have removed deepcopy.
         element_column2[row_label2] = outcome
     element_column = element_column2
     # # Check if new method gives same result as old method.
@@ -518,10 +590,9 @@ def generate_state_cayley_column(element, state_cayley_table, world):
 
 
 ########################################################################################################################
-def add_element_to_state_cayley_table(element,
-                                      state_cayley_table,
-                                      world,
-                                      equivalence_classes=None):
+def add_element_to_state_cayley_table(
+    element, state_cayley_table, world, equivalence_classes=None
+):
     """
     Adds an element to the state Cayley table and fills in the row and column for that element.
     :param world:
@@ -531,25 +602,24 @@ def add_element_to_state_cayley_table(element,
     :return:
     """
     # Generate state Cayley table row for element.
-    element_row = generate_state_cayley_row(element=element,
-                                            state_cayley_table=state_cayley_table,
-                                            world=world)
+    element_row = generate_state_cayley_row(
+        element=element, state_cayley_table=state_cayley_table, world=world
+    )
     # Add candidate_element row to state Cayley table.
-    element_row = pandas.DataFrame([element_row],
-                                   columns=state_cayley_table.columns,
-                                   index=[element])
+    element_row = pandas.DataFrame(
+        [element_row], columns=state_cayley_table.columns, index=[element]
+    )
     state_cayley_table = pandas.concat([state_cayley_table, element_row])
 
     # Generate state Cayley table column for element.
-    element_column = generate_state_cayley_column(element=element,
-                                                  state_cayley_table=state_cayley_table,
-                                                  world=world)
+    element_column = generate_state_cayley_column(
+        element=element, state_cayley_table=state_cayley_table, world=world
+    )
     # Add element column to state Cayley table.
-    element_column = pandas.Series(element_column,
-                                   name=element,
-                                   index=state_cayley_table.index)
-    state_cayley_table = pandas.concat([state_cayley_table, element_column],
-                                       axis=1)
+    element_column = pandas.Series(
+        element_column, name=element, index=state_cayley_table.index
+    )
+    state_cayley_table = pandas.concat([state_cayley_table, element_column], axis=1)
 
     # TODO: SPLIT_FROM method:
     # SPLIT_FROM method - use split_from's column then complete. - will this work?
@@ -565,10 +635,12 @@ def add_element_to_state_cayley_table(element,
 def check_each_action_sequence_in_single_equivalence_class(equivalence_classes):
     ### Select element in equivalence class.
     for labelling_element in equivalence_classes.keys():
-        for check_element in equivalence_classes[labelling_element]['class_elements']:
+        for check_element in equivalence_classes[labelling_element]["class_elements"]:
             ec_of_matching_elements = []
             ### Check if element is the same as any of the other elements in this equivalence class.
-            for comparison_element in equivalence_classes[labelling_element]['class_elements']:
+            for comparison_element in equivalence_classes[labelling_element][
+                "class_elements"
+            ]:
                 if check_element == comparison_element:
                     ec_of_matching_elements.append(labelling_element)
 
@@ -577,15 +649,20 @@ def check_each_action_sequence_in_single_equivalence_class(equivalence_classes):
                 # Already checked elements in same equivalence class.
                 if comparison_labelling_element == labelling_element:
                     continue
-                for comparison_element in equivalence_classes[comparison_labelling_element]['class_elements']:
+                for comparison_element in equivalence_classes[
+                    comparison_labelling_element
+                ]["class_elements"]:
                     if check_element == comparison_element:
                         ec_of_matching_elements.append(comparison_labelling_element)
 
             if (len(ec_of_matching_elements) != 1) and (
-                    ec_of_matching_elements[0] != labelling_element):
+                ec_of_matching_elements[0] != labelling_element
+            ):
                 raise Exception(
-                    'Element in more than one equivalence class. \nEquivalence_class_of_matching_elements = {0}'.format(
-                        ec_of_matching_elements))
+                    "Element in more than one equivalence class. \nEquivalence_class_of_matching_elements = {0}".format(
+                        ec_of_matching_elements
+                    )
+                )
 
 
 ########################################################################################################################
@@ -614,14 +691,14 @@ def find_element_equivalents_in_state_cayley_table(element, state_cayley_table, 
     :return:
     """
     # Generate state Cayley table row for element.
-    element_row = generate_state_cayley_row(element=element,
-                                            state_cayley_table=state_cayley_table,
-                                            world=world)
+    element_row = generate_state_cayley_row(
+        element=element, state_cayley_table=state_cayley_table, world=world
+    )
 
     # Generate state Cayley table column for element.
-    element_column = generate_state_cayley_column(element=element,
-                                                  state_cayley_table=state_cayley_table,
-                                                  world=world)
+    element_column = generate_state_cayley_column(
+        element=element, state_cayley_table=state_cayley_table, world=world
+    )
 
     # TODO: parallelise this ?
     equivalents_found = set()
@@ -629,8 +706,12 @@ def find_element_equivalents_in_state_cayley_table(element, state_cayley_table, 
         cayley_element_row = dict(state_cayley_table.iloc[cayley_element_index])
         cayley_element_column = dict(state_cayley_table.iloc[:, cayley_element_index])
 
-        if (cayley_element_row == element_row) and (cayley_element_column == element_column):
-            equivalents_found.add((state_cayley_table.index[cayley_element_index], element))
+        if (cayley_element_row == element_row) and (
+            cayley_element_column == element_column
+        ):
+            equivalents_found.add(
+                (state_cayley_table.index[cayley_element_index], element)
+            )
 
     return equivalents_found
 
@@ -655,13 +736,20 @@ def find_equivalents_in_state_cayley_table(state_cayley_table):
 
         for comparison_element_index in range(len(state_cayley_table.index)):
             if (comparison_element_index == element_index) or (
-                    comparison_element_index in equivalents_found.keys()):
+                comparison_element_index in equivalents_found.keys()
+            ):
                 continue
 
-            comparison_element_row = list(state_cayley_table.iloc[comparison_element_index])
-            comparison_element_column = list(state_cayley_table.iloc[:, comparison_element_index])
+            comparison_element_row = list(
+                state_cayley_table.iloc[comparison_element_index]
+            )
+            comparison_element_column = list(
+                state_cayley_table.iloc[:, comparison_element_index]
+            )
 
-            if (comparison_element_row == element_row) and (comparison_element_column == element_column):
+            if (comparison_element_row == element_row) and (
+                comparison_element_column == element_column
+            ):
                 equivalents_found[comparison_element_index] = element_index
 
     return equivalents_found
@@ -686,21 +774,23 @@ def find_broken_equivalence_classes(candidate_element, ecs, world):
     temp_ecs = {}
     for ec_label in ecs.keys():
         # If equivalence class contains a single element, skip it because there are no equivalences to break.
-        if len(ecs[ec_label]['class_elements']) == 1:
+        if len(ecs[ec_label]["class_elements"]) == 1:
             continue
 
         # Find outcome of the equivalence class labelling element acting on w0 after the candidate element:
         # (ec_label \circ a_{C}) * w0.
         # TODO: do I already have this from the equivalence class check ?
-        ec_label_outcome = find_outcome_agent(action_sequence=(ec_label + candidate_element),
-                                              world=world)
+        ec_label_outcome = find_outcome_agent(
+            action_sequence=(ec_label + candidate_element), world=world
+        )
 
         # Find outcome of each equivalence class element acting on w0 after the candidate element:
         # (ec_element \circ a_{C}) * w_{0}.
         # TODO: convert to list ?
-        for ec_element in copy.deepcopy(ecs[ec_label]['class_elements']):
-            ec_element_outcome = find_outcome_agent(action_sequence=(ec_element + candidate_element),
-                                                    world=world)
+        for ec_element in copy.deepcopy(ecs[ec_label]["class_elements"]):
+            ec_element_outcome = find_outcome_agent(
+                action_sequence=(ec_element + candidate_element), world=world
+            )
 
             # If ec_element produces different result to the class_label_element, then need to split
             # ec_element into another equivalence class.
@@ -710,24 +800,24 @@ def find_broken_equivalence_classes(candidate_element, ecs, world):
                     # To be in the same temporary equivalence class, elements must be split from the same
                     # equivalence class; therefore only check temporary equivalence classes split from
                     # ec_label's equivalence class.
-                    if temp_ecs[temp_ec_label]['split_from'] != ec_label:
+                    if temp_ecs[temp_ec_label]["split_from"] != ec_label:
                         continue
 
                     # Find outcome of temp_ec_label acting on w0 after a_{C} has acted on w0
                     # (temp_ec_label \circ a_{C}) * w_{0}.
                     temp_ec_label_outcome = find_outcome_agent(
-                        action_sequence=(temp_ec_label + candidate_element),
-                        world=world)
+                        action_sequence=(temp_ec_label + candidate_element), world=world
+                    )
 
                     # If the temp_ec_label_outcome is the same as the ec_element_outcome, then add ec_element
                     # to the temp_ec_label temporary equivalence class, and remove the ec_element from the
                     # ec_label equivalence class.
                     if ec_element_outcome == temp_ec_label_outcome:
                         # Add ec_element to temporary equivalence class
-                        temp_ecs[temp_ec_label]['class_elements'].add(ec_element)
+                        temp_ecs[temp_ec_label]["class_elements"].add(ec_element)
                         flag_temp_ec_found = True
                         # Remove ec_element from ec_label equivalence class.
-                        ecs[ec_label]['class_elements'].remove(ec_element)
+                        ecs[ec_label]["class_elements"].remove(ec_element)
                         # Break from loop because each ec_element can only be in one temporary equivalence class.
                         break
 
@@ -736,10 +826,11 @@ def find_broken_equivalence_classes(candidate_element, ecs, world):
                 if not flag_temp_ec_found:
                     # Create new temporary equivalence class labelled by ec_element.
                     temp_ecs[ec_element] = {
-                        'class_elements': set([ec_element]),
-                        'end_world_state': ecs[ec_label]['end_world_state'],
-                        'split_from': ec_label}
+                        "class_elements": set([ec_element]),
+                        "end_world_state": ecs[ec_label]["end_world_state"],
+                        "split_from": ec_label,
+                    }
                     # Remove ec_element from ec_label equivalence class.
-                    ecs[ec_label]['class_elements'].remove(ec_element)
+                    ecs[ec_label]["class_elements"].remove(ec_element)
 
     return temp_ecs, ecs
