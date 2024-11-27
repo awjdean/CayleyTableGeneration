@@ -3,45 +3,44 @@ from enum import Enum
 from ..base_world import BaseWorld
 from .generate_states import generate_states
 
-GridPosition = tuple[int, int]
-ActionType = str
-TransformationMatrix = dict[GridPosition, dict[ActionType, GridPosition]]
-
 
 class Gridworld2D(BaseWorld):
-    def __init__(self, grid_shape: GridPosition, **kwargs) -> None:
+    def __init__(self, grid_shape: tuple[int, int], **kwargs) -> None:
         """Initialize a 2D grid world.
 
         Args:
             grid_shape: Tuple of (max_x, max_y) defining maximum grid coordinates
             **kwargs: Optional keyword arguments
-                minimum_actions: List of possible actions
-                  (default: ["1", "W", "E", "N", "S"])
-                initial_agent_state: Starting position as (x, y) tuple (default: (0, 0))
-
-        Raises:
-            ValueError: If grid dimensions are not positive integers or initial state is
-              invalid
+                minimum_actions: List of possible actions (default: ["1", "W", "E", "N", "S"])
+                initial_agent_position: Starting position as (x, y) tuple (default: (0, 0))
         """
         super().__init__()
 
         if not all(isinstance(x, int) and x > 0 for x in grid_shape):
             raise ValueError("Grid dimensions must be positive integers")
-
         self._grid_shape = grid_shape
         self._min_actions = kwargs.get("minimum_actions", ["1", "W", "E", "N", "S"])
+
+        # Generate possible states.
         self._possible_states = generate_states(grid_size=self._grid_shape)
 
+        # Check if initial state is valid
         initial_state = kwargs.get("initial_agent_state", (0, 0))
         if initial_state not in self._possible_states:
             raise ValueError("Initial state must be a valid state in the world")
 
         self._initial_state = initial_state
 
-    def get_next_state(self, initial_state, min_action):
-        return MoveObject2DGrid(min_action).apply(
-            object_position=initial_state, grid_size=self._grid_shape
-        )
+    def generate_min_action_transformation_matrix(self):
+        tranformation_matrix = {}
+        for initial_state in self._possible_states:
+            tranformation_matrix[initial_state] = {}
+            for action in self._min_actions:
+                final_state = MoveObject2DGrid(action).apply(
+                    object_position=initial_state, grid_size=self._grid_shape
+                )
+                tranformation_matrix[initial_state][action] = final_state
+        self._minimum_action_transformation_matrix = tranformation_matrix
 
 
 class MoveObject2DGrid(Enum):
