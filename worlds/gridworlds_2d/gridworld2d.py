@@ -1,0 +1,98 @@
+from enum import Enum
+
+from ..base_world import BaseWorld
+from .generate_states import generate_states
+
+GridPosition = tuple[int, int]
+ActionType = str
+TransformationMatrix = dict[GridPosition, dict[ActionType, GridPosition]]
+
+
+class Gridworld2D(BaseWorld):
+    def __init__(self, grid_shape: GridPosition, **kwargs) -> None:
+        """Initialize a 2D grid world.
+
+        Args:
+            grid_shape: Tuple of (max_x, max_y) defining maximum grid coordinates
+            **kwargs: Optional keyword arguments
+                minimum_actions: List of possible actions
+                  (default: ["1", "W", "E", "N", "S"])
+                initial_agent_state: Starting position as (x, y) tuple (default: (0, 0))
+
+        Raises:
+            ValueError: If grid dimensions are not positive integers or initial state is
+              invalid
+        """
+        super().__init__()
+
+        if not all(isinstance(x, int) and x > 0 for x in grid_shape):
+            raise ValueError("Grid dimensions must be positive integers")
+
+        self._grid_shape = grid_shape
+        self._minimum_actions = kwargs.get("minimum_actions", ["1", "W", "E", "N", "S"])
+        self._possible_states = generate_states(grid_size=self._grid_shape)
+
+        initial_state = kwargs.get("initial_agent_state", (0, 0))
+        if initial_state not in self._possible_states:
+            raise ValueError("Initial state must be a valid state in the world")
+
+        self._initial_state = initial_state
+        self._minimum_action_transformation_matrix: TransformationMatrix = {}
+
+    def generate_min_action_transformation_matrix(self) -> None:
+        """Generate the transformation matrix for all possible state-action pairs."""
+        if self._minimum_action_transformation_matrix != {}:
+            print("Transformation matrix already exists.")
+        else:
+            transformation_matrix: TransformationMatrix = {}
+            for initial_state in self._possible_states:
+                transformation_matrix[initial_state] = {}
+                for action in self._minimum_actions:
+                    final_state = MoveObject2DGrid(action).apply(
+                        object_position=initial_state, grid_size=self._grid_shape
+                    )
+                    transformation_matrix[initial_state][action] = final_state
+            self._minimum_action_transformation_matrix = transformation_matrix
+
+
+class MoveObject2DGrid(Enum):
+    """
+    Moves objects in a 2D grid world.
+    """
+
+    NOOP = "1"
+    LEFT = "W"
+    RIGHT = "E"
+    UP = "N"
+    DOWN = "S"
+
+    def apply(self, object_position, grid_size):
+        if self == self.NOOP:
+            return object_position
+        elif self == self.LEFT:
+            object_position = object_position[0] - 1, object_position[1]
+        elif self == self.RIGHT:
+            object_position = object_position[0] + 1, object_position[1]
+        elif self == self.UP:
+            object_position = object_position[0], object_position[1] + 1
+        elif self == self.DOWN:
+            object_position = object_position[0], object_position[1] - 1
+
+        object_position = make_world_cyclical(
+            object_position=object_position, grid_size=grid_size
+        )
+        return object_position
+
+
+def make_world_cyclical(object_position, grid_size):
+    """
+    Converts positions of objects that are out of the grid size to the relevant cyclical
+     positions.
+    """
+    return tuple(object_position[i] % grid_size[i] for i in range(len(grid_size)))
+
+
+if __name__ == "__main__":
+    grid = Gridworld2D(grid_shape=(2, 3), initial_agent_state=(1, 2))
+    print(grid._possible_states)
+    # print(make_world_cyclical(object_position=(0, 0), grid_size=(2, 3)))
