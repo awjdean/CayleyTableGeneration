@@ -3,10 +3,10 @@ import copy
 from cayley_table_generation.cayley_table_states_main import (
     generate_cayley_table_states,
 )
+from cayley_table_states import CayleyTableStates
+from equivalence_classes import EquivalenceClasses
 from type_definitions import (
     CayleyTableActionsType,
-    CayleyTableStatesType,
-    EquivalenceClassesType,
 )
 from worlds.base_world import BaseWorld
 
@@ -18,9 +18,9 @@ class TransformationAlgebra:
         self._algebra_generation_parameters = None
         # Cayley tables generation.
         # TODO: Have a cayley_table class with these as properties ?
-        self.cayley_table_states: CayleyTableStatesType | None = None
+        self.cayley_table_states: CayleyTableStates
         self.cayley_table_actions: CayleyTableActionsType | None = None
-        self.equivalence_classes: EquivalenceClassesType | None = None
+        self.equivalence_classes: EquivalenceClasses
 
     def generate_cayley_table_states(self, world: BaseWorld, initial_state):
         self.save_algebra_generation_paramenters(world, initial_state)

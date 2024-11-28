@@ -1,11 +1,11 @@
 from cayley_table_generation.helpers import generate_action_sequence_outcome
-from type_definitions import EquivalenceClassesType, MinActionsType, StateType
+from type_definitions import EquivalenceClassesDataType, MinActionsType, StateType
 from worlds.base_world import BaseWorld
 
 
 class EquivalenceClasses:
     def __init__(self) -> None:
-        self.data: EquivalenceClassesType = {}
+        self.data: EquivalenceClassesDataType = {}
 
     def get_labels(self) -> list[str]:
         return list(self.data.keys())

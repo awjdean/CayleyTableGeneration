@@ -4,17 +4,17 @@ from typing import Any, TypedDict
 ActionType = str
 MinActionsType = list[str]
 StateType = tuple[Any, ...]
-TransformationMatrix = dict[Any, dict[Any, Any]]
+TransformationMatrix = dict[Any, dict[Any, Any]]  # TODO: fix types.
 
 # Cayley table generation.
-CayleyTableStatesType = dict[str, dict[str, Any]]
+CayleyTableStatesDataType = dict[str, dict[str, StateType]]
 CayleyTableActionsType = dict[str, dict[str, str]]
 
 
 # Equivalence classes.
 class EquivalenceClassEntryType(TypedDict):
-    elements: set[str]
+    elements: set[ActionType]
     outcome: StateType
 
 
-EquivalenceClassesType = dict[str, EquivalenceClassEntryType]
+EquivalenceClassesDataType = dict[ActionType, EquivalenceClassEntryType]

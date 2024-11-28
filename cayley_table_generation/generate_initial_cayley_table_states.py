@@ -1,5 +1,6 @@
 from cayley_table_generation.helpers import generate_action_sequence_outcome
-from type_definitions import CayleyTableStatesType, StateType
+from cayley_table_states import CayleyTableStates
+from type_definitions import StateType
 from worlds.base_world import BaseWorld
 
 
@@ -7,13 +8,13 @@ def generate_initial_cayley_table_states(
     equiv_class_labels: list[str],
     initial_state: StateType,
     world: BaseWorld,
-) -> CayleyTableStatesType:
+) -> CayleyTableStates:
     """
     Generate initial state Cayley table.
     """
-    cayley_table_states = {}
+    cayley_table_states = CayleyTableStates()
     for row_label in equiv_class_labels:
-        cayley_table_states[row_label] = {}
+        cayley_table_states.data[row_label] = {}
         for column_label in equiv_class_labels:
             action_sequence = column_label + row_label
             outcome = generate_action_sequence_outcome(
@@ -21,7 +22,7 @@ def generate_initial_cayley_table_states(
                 initial_state=initial_state,
                 world=world,
             )
-            cayley_table_states[row_label][column_label] = outcome
+            cayley_table_states.data[row_label][column_label] = outcome
     return cayley_table_states
 
 

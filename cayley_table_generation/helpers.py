@@ -1,9 +1,9 @@
-from type_definitions import CayleyTableStatesType, StateType
+from type_definitions import CayleyTableStatesDataType, StateType
 from worlds.base_world import BaseWorld
 
 
 def add_outcome_to_cayley_table(
-    cayley_table: CayleyTableStatesType,
+    cayley_table: CayleyTableStatesDataType,
     row_label: str,
     column_label: str,
     outcome: StateType,
