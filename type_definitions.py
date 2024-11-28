@@ -7,8 +7,9 @@ StateType = tuple[Any, ...]
 TransformationMatrix = dict[Any, dict[Any, Any]]  # TODO: fix types.
 
 # Cayley table generation.
-CayleyTableStatesDataType = dict[str, dict[str, StateType]]
-CayleyTableActionsType = dict[str, dict[str, str]]
+CayleyTableStatesRowType = dict[ActionType, StateType]
+CayleyTableStatesDataType = dict[ActionType, CayleyTableStatesRowType]
+CayleyTableActionsType = dict[ActionType, dict[ActionType, ActionType]]
 
 
 # Equivalence classes.
@@ -18,3 +19,8 @@ class EquivalenceClassEntryType(TypedDict):
 
 
 EquivalenceClassesDataType = dict[ActionType, EquivalenceClassEntryType]
+
+
+class EquivElementsType(TypedDict):
+    row: CayleyTableStatesRowType
+    column: CayleyTableStatesRowType
