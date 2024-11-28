@@ -22,3 +22,7 @@ def generate_cayley_table_states(world: BaseWorld, initial_state: StateType):
         world=world,
     )
     pass
+
+
+def search_for_candidate_elements():
+    candidate_elements = {}
