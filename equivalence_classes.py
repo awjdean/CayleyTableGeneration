@@ -28,7 +28,8 @@ class EquivalenceClasses:
 
     def __str__(self):
         return "\n".join(
-            f"class_label: {{ \"outcome\": {value['outcome']}, \"elements\": {value['elements']} }}"
+            f"class_label: {{ \"outcome\": {value['outcome']}, "
+            f"\"elements\": {value['elements']} }}"
             for key, value in self.data.items()
         )
 
