@@ -27,7 +27,10 @@ class EquivalenceClasses:
         return self.data[class_label]["outcome"]
 
     def __str__(self):
-        return str(self.data)
+        return "\n".join(
+            f"class_label: {{ \"outcome\": {value['outcome']}, \"elements\": {value['elements']} }}"
+            for key, value in self.data.items()
+        )
 
 
 def generate_initial_equivalence_classes(
