@@ -32,6 +32,8 @@ class EquivClasses:
         return self.data[class_label]["outcome"]
 
     def get_all_elements(self) -> list[ActionType]:
+        if not self.data:
+            return []
         return list(set.union(*[value["elements"] for value in self.data.values()]))
 
     def get_class_elements(self, class_label: ActionType) -> set[ActionType]:
