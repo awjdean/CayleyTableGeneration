@@ -1,4 +1,4 @@
-from cayley_table_generation.helpers import generate_action_sequence_outcome
+from cayley_table_generation.action_outcome import generate_action_outcome
 from type_definitions import (
     ActionType,
     EquivClassesDataType,
@@ -106,8 +106,8 @@ def generate_initial_equivalence_classes(
     equiv_classes = EquivClasses()
     for a in min_actions:
         # Calculate: \hat{a} * w_{0}.
-        a_outcome = generate_action_sequence_outcome(
-            action_sequence=a, initial_state=initial_state, world=world
+        a_outcome = generate_action_outcome(
+            action=a, initial_state=initial_state, world=world
         )
         for b in equiv_classes.get_labels():
             # Calculate: b * w_{0}.

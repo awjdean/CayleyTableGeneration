@@ -1,10 +1,10 @@
 import copy
 
+from cayley_table_generation.cayley_table_states import CayleyTableStates
 from cayley_table_generation.cayley_table_states_main import (
     generate_cayley_table_states,
 )
-from cayley_table_states import CayleyTableStates
-from equiv_classes import EquivClasses
+from cayley_table_generation.equiv_classes import EquivClasses
 from type_definitions import (
     CayleyTableActionsType,
     StateType,
