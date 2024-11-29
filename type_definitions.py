@@ -18,7 +18,7 @@ class EquivalenceClassEntryType(TypedDict):
     outcome: StateType
 
 
-EquivalenceClassesDataType = dict[ActionType, EquivalenceClassEntryType]
+EquivClassesDataType = dict[ActionType, EquivalenceClassEntryType]
 
 
 class EquivElementsRowColumnDictType(TypedDict):

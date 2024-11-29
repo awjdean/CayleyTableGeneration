@@ -4,7 +4,7 @@ from cayley_table_generation.cayley_table_states_main import (
     generate_cayley_table_states,
 )
 from cayley_table_states import CayleyTableStates
-from equivalence_classes import EquivalenceClasses
+from equiv_classes import EquivClasses
 from type_definitions import (
     CayleyTableActionsType,
     StateType,
@@ -21,7 +21,7 @@ class TransformationAlgebra:
         # Cayley tables generation.
         self.cayley_table_states: CayleyTableStates
         self.cayley_table_actions: CayleyTableActionsType
-        self.equiv_classes: EquivalenceClasses
+        self.equiv_classes: EquivClasses
 
     def generate_cayley_table_states(self, world: BaseWorld, initial_state):
         self.save_algebra_generation_paramenters(world, initial_state)

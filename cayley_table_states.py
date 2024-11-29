@@ -1,7 +1,7 @@
 import pandas as pd
 
 from cayley_table_generation.helpers import generate_action_sequence_outcome
-from equivalence_classes import EquivalenceClasses
+from equiv_classes import EquivClasses
 from type_definitions import (
     ActionType,
     CayleyTableStatesDataType,
@@ -142,7 +142,7 @@ class CayleyTableStates:
 
     def add_equiv_classes(
         self,
-        equiv_classes: EquivalenceClasses,
+        equiv_classes: EquivClasses,
         initial_state: StateType,
         world: BaseWorld,
     ):
