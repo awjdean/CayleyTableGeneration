@@ -1,16 +1,16 @@
 from cayley_table_generation.helpers import generate_action_sequence_outcome
 from type_definitions import (
     ActionType,
-    EquivalenceClassesDataType,
+    EquivClassesDataType,
     MinActionsType,
     StateType,
 )
 from worlds.base_world import BaseWorld
 
 
-class EquivalenceClasses:
+class EquivClasses:
     def __init__(self) -> None:
-        self.data: EquivalenceClassesDataType = {}
+        self.data: EquivClassesDataType = {}
 
     def get_labels(self) -> list[ActionType]:
         return list(self.data.keys())
@@ -37,7 +37,7 @@ class EquivalenceClasses:
     def get_class_elements(self, class_label: ActionType) -> set[ActionType]:
         return self.data[class_label]["elements"]
 
-    def merge_equiv_class_instances(self, equiv_classes: "EquivalenceClasses") -> None:
+    def merge_equiv_class_instances(self, equiv_classes: "EquivClasses") -> None:
         for class_label, class_data in equiv_classes.data.items():
             if class_label in self.data:
                 raise ValueError(
@@ -78,7 +78,7 @@ class EquivalenceClasses:
 
 def generate_initial_equivalence_classes(
     min_actions: MinActionsType, initial_state: StateType, world: BaseWorld
-) -> EquivalenceClasses:
+) -> EquivClasses:
     """
     Creates initial equivalence classes based on the provided minimum actions
     and the initial state of the world.
@@ -101,7 +101,7 @@ def generate_initial_equivalence_classes(
                             the newly created equivalence classes based on
                             the evaluated actions and their outcomes.
     """
-    equiv_classes = EquivalenceClasses()
+    equiv_classes = EquivClasses()
     for a in min_actions:
         # Calculate: \hat{a} * w_{0}.
         a_outcome = generate_action_sequence_outcome(

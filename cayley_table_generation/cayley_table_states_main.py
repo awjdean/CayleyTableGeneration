@@ -3,14 +3,14 @@ from cayley_table_generation.generate_initial_cayley_table_states import (
 )
 from cayley_table_generation.helpers import generate_action_sequence_outcome
 from cayley_table_states import CayleyTableStates
-from equivalence_classes import EquivalenceClasses, generate_initial_equivalence_classes
+from equiv_classes import EquivClasses, generate_initial_equivalence_classes
 from type_definitions import ActionType, StateType
 from worlds.base_world import BaseWorld
 
 
 def generate_cayley_table_states(
     world: BaseWorld, initial_state: StateType
-) -> tuple[CayleyTableStates, EquivalenceClasses]:
+) -> tuple[CayleyTableStates, EquivClasses]:
     # Initialise variables.
     min_actions = world.get_min_actions()
 
@@ -95,11 +95,11 @@ def generate_cayley_table_states(
 
 def find_broken_equiv_classes(
     candidate_element: ActionType,
-    equiv_classes: EquivalenceClasses,
+    equiv_classes: EquivClasses,
     initial_state: StateType,
     world: BaseWorld,
 ):
-    new_equiv_classes = EquivalenceClasses()
+    new_equiv_classes = EquivClasses()
     for class_label in equiv_classes.get_labels():
         # Check if candidate_element breaks the equiv class labelled by class_label.
         temp_new_equivs = check_if_equiv_class_broken(
@@ -117,14 +117,14 @@ def find_broken_equiv_classes(
 def check_if_equiv_class_broken(
     candidate_element: ActionType,
     b_label: ActionType,
-    equiv_classes: EquivalenceClasses,
+    equiv_classes: EquivClasses,
     initial_state: StateType,
     world: BaseWorld,
 ):
     """
     Checks if the candidate element breaks the equivalence class labelled by b_label.
     """
-    new_equiv_classes = EquivalenceClasses()
+    new_equiv_classes = EquivClasses()
     if len(equiv_classes.get_class_elements(b_label)) == 1:
         return new_equiv_classes
 
@@ -177,7 +177,7 @@ def find_candidate_elements(
     cayley_table_states: CayleyTableStates,
     initial_state: StateType,
     world: BaseWorld,
-    equiv_classes: EquivalenceClasses,
+    equiv_classes: EquivClasses,
 ) -> set[ActionType]:
     candidate_elements = set()
     for row_label in cayley_table_states.get_row_labels():
