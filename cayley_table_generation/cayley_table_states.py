@@ -1,7 +1,7 @@
 import pandas as pd
 
-from cayley_table_generation.helpers import generate_action_sequence_outcome
-from equiv_classes import EquivClasses
+from cayley_table_generation.action_outcome import generate_action_outcome
+from cayley_table_generation.equiv_classes import EquivClasses
 from type_definitions import (
     ActionType,
     CayleyTableStatesDataType,
@@ -31,7 +31,6 @@ class CayleyTableStates:
                 f"Column label '{column_label}' not found in table. "
                 f"Available columns: {list(first_row.keys())}"
             )
-
         return {
             row_label: self.data[row_label][column_label] for row_label in self.data
         }
@@ -39,10 +38,8 @@ class CayleyTableStates:
     def __str__(self):
         if not self.data:
             return "cayley_table_states: CayleyTableStatesType = {}"
-
         # Convert the nested dictionary to a pandas DataFrame
         df = pd.DataFrame.from_dict(self.data, orient="index")
-
         # Return the string representation of the DataFrame
         return f"cayley_table_states =\n{df}"
 
@@ -80,13 +77,12 @@ class CayleyTableStates:
     def generate_new_element_row(
         self, element: ActionType, initial_state: StateType, world: BaseWorld
     ) -> CayleyTableStatesRowType:
-        # TODO: check this.
         element_row = {}
         for col_label in self.get_row_labels():
             action_sequence = col_label + element
             # Calculate: a_{col} * (a * w_{0}).
-            outcome = generate_action_sequence_outcome(
-                action_sequence=action_sequence,
+            outcome = generate_action_outcome(
+                action=action_sequence,
                 initial_state=initial_state,
                 world=world,
             )
@@ -100,8 +96,8 @@ class CayleyTableStates:
         element_column = {}
         for row_label in self.get_row_labels():
             action_sequence = element + row_label
-            outcome = generate_action_sequence_outcome(
-                action_sequence=action_sequence,
+            outcome = generate_action_outcome(
+                action=action_sequence,
                 initial_state=initial_state,
                 world=world,
             )
@@ -111,7 +107,7 @@ class CayleyTableStates:
 
     def add_new_element(
         self, element: ActionType, initial_state: StateType, world: BaseWorld
-    ):
+    ) -> None:
         # Generate a new row for the Cayley table
         new_row = self.generate_new_element_row(
             element=element,
@@ -137,7 +133,7 @@ class CayleyTableStates:
         equiv_classes: EquivClasses,
         initial_state: StateType,
         world: BaseWorld,
-    ):
+    ) -> None:
         for class_label in equiv_classes.get_labels():
             self.add_new_element(
                 element=class_label,
