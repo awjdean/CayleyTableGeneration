@@ -7,3 +7,5 @@ world = Gridworld2D(
 world.generate_min_action_transformation_matrix()
 algebra = TransformationAlgebra(name="test")
 algebra.generate_cayley_table_states(world=world, initial_state=(0, 0))
+print(algebra.cayley_table_states)
+print(algebra.equiv_classes)

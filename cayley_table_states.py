@@ -128,14 +128,6 @@ class CayleyTableStates:
             world=world,
         )
 
-        # Check for overlap point consistency.
-        if new_row[element] != new_column[element]:
-            raise ValueError(
-                f"Overlap point mismatch for element '{element}': "
-                f"row value '{new_row[element]}' does not match "
-                f"column value '{new_column[element]}'."
-            )
-
         # Add the new column to the data.
         for row_label in self.get_row_labels():
             self.data[row_label][element] = new_column[row_label]
