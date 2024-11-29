@@ -5,52 +5,55 @@ Features present in any world class.
 from abc import abstractmethod
 from typing import Any
 
-TransformationMatrix = dict[Any, dict[Any, Any]]
+from type_definitions import MinActionsType, StateType, TransformationMatrix
 
 
 class BaseWorld:
     def __init__(self) -> None:
-        self._current_state: Any | None = None
-        self._min_actions: list[Any] | None = None
-        self._minimum_action_transformation_matrix: TransformationMatrix | None = None
-        self._initial_state: Any | None = None
-        self._possible_states: list[Any] | None = None
+        self._current_state: StateType
+        self._MIN_ACTIONS: list[str] = []
+        self._minimum_action_transformation_matrix: TransformationMatrix = {}
+        self._POSSIBLE_STATES: list[StateType] = []
 
-    def get_state(self) -> Any | None:
+    def get_state(self) -> StateType:
         return self._current_state
 
-    def reset_state(self) -> None:
-        self._current_state = self._initial_state
+    def set_state(self, state) -> None:
+        if state not in self._POSSIBLE_STATES:
+            raise ValueError(
+                f"Invalid state: {state}. State must be one of {self._POSSIBLE_STATES}"
+            )
+        self._current_state = state
 
     @abstractmethod
     def get_possible_states(self) -> list[Any]:
         raise NotImplementedError("Subclasses must implement get_possible_states.")
 
+    @abstractmethod
+    def get_next_state(self, initial_state: StateType, min_action: str) -> StateType:
+        raise NotImplementedError(
+            "Subclasses must implement generate_min_action_transformation_matrix."
+        )
+
     def generate_min_action_transformation_matrix(self) -> None:
         """Generate the transformation matrix for all possible state-action pairs."""
-        if self._minimum_action_transformation_matrix is not None:
+        if self._minimum_action_transformation_matrix:
             print("Transformation matrix already exists.")
-        elif self._possible_states is None:
+        elif not self._POSSIBLE_STATES:
             raise ValueError("Possible states are not defined.")
-        elif self._min_actions is None:
+        elif not self._MIN_ACTIONS:
             raise ValueError("Minimum actions are not defined.")
         else:
             transformation_matrix: TransformationMatrix = {}
-            for initial_state in self._possible_states:
+            for initial_state in self._POSSIBLE_STATES:
                 transformation_matrix[initial_state] = {}
-                for min_action in self._min_actions:
+                for min_action in self._MIN_ACTIONS:
                     transformation_matrix[initial_state][min_action] = (
                         self.get_next_state(initial_state, min_action)
                     )
             self._minimum_action_transformation_matrix = transformation_matrix
 
-    @abstractmethod
-    def get_next_state(self, initial_state: Any, min_action: Any) -> Any:
-        raise NotImplementedError(
-            "Subclasses must implement generate_min_action_transformation_matrix."
-        )
-
-    def apply_minimum_action(self, action: str) -> None:
+    def _apply_min_action(self, min_action: str) -> None:
         """
         Lookup a precomputed state-action pair in the transformation matrix.
         """
@@ -59,18 +62,22 @@ class BaseWorld:
         try:
             self._current_state = self._minimum_action_transformation_matrix[
                 self._current_state
-            ][action]
+            ][min_action]
         except KeyError:
             raise ValueError(
-                f"Invalid state-action pair: {self._current_state}-{action}"
+                f"Invalid state-action pair: {self._current_state}-{min_action}"
             )
 
-    def apply_action(self) -> None:
+    def apply_action_sequence(self, action_sequence: str) -> None:
         """
         # TODO: build in a check here so that if action goes to the undefined state,
         #  we can skip the rest of the look ups.
         """
-        pass
+        for min_action in action_sequence[::-1]:
+            self._apply_min_action(min_action)
+
+    def get_min_actions(self) -> MinActionsType:
+        return self._MIN_ACTIONS
 
     def save_minimum_action_transformation_matrix(self, path: str) -> None:
         """
