@@ -1,5 +1,10 @@
 from cayley_table_generation.helpers import generate_action_sequence_outcome
-from type_definitions import EquivalenceClassesDataType, MinActionsType, StateType
+from type_definitions import (
+    ActionType,
+    EquivalenceClassesDataType,
+    MinActionsType,
+    StateType,
+)
 from worlds.base_world import BaseWorld
 
 
@@ -7,13 +12,13 @@ class EquivalenceClasses:
     def __init__(self) -> None:
         self.data: EquivalenceClassesDataType = {}
 
-    def get_labels(self) -> list[str]:
+    def get_labels(self) -> list[ActionType]:
         return list(self.data.keys())
 
-    def add_element(self, element: str, class_label: str):
+    def add_element(self, element: ActionType, class_label: ActionType) -> None:
         self.data[class_label]["elements"].add(element)
 
-    def create_new_class(self, class_label: str, outcome: StateType, split_from=None):
+    def create_new_class(self, class_label: ActionType, outcome: StateType) -> None:
         if class_label in self.data:
             raise ValueError(f"Class with label '{class_label}' already exists.")
 
@@ -23,8 +28,45 @@ class EquivalenceClasses:
             "outcome": outcome,
         }
 
-    def get_class_outcome(self, class_label: str) -> StateType:
+    def get_class_outcome(self, class_label: ActionType) -> StateType:
         return self.data[class_label]["outcome"]
+
+    def get_all_elements(self) -> list[ActionType]:
+        return list(set.union(*[value["elements"] for value in self.data.values()]))
+
+    def get_class_elements(self, class_label: ActionType) -> set[ActionType]:
+        return self.data[class_label]["elements"]
+
+    def merge_equiv_class_instances(self, equiv_classes: "EquivalenceClasses") -> None:
+        for class_label, class_data in equiv_classes.data.items():
+            if class_label in self.data:
+                raise ValueError(
+                    f"Class with label '{class_label}' already exists in the current "
+                    "instance when they should be unique."
+                )
+            else:
+                # Add new class label
+                self.data[class_label] = class_data
+
+    def remove_elements_from_classes(self, elements: list[ActionType]) -> None:
+        for element in elements:
+            if element in self.data:
+                raise ValueError(
+                    f"Element '{element}' is a class label and cannot be removed."
+                )
+
+        all_elements = self.get_all_elements()
+        for element in elements:
+            if element not in all_elements:
+                raise ValueError(
+                    f"Element '{element}' not found in any equivalence class."
+                )
+
+        # Step 3: Remove elements from the equivalence classes
+        for element in elements:
+            for class_label, class_data in self.data.items():
+                if element in class_data["elements"]:
+                    class_data["elements"].remove(element)
 
     def __str__(self):
         return "\n".join(
