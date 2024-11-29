@@ -21,6 +21,6 @@ class EquivalenceClassEntryType(TypedDict):
 EquivalenceClassesDataType = dict[ActionType, EquivalenceClassEntryType]
 
 
-class EquivElementsType(TypedDict):
+class EquivElementsRowColumnDictType(TypedDict):
     row: CayleyTableStatesRowType
     column: CayleyTableStatesRowType

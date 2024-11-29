@@ -1,11 +1,12 @@
 import pandas as pd
 
 from cayley_table_generation.helpers import generate_action_sequence_outcome
+from equivalence_classes import EquivalenceClasses
 from type_definitions import (
     ActionType,
     CayleyTableStatesDataType,
     CayleyTableStatesRowType,
-    EquivElementsType,
+    EquivElementsRowColumnDictType,
     StateType,
 )
 from worlds.base_world import BaseWorld
@@ -49,27 +50,19 @@ class CayleyTableStates:
         """Return the row labels of the Cayley table."""
         return list(self.data.keys())
 
-    # def get_column_labels(self):
-    #     # TODO: rows and column labels should be the same; so can remove this ?
-    #     """Return the column labels of the Cayley table."""
-    #     if not self.data:
-    #         return []  # Return an empty list if there are no rows
-    #     return list(next(iter(self.data.values())).keys())
-
     def find_equiv_elements(
         self,
         element: ActionType,
         initial_state: StateType,
         world: BaseWorld,
-        first: bool = False,
-    ) -> dict[ActionType, EquivElementsType]:
-        equiv_elements: dict[ActionType, EquivElementsType] = {}
-        # Generate state Cayley table row for action.
+        take_first: bool = False,
+    ) -> dict[ActionType, EquivElementsRowColumnDictType]:
+        equiv_elements: dict[ActionType, EquivElementsRowColumnDictType] = {}
+
         element_row = self.generate_new_element_row(
             element=element, initial_state=initial_state, world=world
         )
 
-        # Generate state Cayley table column for action.
         element_column = self.generate_new_element_column(
             element=element, initial_state=initial_state, world=world
         )
@@ -79,7 +72,7 @@ class CayleyTableStates:
             class_column = self.get_column(row_label)
             if (element_row == class_row) and (element_column == class_column):
                 equiv_elements[row_label] = {"row": class_row, "column": class_column}
-                if first:
+                if take_first:
                     return equiv_elements
 
         return equiv_elements
@@ -115,3 +108,47 @@ class CayleyTableStates:
             element_column[row_label] = outcome
 
         return element_column
+
+    def add_new_element(
+        self, element: ActionType, initial_state: StateType, world: BaseWorld
+    ):
+        # Generate a new row for the Cayley table
+        new_row = self.generate_new_element_row(
+            element=element,
+            initial_state=initial_state,
+            world=world,
+        )
+        # Add the new row to the data.
+        self.data[element] = new_row
+
+        # Generate a new column for the Cayley table.
+        new_column = self.generate_new_element_column(
+            element=element,
+            initial_state=initial_state,
+            world=world,
+        )
+
+        # Check for overlap point consistency.
+        if new_row[element] != new_column[element]:
+            raise ValueError(
+                f"Overlap point mismatch for element '{element}': "
+                f"row value '{new_row[element]}' does not match "
+                f"column value '{new_column[element]}'."
+            )
+
+        # Add the new column to the data.
+        for row_label in self.get_row_labels():
+            self.data[row_label][element] = new_column[row_label]
+
+    def add_equiv_classes(
+        self,
+        equiv_classes: EquivalenceClasses,
+        initial_state: StateType,
+        world: BaseWorld,
+    ):
+        for class_label in equiv_classes.get_labels():
+            self.add_new_element(
+                element=class_label,
+                initial_state=initial_state,
+                world=world,
+            )
