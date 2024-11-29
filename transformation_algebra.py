@@ -7,6 +7,7 @@ from cayley_table_states import CayleyTableStates
 from equivalence_classes import EquivalenceClasses
 from type_definitions import (
     CayleyTableActionsType,
+    StateType,
 )
 from worlds.base_world import BaseWorld
 
@@ -15,16 +16,18 @@ class TransformationAlgebra:
     def __init__(self, name) -> None:
         self.name = name
 
-        self._algebra_generation_parameters = None
+        self._algebra_generation_parameters: dict
+
         # Cayley tables generation.
-        # TODO: Have a cayley_table class with these as properties ?
         self.cayley_table_states: CayleyTableStates
-        self.cayley_table_actions: CayleyTableActionsType | None = None
-        self.equivalence_classes: EquivalenceClasses
+        self.cayley_table_actions: CayleyTableActionsType
+        self.equiv_classes: EquivalenceClasses
 
     def generate_cayley_table_states(self, world: BaseWorld, initial_state):
         self.save_algebra_generation_paramenters(world, initial_state)
-        generate_cayley_table_states(world=world, initial_state=initial_state)
+        self.cayley_table_states, self.equiv_classes = generate_cayley_table_states(
+            world=world, initial_state=initial_state
+        )
 
     def generate_cayley_table_actions(self):
         pass
@@ -35,7 +38,9 @@ class TransformationAlgebra:
     def load_cayley_tables(self):
         pass
 
-    def save_algebra_generation_paramenters(self, world, initial_state):
+    def save_algebra_generation_paramenters(
+        self, world: BaseWorld, initial_state: StateType
+    ):
         self._algebra_generation_parameters = {
             "world": copy.deepcopy(world),
             "initial_state": initial_state,
