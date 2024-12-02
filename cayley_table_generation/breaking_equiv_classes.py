@@ -79,6 +79,8 @@ def check_if_equiv_class_broken(
                 # TODO: check this.
                 new_equiv_outcome = equiv_classes.get_class_outcome(b_label)
                 new_equiv_classes.create_new_class(
-                    class_label=b_element, outcome=new_equiv_outcome
+                    class_label=b_element,
+                    outcome=new_equiv_outcome,
+                    elements=[b_element],
                 )
     return new_equiv_classes

@@ -18,13 +18,15 @@ class EquivClasses:
     def add_element(self, element: ActionType, class_label: ActionType) -> None:
         self.data[class_label]["elements"].add(element)
 
-    def create_new_class(self, class_label: ActionType, outcome: StateType) -> None:
+    def create_new_class(
+        self, class_label: ActionType, outcome: StateType, elements: list[str]
+    ) -> None:
         if class_label in self.data:
             raise ValueError(f"Class with label '{class_label}' already exists.")
 
         # Create a new class entry
         self.data[class_label] = {
-            "elements": {class_label},
+            "elements": set(elements),
             "outcome": outcome,
         }
 
@@ -38,6 +40,13 @@ class EquivClasses:
 
     def get_class_elements(self, class_label: ActionType) -> set[ActionType]:
         return self.data[class_label]["elements"]
+
+    def find_element_class(self, element: ActionType) -> ActionType | None:
+        # TODO: Check this.
+        for class_label, class_data in self.data.items():
+            if element in class_data["elements"]:
+                return class_label
+        return None
 
     def merge_equiv_class_instances(self, equiv_classes: "EquivClasses") -> None:
         for class_label, class_data in equiv_classes.data.items():
@@ -116,6 +125,8 @@ def generate_initial_equivalence_classes(
                 equiv_classes.add_element(element=a, class_label=b)
                 break
         else:
-            equiv_classes.create_new_class(class_label=a, outcome=a_outcome)
+            equiv_classes.create_new_class(
+                class_label=a, outcome=a_outcome, elements=[a]
+            )
 
     return equiv_classes
