@@ -6,19 +6,22 @@ MinActionsType = list[str]
 StateType = tuple[Any, ...]
 TransformationMatrix = dict[Any, dict[Any, Any]]  # TODO: fix types.
 
-# Cayley table generation.
+# States Cayley table generation.
 CayleyTableStatesRowType = dict[ActionType, StateType]
 CayleyTableStatesDataType = dict[ActionType, CayleyTableStatesRowType]
-CayleyTableActionsType = dict[ActionType, dict[ActionType, ActionType]]
+
+# Actions Cayley table generation.
+CayleyTableActionsRowType = dict[ActionType, ActionType]
+CayleyTableActionsDataType = dict[ActionType, CayleyTableActionsRowType]
 
 
 # Equivalence classes.
-class EquivalenceClassEntryType(TypedDict):
+class EquivClassEntryType(TypedDict):
     elements: set[ActionType]
     outcome: StateType
 
 
-EquivClassesDataType = dict[ActionType, EquivalenceClassEntryType]
+EquivClassesDataType = dict[ActionType, EquivClassEntryType]
 
 
 class EquivElementsRowColumnDictType(TypedDict):

@@ -1,11 +1,11 @@
 from cayley_table_generation.action_outcome import generate_action_outcome
 from cayley_table_generation.breaking_equiv_classes import find_broken_equiv_classes
-from cayley_table_generation.candidate_elements import find_candidate_elements
 from cayley_table_generation.cayley_table_states import CayleyTableStates
 from cayley_table_generation.equiv_classes import (
     EquivClasses,
     generate_initial_equivalence_classes,
 )
+from cayley_table_generation.find_candidate_elements import find_candidate_elements
 from cayley_table_generation.initial_cayley_table_states import (
     generate_initial_cayley_table_states,
 )
@@ -13,7 +13,7 @@ from type_definitions import StateType
 from worlds.base_world import BaseWorld
 
 
-def generate_cayley_table_states(
+def generate_cayley_table_states_and_equiv_classes(
     world: BaseWorld, initial_state: StateType
 ) -> tuple[CayleyTableStates, EquivClasses]:
     # Initialise variables.
@@ -78,6 +78,7 @@ def generate_cayley_table_states(
                 initial_state=initial_state,
                 world=world,
             ),
+            elements=[candidate_element],
         )
 
         # Merge new_equiv_classes into equiv_classes.
