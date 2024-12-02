@@ -3,7 +3,6 @@ import copy
 from cayley_table_generation.cayley_table_actions import (
     CayleyTableActions,
     generate_cayley_table_actions,
-    relabel_equiv_classes_and_state_cayley_table,
 )
 from cayley_table_generation.cayley_table_states import CayleyTableStates
 from cayley_table_generation.equiv_classes import EquivClasses
@@ -34,15 +33,14 @@ class TransformationAlgebra:
                 world=world, initial_state=initial_state
             )
         )
-        self.equiv_classes, self.cayley_table_states = (
-            relabel_equiv_classes_and_state_cayley_table(
-                equiv_classes=self.equiv_classes,
-                cayley_table_states=self.cayley_table_states,
-                initial_state=initial_state,
-                world=world,
-            )
-        )
-        pass
+        # self.equiv_classes, self.cayley_table_states = (
+        #     relabel_equiv_classes_and_state_cayley_table(
+        #         equiv_classes=self.equiv_classes,
+        #         cayley_table_states=self.cayley_table_states,
+        #         initial_state=initial_state,
+        #         world=world,
+        #     )
+        # )
 
     def generate_cayley_table_actions(self):
         # TODO: if self.equiv_classes not defined, throw error.

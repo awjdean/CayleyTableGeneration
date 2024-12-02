@@ -48,6 +48,16 @@ class EquivClasses:
                 return class_label
         return None
 
+    def reduce_action_sequence(self, action_sequence):
+        """
+        Reduce action sequence down to a single labelling element.
+        """
+        # (1) Check each individual element is a class labelling element.
+        ## If individual element is not a class labelling element, then find equivalent class labelling element.
+        # (2) Take pairs of elements
+        ##
+        pass
+
     def merge_equiv_class_instances(self, equiv_classes: "EquivClasses") -> None:
         for class_label, class_data in equiv_classes.data.items():
             if class_label in self.data:

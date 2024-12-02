@@ -22,21 +22,24 @@ class CayleyTableActions:
 def generate_cayley_table_actions(equiv_classes: EquivClasses) -> CayleyTableActions:
     # Create cayley_table_actions.
     cayley_table_actions = CayleyTableActions()
-    # Initialise rows.
-    for row_label in equiv_classes.get_labels():
-        cayley_table_actions.data[row_label] = {}
 
     # Fill cayley_table_actions.
     ## For each entry in cayley_table_actions:
     for row_label in equiv_classes.get_labels():
+        # Initialise rows.
+        cayley_table_actions.data[row_label] = {}
         for column_label in equiv_classes.get_labels():
             action = column_label + row_label
-            class_label = equiv_classes.find_element_class(action)
-            if class_label is None:
-                raise ValueError(
-                    f"Action '{action}' not found in any equivalence class."
-                )
-            cayley_table_actions.data[row_label][column_label] = class_label
+            outcome_class_label = equiv_classes.find_element_class(action)
+            if outcome_class_label is None:
+                # TODO: Make this raise more informative.
+                # This should only be hit if relabelling has happened.
+                print(f"Action '{action}' not found in any equivalence class.")
+                # Find action using world OR write equiv_classes function to reduce an
+                #  action sequence to a class_labelling element.
+                raise Exception("")
+
+            cayley_table_actions.data[row_label][column_label] = outcome_class_label
 
     ## Combine row and column labels: (column_label \circ row_label).
     ## Find (column_label \circ row_label) in equiv_classes.
@@ -85,17 +88,21 @@ def relabel_equiv_classes_and_state_cayley_table(
     # Construct new_cayley_table_states.
     new_cayley_table_states = CayleyTableStates()
     for old_row_label in equiv_classes.get_labels():
+        # Create new row in new new_cayley_table_states.
+        new_row_label = label_change_dict[old_row_label]
+        new_cayley_table_states.data[new_row_label] = {}
         for old_column_label in equiv_classes.get_labels():
             # Get outcome from old cayley_table_states.
             outcome = cayley_table_states.data[old_row_label][old_column_label]
-            new_row_label = label_change_dict[old_row_label]
             new_column_label = label_change_dict[old_column_label]
             new_cayley_table_states.data[new_row_label][new_column_label] = outcome
 
-    # TODO: check this gives the same as new_cayley_table_states.
+    # TODO: Remove this.
     new_cayley_table_states2 = CayleyTableStates()
     new_cayley_table_states2.add_equiv_classes(
         equiv_classes=new_equiv_classes, initial_state=initial_state, world=world
     )
+    if new_cayley_table_states.data != new_cayley_table_states2.data:
+        raise Exception("")
 
     return new_equiv_classes, new_cayley_table_states
