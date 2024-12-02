@@ -9,7 +9,7 @@ from cayley_table_generation.find_candidate_elements import find_candidate_eleme
 from cayley_table_generation.initial_cayley_table_states import (
     generate_initial_cayley_table_states,
 )
-from type_definitions import StateType
+from type_definitions import ActionType, MinActionsType, StateType
 from worlds.base_world import BaseWorld
 
 
@@ -17,7 +17,7 @@ def generate_cayley_table_states_and_equiv_classes(
     world: BaseWorld, initial_state: StateType
 ) -> tuple[CayleyTableStates, EquivClasses]:
     # Initialise variables.
-    min_actions = world.get_min_actions()
+    min_actions: MinActionsType = world.get_min_actions()
 
     # Generate initial equivalence classes.
     equiv_classes = generate_initial_equivalence_classes(
@@ -31,15 +31,18 @@ def generate_cayley_table_states_and_equiv_classes(
         world=world,
     )
 
-    # Search for candidate elements.
-    candidate_elements = find_candidate_elements(
-        cayley_table_states=cayley_table_states,
-        initial_state=initial_state,
-        world=world,
-        equiv_classes=equiv_classes,
-    )
+    candidate_elements: set[ActionType] = set()
+    while True:
+        if len(candidate_elements) == 0:
+            candidate_elements = find_candidate_elements(
+                cayley_table_states=cayley_table_states,
+                initial_state=initial_state,
+                world=world,
+                equiv_classes=equiv_classes,
+            )
+            if len(candidate_elements) == 0:
+                break
 
-    while len(candidate_elements) > 0:
         candidate_element = candidate_elements.pop()
         # Check if candidate element is in an existing equivalence class.
         equiv_elements = cayley_table_states.find_equiv_elements(
@@ -49,7 +52,7 @@ def generate_cayley_table_states_and_equiv_classes(
             take_first=True,
         )
         # If candidate_element is in an existing equivalence class, add it to the class
-        # and move to next candidate_element.
+        #  and move to next candidate_element.
         if len(equiv_elements):
             equiv_element_label = next(iter(equiv_elements.keys()))
             equiv_classes.add_element(
@@ -83,17 +86,7 @@ def generate_cayley_table_states_and_equiv_classes(
 
         # Merge new_equiv_classes into equiv_classes.
         equiv_classes.merge_equiv_class_instances(new_equiv_classes)
-
         # Add new_equiv_classes to cayley_table_states.
         cayley_table_states.add_equiv_classes(new_equiv_classes, initial_state, world)
-
-        # Search for new candidate elements.
-        if len(candidate_elements) == 0:
-            candidate_elements = find_candidate_elements(
-                cayley_table_states=cayley_table_states,
-                initial_state=initial_state,
-                world=world,
-                equiv_classes=equiv_classes,
-            )
 
     return cayley_table_states, equiv_classes

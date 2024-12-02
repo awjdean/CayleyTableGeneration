@@ -1,9 +1,9 @@
-from type_definitions import StateType
+from type_definitions import ActionType, StateType
 from worlds.base_world import BaseWorld
 
 
 def generate_action_outcome(
-    action, initial_state: StateType, world: BaseWorld
+    action: ActionType, initial_state: StateType, world: BaseWorld
 ) -> StateType:
     """
     Generates outcome of applying an action sequence to the world from the
