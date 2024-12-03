@@ -1,5 +1,5 @@
 from transformation_algebra.transformation_algebra import TransformationAlgebra
-from worlds.gridworlds_2d.gridworld2d import Gridworld2D
+from worlds.gridworlds2d.gridworld2d import Gridworld2D
 
 world = Gridworld2D(
     grid_shape=(3, 2),
