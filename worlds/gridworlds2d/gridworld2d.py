@@ -1,17 +1,15 @@
-from utils.type_definitions import ActionType, StateType
+from utils.type_definitions import GridPosition2DType, StateType
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
 
 from ..base_world import BaseWorld
 from .utils.generate_states import generate_states
 
-GridPositionType = tuple[int, int]
-
-TransformationMatrix = dict[GridPositionType, dict[ActionType, GridPositionType]]
-
 
 class Gridworld2D(BaseWorld):
-    def __init__(self, grid_shape: GridPositionType) -> None:
-        """Initialize a 2D grid world.
+    def __init__(self, grid_shape: GridPosition2DType) -> None:
+        """
+        Initialize a 2D grid world.
+        State has one-to-one correspondence to position of the agent.
 
         Args:
             grid_shape: Tuple of (max_x, max_y) defining maximum grid coordinates
@@ -39,10 +37,10 @@ class Gridworld2D(BaseWorld):
 
     def get_next_state(self, state, min_action):
         return MoveObject2DGrid(min_action).apply(
-            object_position=state, grid_size=self._GRID_SHAPE
+            object_position=state, grid_shape=self._GRID_SHAPE
         )
 
-    def plot(self):
+    def draw(self):
         # TODO:
         # Initialise initial state for plotting.
         initial_state = (0, 0)
