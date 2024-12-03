@@ -12,11 +12,11 @@ class CayleyTableActions:
 
     def __str__(self):
         if not self.data:
-            return "cayley_table_actions: CayleyTableActions = {}"
+            return "\nCayleyTableActions = {}"
         # Convert the nested dictionary to a pandas DataFrame
         df = pd.DataFrame.from_dict(self.data, orient="index")
         # Return the string representation of the DataFrame
-        return f"cayley_table_actions =\n{df}"
+        return f"\nCayleyTableActions =\n{df}"
 
 
 def generate_cayley_table_actions(equiv_classes: EquivClasses) -> CayleyTableActions:

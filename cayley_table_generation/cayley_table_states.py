@@ -37,11 +37,11 @@ class CayleyTableStates:
 
     def __str__(self):
         if not self.data:
-            return "cayley_table_states  = {}"
+            return "\nCayleyTableStates  = {}"
         # Convert the nested dictionary to a pandas DataFrame
         df = pd.DataFrame.from_dict(self.data, orient="index")
         # Return the string representation of the DataFrame
-        return f"cayley_table_states =\n{df}"
+        return f"\nCayleyTableStates =\n{df}"
 
     def get_row_labels(self) -> list[ActionType]:
         """Return the row labels of the Cayley table."""

@@ -5,6 +5,7 @@ from worlds.base_world import BaseWorld
 class GraphWorld1(BaseWorld):
     def __init__(self) -> None:
         super().__init__()
+        self._MIN_ACTIONS = ["1", "a", "b"]
 
     def get_possible_states(self) -> list[StateType]:
         return [(1,), (2,), (3,)]
