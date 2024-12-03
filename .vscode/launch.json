@@ -15,7 +15,7 @@
       "name": "Python Debugger: launch_gridworld2D",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/launch_gridworld2D.py",
+      "program": "${workspaceFolder}/launch_gridworld2d.py",
       "console": "integratedTerminal"
     },
     {
