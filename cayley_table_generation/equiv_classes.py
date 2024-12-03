@@ -1,5 +1,5 @@
 from cayley_table_generation.action_outcome import generate_action_outcome
-from type_definitions import (
+from utils.type_definitions import (
     ActionType,
     EquivClassesDataType,
     MinActionsType,

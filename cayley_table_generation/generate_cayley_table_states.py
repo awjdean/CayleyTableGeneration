@@ -9,7 +9,7 @@ from cayley_table_generation.find_candidate_elements import find_candidate_eleme
 from cayley_table_generation.initial_cayley_table_states import (
     generate_initial_cayley_table_states,
 )
-from type_definitions import ActionType, MinActionsType, StateType
+from utils.type_definitions import ActionType, MinActionsType, StateType
 from worlds.base_world import BaseWorld
 
 

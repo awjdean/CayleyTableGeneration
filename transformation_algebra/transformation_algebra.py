@@ -9,7 +9,7 @@ from cayley_table_generation.equiv_classes import EquivClasses
 from cayley_table_generation.generate_cayley_table_states import (
     generate_cayley_table_states_and_equiv_classes,
 )
-from type_definitions import (
+from utils.type_definitions import (
     StateType,
 )
 from worlds.base_world import BaseWorld

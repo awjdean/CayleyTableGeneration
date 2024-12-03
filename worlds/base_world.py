@@ -4,7 +4,12 @@ Features present in any world class.
 
 from abc import abstractmethod
 
-from type_definitions import ActionType, MinActionsType, StateType, TransformationMatrix
+from utils.type_definitions import (
+    ActionType,
+    MinActionsType,
+    StateType,
+    TransformationMatrix,
+)
 
 
 class BaseWorld:
