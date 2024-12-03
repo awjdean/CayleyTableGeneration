@@ -12,10 +12,17 @@
     //   "console": "integratedTerminal"
     // },
     {
-      "name": "Python Debugger: Main",
+      "name": "Python Debugger: launch_gridworld2D",
       "type": "debugpy",
       "request": "launch",
-      "program": "${workspaceFolder}/main.py",
+      "program": "${workspaceFolder}/launch_gridworld2D.py",
+      "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: launch_graphworld1",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/launch_graphworld1.py",
       "console": "integratedTerminal"
     }
   ]

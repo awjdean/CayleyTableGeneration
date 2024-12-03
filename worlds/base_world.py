@@ -12,16 +12,13 @@ class BaseWorld:
         self._current_state: StateType
         self._MIN_ACTIONS: list[str] = []
         self._minimum_action_transformation_matrix: TransformationMatrix = {}
-        self._POSSIBLE_STATES: list[StateType] = []
 
     @abstractmethod
     def get_possible_states(self) -> list[StateType]:
         raise NotImplementedError("Subclasses must implement get_possible_states.")
 
     @abstractmethod
-    def get_next_state(
-        self, initial_state: StateType, min_action: ActionType
-    ) -> StateType:
+    def get_next_state(self, state: StateType, min_action: ActionType) -> StateType:
         raise NotImplementedError(
             "Subclasses must implement generate_min_action_transformation_matrix."
         )
@@ -30,9 +27,10 @@ class BaseWorld:
         return self._current_state
 
     def set_state(self, state: StateType) -> None:
-        if state not in self._POSSIBLE_STATES:
+        if state not in self.get_possible_states():
             raise ValueError(
-                f"Invalid state: {state}. State must be one of {self._POSSIBLE_STATES}"
+                f"Invalid state: {state}. "
+                f"State must be one of {self.get_possible_states()}"
             )
         self._current_state = state
 
@@ -40,13 +38,13 @@ class BaseWorld:
         """Generate the transformation matrix for all possible state-action pairs."""
         if self._minimum_action_transformation_matrix:
             print("Transformation matrix already exists.")
-        elif not self._POSSIBLE_STATES:
+        elif not self.get_possible_states():
             raise ValueError("Possible states are not defined.")
         elif not self._MIN_ACTIONS:
             raise ValueError("Minimum actions are not defined.")
         else:
             transformation_matrix: TransformationMatrix = {}
-            for state in self._POSSIBLE_STATES:
+            for state in self.get_possible_states():
                 transformation_matrix[state] = {}
                 for min_action in self._MIN_ACTIONS:
                     transformation_matrix[state][min_action] = self.get_next_state(

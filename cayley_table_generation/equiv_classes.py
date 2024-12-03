@@ -42,7 +42,6 @@ class EquivClasses:
         return self.data[class_label]["elements"]
 
     def find_element_class(self, element: ActionType) -> ActionType | None:
-        # TODO: Check this.
         for class_label, class_data in self.data.items():
             if element in class_data["elements"]:
                 return class_label
@@ -53,7 +52,8 @@ class EquivClasses:
         Reduce action sequence down to a single labelling element.
         """
         # (1) Check each individual element is a class labelling element.
-        ## If individual element is not a class labelling element, then find equivalent class labelling element.
+        ## If individual element is not a class labelling element, then find equivalent
+        #  class labelling element.
         # (2) Take pairs of elements
         ##
         pass
@@ -90,7 +90,9 @@ class EquivClasses:
                     class_data["elements"].remove(element)
 
     def __str__(self):
-        return "\n".join(
+        if not self.data:
+            return "\nEquivClasses = {}"
+        return "\nEquivClasses =\n" + "\n".join(
             f"{key}: {{ \"outcome\": {value['outcome']}, "
             f"\"elements\": {value['elements']} }}"
             for key, value in self.data.items()

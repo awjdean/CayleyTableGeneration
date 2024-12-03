@@ -1,4 +1,4 @@
-from type_definitions import ActionType, MinActionsType
+from type_definitions import ActionType, StateType
 from worlds.gridworlds_2d.utils.move_objects_2d import MoveObject2DGrid
 
 from ..base_world import BaseWorld
@@ -10,11 +10,7 @@ TransformationMatrix = dict[GridPositionType, dict[ActionType, GridPositionType]
 
 
 class Gridworld2D(BaseWorld):
-    def __init__(
-        self,
-        grid_shape: GridPositionType,
-        min_actions: MinActionsType = ["1", "W", "E", "N", "S"],
-    ) -> None:
+    def __init__(self, grid_shape: GridPositionType) -> None:
         """Initialize a 2D grid world.
 
         Args:
@@ -34,20 +30,25 @@ class Gridworld2D(BaseWorld):
             raise ValueError("Grid dimensions must be positive integers")
 
         self._GRID_SHAPE = grid_shape
-        self._MIN_ACTIONS = min_actions
+        self._MIN_ACTIONS = ["1", "W", "E", "N", "S"]
 
         self._POSSIBLE_STATES = generate_states(grid_size=self._GRID_SHAPE)
 
-        # Initialise initial state for plotting.
-        initial_state = (0, 0)
-        if initial_state not in self._POSSIBLE_STATES:
-            raise ValueError("Initial state must be a valid state in the world")
-        self.set_state(state=initial_state)
+    def get_possible_states(self) -> list[StateType]:
+        return self._POSSIBLE_STATES
 
     def get_next_state(self, state, min_action):
         return MoveObject2DGrid(min_action).apply(
             object_position=state, grid_size=self._GRID_SHAPE
         )
+
+    def plot(self):
+        # TODO:
+        # Initialise initial state for plotting.
+        initial_state = (0, 0)
+        if initial_state not in self._POSSIBLE_STATES:
+            raise ValueError("Initial state must be a valid state in the world")
+        self.set_state(state=initial_state)
 
 
 if __name__ == "__main__":
