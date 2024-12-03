@@ -1,5 +1,5 @@
 from utils.type_definitions import ActionType, StateType
-from worlds.gridworlds_2d.utils.move_objects_2d import MoveObject2DGrid
+from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
 
 from ..base_world import BaseWorld
 from .utils.generate_states import generate_states
