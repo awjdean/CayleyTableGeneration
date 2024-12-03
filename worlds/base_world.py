@@ -3,9 +3,8 @@ Features present in any world class.
 """
 
 from abc import abstractmethod
-from typing import Any
 
-from type_definitions import MinActionsType, StateType, TransformationMatrix
+from type_definitions import ActionType, MinActionsType, StateType, TransformationMatrix
 
 
 class BaseWorld:
@@ -15,25 +14,27 @@ class BaseWorld:
         self._minimum_action_transformation_matrix: TransformationMatrix = {}
         self._POSSIBLE_STATES: list[StateType] = []
 
+    @abstractmethod
+    def get_possible_states(self) -> list[StateType]:
+        raise NotImplementedError("Subclasses must implement get_possible_states.")
+
+    @abstractmethod
+    def get_next_state(
+        self, initial_state: StateType, min_action: ActionType
+    ) -> StateType:
+        raise NotImplementedError(
+            "Subclasses must implement generate_min_action_transformation_matrix."
+        )
+
     def get_state(self) -> StateType:
         return self._current_state
 
-    def set_state(self, state) -> None:
+    def set_state(self, state: StateType) -> None:
         if state not in self._POSSIBLE_STATES:
             raise ValueError(
                 f"Invalid state: {state}. State must be one of {self._POSSIBLE_STATES}"
             )
         self._current_state = state
-
-    @abstractmethod
-    def get_possible_states(self) -> list[Any]:
-        raise NotImplementedError("Subclasses must implement get_possible_states.")
-
-    @abstractmethod
-    def get_next_state(self, initial_state: StateType, min_action: str) -> StateType:
-        raise NotImplementedError(
-            "Subclasses must implement generate_min_action_transformation_matrix."
-        )
 
     def generate_min_action_transformation_matrix(self) -> None:
         """Generate the transformation matrix for all possible state-action pairs."""
@@ -45,15 +46,15 @@ class BaseWorld:
             raise ValueError("Minimum actions are not defined.")
         else:
             transformation_matrix: TransformationMatrix = {}
-            for initial_state in self._POSSIBLE_STATES:
-                transformation_matrix[initial_state] = {}
+            for state in self._POSSIBLE_STATES:
+                transformation_matrix[state] = {}
                 for min_action in self._MIN_ACTIONS:
-                    transformation_matrix[initial_state][min_action] = (
-                        self.get_next_state(initial_state, min_action)
+                    transformation_matrix[state][min_action] = self.get_next_state(
+                        state, min_action
                     )
             self._minimum_action_transformation_matrix = transformation_matrix
 
-    def _apply_min_action(self, min_action: str) -> None:
+    def _apply_min_action(self, min_action: ActionType) -> None:
         """
         Lookup a precomputed state-action pair in the transformation matrix.
         """
@@ -68,7 +69,7 @@ class BaseWorld:
                 f"Invalid state-action pair: {self._current_state}-{min_action}"
             )
 
-    def apply_action_sequence(self, action_sequence: str) -> None:
+    def apply_action_sequence(self, action_sequence: ActionType) -> None:
         """
         # TODO: build in a check here so that if action goes to the undefined state,
         #  we can skip the rest of the look ups.
