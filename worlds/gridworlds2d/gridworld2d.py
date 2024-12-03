@@ -1,8 +1,10 @@
-from utils.type_definitions import GridPosition2DType, StateType
+from utils.type_definitions import StateType
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
 
 from ..base_world import BaseWorld
 from .utils.generate_states import generate_states
+
+GridPosition2DType = tuple[int, int]
 
 
 class Gridworld2D(BaseWorld):
