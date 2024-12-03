@@ -1,10 +1,10 @@
 from typing import Any, TypedDict
 
-# Worlds.
+# Base world.
 ActionType = str
-MinActionsType = list[str]
+MinActionsType = list[ActionType]
 StateType = tuple[Any, ...]
-TransformationMatrix = dict[Any, dict[Any, Any]]  # TODO: fix types.
+TransformationMatrix = dict[StateType, dict[ActionType, StateType]]
 
 # States Cayley table generation.
 CayleyTableStatesRowType = dict[ActionType, StateType]
@@ -27,3 +27,7 @@ EquivClassesDataType = dict[ActionType, EquivClassEntryType]
 class EquivElementsRowColumnDictType(TypedDict):
     row: CayleyTableStatesRowType
     column: CayleyTableStatesRowType
+
+
+# Gridworld2D.
+GridPosition2DType = tuple[int, int]

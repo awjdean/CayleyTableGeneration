@@ -12,7 +12,7 @@ class MoveObject2DGrid(Enum):
     UP = "N"
     DOWN = "S"
 
-    def apply(self, object_position, grid_size):
+    def apply(self, object_position, grid_shape):
         if self == self.NOOP:
             return object_position
         elif self == self.LEFT:
@@ -25,14 +25,14 @@ class MoveObject2DGrid(Enum):
             object_position = object_position[0], object_position[1] - 1
 
         object_position = make_world_cyclical(
-            object_position=object_position, grid_size=grid_size
+            object_position=object_position, grid_shape=grid_shape
         )
         return object_position
 
 
-def make_world_cyclical(object_position, grid_size):
+def make_world_cyclical(object_position, grid_shape):
     """
     Converts positions of objects that are out of the grid size to the relevant cyclical
      positions.
     """
-    return tuple(object_position[i] % grid_size[i] for i in range(len(grid_size)))
+    return tuple(object_position[i] % grid_shape[i] for i in range(len(grid_shape)))
