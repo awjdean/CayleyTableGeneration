@@ -27,7 +27,3 @@ EquivClassesDataType = dict[ActionType, EquivClassEntryType]
 class EquivElementsRowColumnDictType(TypedDict):
     row: CayleyTableStatesRowType
     column: CayleyTableStatesRowType
-
-
-# Gridworld2D.
-GridPosition2DType = tuple[int, int]

@@ -24,6 +24,13 @@
       "request": "launch",
       "program": "${workspaceFolder}/launch_graphworld1.py",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: launch_gridworld2d_walls",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/launch_gridworld2d_walls.py",
+      "console": "integratedTerminal"
     }
   ]
 }

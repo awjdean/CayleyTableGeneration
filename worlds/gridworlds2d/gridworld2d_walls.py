@@ -2,7 +2,10 @@ from utils.type_definitions import ActionType, StateType
 from worlds.gridworlds2d.gridworld2d import GridPosition2DType, Gridworld2D
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
 
-WallPositionsType = list[GridPosition2DType]
+WallPositionsType = list[tuple[float, float]]
+
+# Define constant for wall position relative to states.
+HALF_INT = 0.5
 
 
 class Gridworld2DWalls(Gridworld2D):
@@ -16,13 +19,14 @@ class Gridworld2DWalls(Gridworld2D):
         if wall_strategy not in ["identity", "masked"]:
             raise ValueError("wall_strategy must be either 'identity' or 'masked'")
 
+        self._check_walls()
+
         self._wall_strategy = wall_strategy
         self._wall_positions = wall_positions
 
     def get_next_state(self, state: StateType, min_action: ActionType) -> StateType:
-        # Check if wall in way.
         agent_position = state
-        agent_moving_into_wall = self._check_if_object_moving_into_wall(
+        agent_moving_into_wall = self._is_object_moving_into_wall(
             object_position=agent_position,
             wall_positions=self._wall_positions,
             min_action=min_action,
@@ -42,11 +46,7 @@ class Gridworld2DWalls(Gridworld2D):
                 object_position=state, grid_shape=self._GRID_SHAPE
             )
 
-    def draw(self):
-        # TODO: use draw from GridWorld2D, then draw in walls.
-        pass
-
-    def _check_if_object_moving_into_wall(
+    def _is_object_moving_into_wall(
         self,
         object_position: GridPosition2DType,
         wall_positions: WallPositionsType,
@@ -58,47 +58,87 @@ class Gridworld2DWalls(Gridworld2D):
         # TODO: check.
         elif min_action == "N":
             x_change = 0.0
-            y_change = 0.5
+            y_change = HALF_INT
         # Moving down into wall.
         # TODO: check.
         elif min_action == "S":
             x_change = 0.0
-            y_change = -0.5
+            y_change = -HALF_INT
         # Moving right into wall.
         # TODO: check.
         elif min_action == "E":
-            x_change = 0.5
+            x_change = HALF_INT
             y_change = 0.0
         # Moving left into wall.
         # TODO: check.
         elif min_action == "W":
-            x_change = -0.5
+            x_change = -HALF_INT
             y_change = 0.0
         else:
             raise Exception(f"Minimum action not in {self._MIN_ACTIONS}")
 
-        return is_wall_at_position(
+        return self._is_wall_at_position(
             object_position=object_position,
             wall_positions=wall_positions,
             x_change=x_change,
             y_change=y_change,
         )
 
+    def draw(self):
+        # TODO: use draw from GridWorld2D, then draw in walls.
+        pass
 
-def is_wall_at_position(
-    object_position: GridPosition2DType,
-    wall_positions: WallPositionsType,
-    x_change: float,
-    y_change: float,
-):
-    for wall_position in wall_positions:
-        if wall_position == (
-            object_position[0] + x_change,
-            object_position[1] + y_change,
-        ):
-            return True
-    return False
+    def _is_wall_at_position(
+        self,
+        object_position: GridPosition2DType,
+        wall_positions: WallPositionsType,
+        x_change: float,
+        y_change: float,
+    ):
+        for wall_position in wall_positions:
+            if wall_position == (
+                object_position[0] + x_change,
+                object_position[1] + y_change,
+            ):
+                return True
+        return False
 
+    def _check_walls(self) -> None:
+        max_x = self._GRID_SHAPE[0]
+        max_y = self._GRID_SHAPE[1]
+        for wall_position in self._wall_positions:
+            # Check x and y position ranges
+            if not (-HALF_INT <= wall_position[0] <= max_x - HALF_INT):
+                raise ValueError(
+                    f"Invalid x position: {wall_position[0]}."
+                    f" Must be in range [-{HALF_INT}, {max_x - HALF_INT}]."
+                )
+            if not (-HALF_INT <= wall_position[1] <= max_y - HALF_INT):
+                raise ValueError(
+                    f"Invalid y position: {wall_position[1]}."
+                    f" Must be in range [-{HALF_INT}, {max_y - HALF_INT}]."
+                )
 
-def check_walls_in_grid():
-    pass
+            # Existing validation for position types
+            if not (
+                (
+                    (
+                        isinstance(wall_position[0], int | float)
+                        and wall_position[0] % 1 == 0
+                    )
+                    and (
+                        isinstance(wall_position[1], int | float)
+                        and wall_position[1] % 1 == HALF_INT
+                    )
+                )
+                or (
+                    isinstance(wall_position[1], int | float)
+                    and wall_position[1] % 1 == 0
+                    and isinstance(wall_position[0], int | float)
+                    and wall_position[0] % 1 == HALF_INT
+                )
+            ):
+                raise ValueError(
+                    f"Invalid wall position: {wall_position}. "
+                    "Must be (int, half int) or (half int, int)."
+                )
