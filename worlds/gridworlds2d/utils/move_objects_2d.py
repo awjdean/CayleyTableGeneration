@@ -1,6 +1,6 @@
 from enum import Enum
 
-from worlds.gridworlds2d.gridworld2d import GridPosition2DType
+from utils.type_definitions import GridPosition2DType
 from worlds.gridworlds2d.utils.make_world_cyclical import make_world_cyclical
 
 

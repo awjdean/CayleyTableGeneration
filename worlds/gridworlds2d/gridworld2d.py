@@ -2,7 +2,7 @@ from utils.type_definitions import GridPosition2DType, StateType
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
 
 from ..base_world import BaseWorld
-from .utils.generate_states import generate_states
+from .utils.generate_2d_grid_positions import generate_2d_grid_positions
 
 
 class Gridworld2D(BaseWorld):
@@ -30,7 +30,7 @@ class Gridworld2D(BaseWorld):
         self._GRID_SHAPE = grid_shape
         self._MIN_ACTIONS = ["1", "W", "E", "N", "S"]
 
-        self._POSSIBLE_STATES = generate_states(grid_size=self._GRID_SHAPE)
+        self._POSSIBLE_STATES = generate_2d_grid_positions(grid_size=self._GRID_SHAPE)
 
     def get_possible_states(self) -> list[StateType]:
         return self._POSSIBLE_STATES
