@@ -1,7 +1,7 @@
 import itertools
 
 
-def generate_states(grid_size: tuple[int, int]) -> list[tuple[int, int]]:
+def generate_2d_grid_positions(grid_size: tuple[int, int]) -> list[tuple[int, int]]:
     """
     Creates a list of all possible states in a 2D grid.
 

@@ -1,3 +1,4 @@
+from undefined_action_strat import UndefinedActionStrat
 from utils.type_definitions import ActionType, StateType
 from worlds.gridworlds2d.gridworld2d import GridPosition2DType, Gridworld2D
 from worlds.gridworlds2d.utils.make_world_cyclical import make_world_cyclical
@@ -37,15 +38,8 @@ class Gridworld2DWalls(Gridworld2D):
             min_action=min_action,
         )
         if agent_moving_into_wall:
-            if self._wall_strategy == "identity":
-                return agent_position
-            if self._wall_strategy == "masked":
-                return (None, None)
-            else:
-                raise ValueError(
-                    "Invalid wall strategy: '{self._wall_strategy}'"
-                    "Must be either 'identity' or 'masked'."
-                )
+            # TODO: test this.
+            return UndefinedActionStrat(self._wall_strategy).apply(state)
         else:
             return MoveObject2DGrid(min_action).apply(
                 object_position=state, grid_shape=self._GRID_SHAPE
