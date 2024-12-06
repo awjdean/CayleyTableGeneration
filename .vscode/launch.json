@@ -31,6 +31,13 @@
       "request": "launch",
       "program": "${workspaceFolder}/launch_gridworld2d_walls.py",
       "console": "integratedTerminal"
+    },
+    {
+      "name": "Python Debugger: launch_gridworld2d_consumables",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${workspaceFolder}/launch_gridworld2d_consumables.py",
+      "console": "integratedTerminal"
     }
   ]
 }

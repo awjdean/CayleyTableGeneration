@@ -14,6 +14,8 @@ from cayley_table_generation.initial_cayley_table_states import (
 from utils.type_definitions import ActionType, MinActionsType, StateType
 from worlds.base_world import BaseWorld
 
+PRINT_INTERVAL = 100
+
 
 def generate_cayley_table_states_and_equiv_classes(
     world: BaseWorld, initial_state: StateType
@@ -38,13 +40,13 @@ def generate_cayley_table_states_and_equiv_classes(
     print_count = 0
     while True:
         print_count += 1
-        if print_count % 100 == 0:
+        if print_count % PRINT_INTERVAL == 0:
             print(
                 f"\tProcessing candidates: {len(candidate_elements)} remaining.",
                 end="\r",
             )
         if len(candidate_elements) == 0:
-            if print_count > 100:
+            if print_count > PRINT_INTERVAL:
                 print_start = "\n\n"
             else:
                 print_start = "\n"
