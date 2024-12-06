@@ -1,8 +1,8 @@
-from undefined_action_strat import UndefinedActionStrat
 from utils.type_definitions import ActionType, StateType
 from worlds.gridworlds2d.gridworld2d import GridPosition2DType, Gridworld2D
 from worlds.gridworlds2d.utils.make_world_cyclical import make_world_cyclical
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
+from worlds.undefined_action_strat import UndefinedActionStrat
 
 WallPositionsType = list[tuple[float, float]]
 
@@ -26,24 +26,23 @@ class Gridworld2DWalls(Gridworld2D):
         pseudo_wall_positions = generate_cyclical_pseudo_wall_positions(
             wall_positions, grid_shape
         )
-
         self._wall_positions = wall_positions + pseudo_wall_positions
 
     def get_next_state(self, state: StateType, min_action: ActionType) -> StateType:
         agent_position = state
-
         agent_moving_into_wall = self._is_object_moving_into_wall(
             object_position=agent_position,
             wall_positions=self._wall_positions,
             min_action=min_action,
         )
         if agent_moving_into_wall:
-            # TODO: test this.
-            return UndefinedActionStrat(self._wall_strategy).apply(state)
+            next_state = UndefinedActionStrat(self._wall_strategy).apply(state)
+            return next_state
         else:
-            return MoveObject2DGrid(min_action).apply(
+            next_state = MoveObject2DGrid(min_action).apply(
                 object_position=state, grid_shape=self._GRID_SHAPE
             )
+            return next_state
 
     def _is_object_moving_into_wall(
         self,

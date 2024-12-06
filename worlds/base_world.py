@@ -63,14 +63,17 @@ class BaseWorld:
         """
         if self._minimum_action_transformation_matrix is None:
             raise ValueError("Minimum action transformation matrix is not defined.")
-        try:
-            self._current_state = self._minimum_action_transformation_matrix[
-                self._current_state
-            ][min_action]
-        except KeyError:
-            raise ValueError(
-                f"Invalid state-action pair: {self._current_state}-{min_action}"
-            )
+        if self._current_state == (None,):
+            self._current_state = (None,)
+        else:
+            try:
+                self._current_state = self._minimum_action_transformation_matrix[
+                    self._current_state
+                ][min_action]
+            except KeyError:
+                raise ValueError(
+                    f"Invalid state-action pair: {self._current_state}-{min_action}"
+                )
 
     def apply_action_sequence(self, action_sequence: ActionType) -> None:
         """

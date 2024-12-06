@@ -4,7 +4,8 @@ from utils.type_definitions import StateType
 
 
 class UndefinedActionStrat(Enum):
-    """Enum class defining strategies for handling undefined actions.
+    """
+    Enum class defining strategies for handling undefined actions.
 
     Attributes:
         IDENTITY: Returns the original state unchanged
@@ -37,6 +38,3 @@ class UndefinedActionStrat(Enum):
             return (None,)
         else:
             raise ValueError(f"Invalid undefined action strategy: {self}")
-
-
-# TODO: Use this in walls.
