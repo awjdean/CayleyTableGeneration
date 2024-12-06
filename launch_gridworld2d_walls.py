@@ -2,7 +2,9 @@ from transformation_algebra.transformation_algebra import TransformationAlgebra
 from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
 world = Gridworld2DWalls(
-    grid_shape=(3, 2), wall_positions=[(2.5, 0)], wall_strategy="identity"
+    grid_shape=(2, 3),
+    wall_positions=[(0.5, 0)],
+    wall_strategy="identity",
 )
 world.generate_min_action_transformation_matrix()
 algebra = TransformationAlgebra(name="gridworld2D")

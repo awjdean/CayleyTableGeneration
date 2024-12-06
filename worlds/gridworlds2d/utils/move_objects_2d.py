@@ -1,5 +1,8 @@
 from enum import Enum
 
+from worlds.gridworlds2d.gridworld2d import GridPosition2DType
+from worlds.gridworlds2d.utils.make_world_cyclical import make_world_cyclical
+
 
 class MoveObject2DGrid(Enum):
     """
@@ -12,7 +15,7 @@ class MoveObject2DGrid(Enum):
     UP = "N"
     DOWN = "S"
 
-    def apply(self, object_position, grid_shape):
+    def apply(self, object_position: GridPosition2DType, grid_shape: tuple[int, ...]):
         if self == self.NOOP:
             return object_position
         elif self == self.LEFT:
@@ -25,14 +28,6 @@ class MoveObject2DGrid(Enum):
             object_position = object_position[0], object_position[1] - 1
 
         object_position = make_world_cyclical(
-            object_position=object_position, grid_shape=grid_shape
+            position=object_position, grid_shape=grid_shape
         )
         return object_position
-
-
-def make_world_cyclical(object_position, grid_shape):
-    """
-    Converts positions of objects that are out of the grid size to the relevant cyclical
-     positions.
-    """
-    return tuple(object_position[i] % grid_shape[i] for i in range(len(grid_shape)))
