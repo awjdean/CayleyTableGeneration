@@ -1,12 +1,12 @@
 import itertools
 
-from undefined_action_strat import UndefinedActionStrat
 from utils.type_definitions import ActionType, GridPosition2DType, StateType
 from worlds.base_world import BaseWorld
 from worlds.gridworlds2d.utils.generate_2d_grid_positions import (
     generate_2d_grid_positions,
 )
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
+from worlds.undefined_action_strat import UndefinedActionStrat
 
 
 class Gridworld2DConsumable(BaseWorld):
@@ -44,7 +44,7 @@ class Gridworld2DConsumable(BaseWorld):
 
     def get_next_state(self, state: StateType, min_action: ActionType) -> StateType:
         if min_action == "C":
-            next_state = apply_consume_action(state, self._CONSUME_STRATEGY)
+            next_state = _apply_consume_action(state, self._CONSUME_STRATEGY)
         else:
             agent_position = state[:2]
             consumable_positions = state[2]
@@ -59,11 +59,11 @@ class Gridworld2DConsumable(BaseWorld):
         pass
 
 
-def apply_consume_action(state: StateType, consume_strategy: str) -> StateType:
+def _apply_consume_action(state: StateType, consume_strategy: str) -> StateType:
     agent_position = state[:2]
     consumable_positions = state[2]
     if agent_position in consumable_positions:
-        new_consumable_positions = remove_first_consumable(
+        new_consumable_positions = _remove_first_consumable(
             consumable_positions=consumable_positions, agent_position=agent_position
         )
         new_state = (*agent_position, new_consumable_positions)
@@ -72,9 +72,10 @@ def apply_consume_action(state: StateType, consume_strategy: str) -> StateType:
     return new_state
 
 
-def remove_first_consumable(
-    consumable_positions: tuple, agent_position: GridPosition2DType
-):
+def _remove_first_consumable(
+    consumable_positions: tuple[GridPosition2DType, ...],
+    agent_position: GridPosition2DType,
+) -> tuple[GridPosition2DType, ...]:
     consumable_positions_list = list(consumable_positions)
     idx = consumable_positions_list.index(agent_position)
     consumable_positions_list.pop(idx)
