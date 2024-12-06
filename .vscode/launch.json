@@ -12,7 +12,7 @@
     //   "console": "integratedTerminal"
     // },
     {
-      "name": "Python Debugger: launch_gridworld2D",
+      "name": "Python Debugger: launch_gridworld2d",
       "type": "debugpy",
       "request": "launch",
       "program": "${workspaceFolder}/launch_gridworld2d.py",

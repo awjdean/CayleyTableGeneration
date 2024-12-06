@@ -1,3 +1,5 @@
+import time
+
 from cayley_table_generation.action_outcome import generate_action_outcome
 from cayley_table_generation.breaking_equiv_classes import find_broken_equiv_classes
 from cayley_table_generation.cayley_table_states import CayleyTableStates
@@ -30,15 +32,36 @@ def generate_cayley_table_states_and_equiv_classes(
         initial_state=initial_state,
         world=world,
     )
+    print("\n\tInitial Cayley table generated.")
 
     candidate_elements: set[ActionType] = set()
+    print_count = 0
     while True:
+        print_count += 1
+        if print_count % 100 == 0:
+            print(
+                f"\tProcessing candidates: {len(candidate_elements)} remaining.",
+                end="\r",
+            )
         if len(candidate_elements) == 0:
+            if print_count > 100:
+                print_start = "\n\n"
+            else:
+                print_start = "\n"
+            print_count = 0
+            print(f"{print_start}\tSearching for candidate elements.")
+            start_time = time.time()
             candidate_elements = find_candidate_elements(
                 cayley_table_states=cayley_table_states,
                 initial_state=initial_state,
                 world=world,
                 equiv_classes=equiv_classes,
+            )
+            elapsed_time = time.time() - start_time
+            # START TIMER
+            print(
+                f"\tCandidate elements found: {len(candidate_elements)}"
+                f" (in {elapsed_time:.2f} seconds)"
             )
             if len(candidate_elements) == 0:
                 break
@@ -67,6 +90,8 @@ def generate_cayley_table_states_and_equiv_classes(
             initial_state=initial_state,
             world=world,
         )
+        if len(new_equiv_classes.data) != 0:
+            print(f"\t{candidate_element} split classes:\n\t{new_equiv_classes.data}")
 
         # Remove elements in new_equiv_classes from equiv_classes.
         equiv_classes.remove_elements_from_classes(
