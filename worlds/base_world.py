@@ -48,14 +48,26 @@ class BaseWorld:
         elif not self._MIN_ACTIONS:
             raise ValueError("Minimum actions are not defined.")
         else:
+            self._add_undefined_state_to_possible_states()
             transformation_matrix: TransformationMatrix = {}
             for state in self.get_possible_states():
                 transformation_matrix[state] = {}
                 for min_action in self._MIN_ACTIONS:
-                    transformation_matrix[state][min_action] = self.get_next_state(
-                        state, min_action
-                    )
+                    # Undefined state is absorbing.
+                    if state == (None,):
+                        next_state = (None,)
+                    else:
+                        next_state = self.get_next_state(state, min_action)
+
+                    transformation_matrix[state][min_action] = next_state
             self._minimum_action_transformation_matrix = transformation_matrix
+
+    def _add_undefined_state_to_possible_states(self) -> None:
+        """
+        Add the undefined state to the list of possible states.
+        """
+        if (None,) not in self.get_possible_states():
+            self.get_possible_states().append((None,))
 
     def _apply_min_action(self, min_action: ActionType) -> None:
         """
@@ -63,8 +75,6 @@ class BaseWorld:
         """
         if self._minimum_action_transformation_matrix is None:
             raise ValueError("Minimum action transformation matrix is not defined.")
-        if self._current_state == (None,):
-            self._current_state = (None,)
         else:
             try:
                 self._current_state = self._minimum_action_transformation_matrix[

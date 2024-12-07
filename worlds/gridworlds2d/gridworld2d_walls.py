@@ -37,12 +37,11 @@ class Gridworld2DWalls(Gridworld2D):
         )
         if agent_moving_into_wall:
             next_state = UndefinedActionStrat(self._wall_strategy).apply(state)
-            return next_state
         else:
             next_state = MoveObject2DGrid(min_action).apply(
                 object_position=state, grid_shape=self._GRID_SHAPE
             )
-            return next_state
+        return next_state
 
     def _is_object_moving_into_wall(
         self,
