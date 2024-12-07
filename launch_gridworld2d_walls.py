@@ -2,7 +2,7 @@ from transformation_algebra.transformation_algebra import TransformationAlgebra
 from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
 world = Gridworld2DWalls(
-    grid_shape=(2, 3),
+    grid_shape=(2, 2),
     wall_positions=[(0.5, 0)],
     wall_strategy="masked",
 )
