@@ -15,7 +15,9 @@ class MoveObject2DGrid(Enum):
     UP = "N"
     DOWN = "S"
 
-    def apply(self, object_position: GridPosition2DType, grid_shape: tuple[int, ...]):
+    def apply(
+        self, object_position: GridPosition2DType, grid_shape: tuple[int, int]
+    ) -> GridPosition2DType:
         if self == self.NOOP:
             return object_position
         elif self == self.LEFT:
