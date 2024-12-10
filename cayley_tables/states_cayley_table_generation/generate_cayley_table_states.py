@@ -1,14 +1,20 @@
 import time
 
-from cayley_table_generation.action_outcome import generate_action_outcome
-from cayley_table_generation.breaking_equiv_classes import find_broken_equiv_classes
-from cayley_table_generation.cayley_table_states import CayleyTableStates
-from cayley_table_generation.equiv_classes import (
+from cayley_tables.cayley_table_states import CayleyTableStates
+from cayley_tables.equiv_classes import (
     EquivClasses,
     generate_initial_equivalence_classes,
 )
-from cayley_table_generation.find_candidate_elements import find_candidate_elements
-from cayley_table_generation.initial_cayley_table_states import (
+from cayley_tables.states_cayley_table_generation.action_outcome import (
+    generate_action_outcome,
+)
+from cayley_tables.states_cayley_table_generation.breaking_equiv_classes import (
+    find_broken_equiv_classes,
+)
+from cayley_tables.states_cayley_table_generation.find_candidate_elements import (
+    find_candidate_elements,
+)
+from cayley_tables.states_cayley_table_generation.initial_cayley_table_states import (
     generate_initial_cayley_table_states,
 )
 from utils.type_definitions import ActionType, MinActionsType, StateType
