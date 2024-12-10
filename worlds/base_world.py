@@ -2,10 +2,7 @@
 Features present in any world class.
 """
 
-import json
-import os
 from abc import abstractmethod
-from typing import Any
 
 from utils.type_definitions import (
     ActionType,
@@ -14,6 +11,7 @@ from utils.type_definitions import (
     TransformationMatrix,
 )
 from worlds.utils.undefined_state import UndefinedStates
+from worlds.world_saver import WorldSaver
 
 
 class BaseWorld:
@@ -22,6 +20,7 @@ class BaseWorld:
         self._MIN_ACTIONS: list[ActionType] = min_actions
         self._min_action_transformation_matrix: TransformationMatrix = {}
         self._possible_states: list[StateType] = []
+        self.world_saver = WorldSaver()
 
     @abstractmethod
     def generate_possible_states(self) -> list[StateType]:
@@ -135,24 +134,38 @@ class BaseWorld:
     def get_min_actions(self) -> MinActionsType:
         return self._MIN_ACTIONS
 
-    def save_minimum_action_transformation_matrix(self, path: str) -> None:
-        """Save the minimum action transformation matrix to a file.
+    def save_world_properties(self, path: str) -> None:
+        """Save the world properties to a JSON file."""
+        properties = self._get_world_properties_for_save()
+        self.world_saver.save_world_properties(properties, path)
 
-        Args:
-            path (str): The file path to save the transformation matrix.
-        """
-        pass
+    def load_world_properties(self, path: str) -> None:
+        """Load the world properties from a pickle file."""
+        # Get the keys of additional properties that need to be loaded
+        additional_properties_keys = set(
+            self._get_additional_properties_for_save().keys()
+        )
 
-    def load_minimum_action_transformation_matrix(self, path: str) -> None:
-        """Load the minimum action transformation matrix from a file.
+        # Load properties using WorldSaver
+        properties = self.world_saver.load_world_properties(
+            path, additional_properties_keys
+        )
 
-        Args:
-            path (str): The file path to load the transformation matrix from.
+        # Set the properties
+        self._MIN_ACTIONS = properties["minimum_actions"]
+        self._possible_states = properties["possible_states"]
+        self._min_action_transformation_matrix = properties[
+            "min_action_transformation_matrix"
+        ]
 
-        # TODO: Load minimum actions, states, and transformation matrix; ask user to
-        # input initial_state?
-        """
-        pass
+        # Set additional properties
+        for key, value in properties.items():
+            if key not in [
+                "minimum_actions",
+                "possible_states",
+                "min_action_transformation_matrix",
+            ]:
+                setattr(self, f"_{key.upper()}", value)
 
     def _get_world_properties_for_save(self) -> dict:
         """Collect all relevant world properties into a dictionary.
@@ -175,89 +188,3 @@ class BaseWorld:
             dict: Additional properties to save. Empty by default.
         """
         return {}
-
-    def _get_additional_properties_for_load(self, properties: dict) -> dict:
-        """Get additional properties specific to the world subclass for loading.
-
-        Args:
-            properties (dict): The loaded properties dictionary.
-
-        Returns:
-            dict: Additional properties to load, matching those from save.
-        """
-        # Get the keys from the save method
-        save_keys = self._get_additional_properties_for_save().keys()
-        # Return a dict with just those properties from the loaded data
-        return {key: properties[key] for key in save_keys}
-
-    def save_world_properties(self, path: str) -> None:
-        """Save the world properties to a JSON file.
-
-        Args:
-            path (str): The file path to save the world properties.
-        """
-        # Ensure the directory exists
-        save_dir = os.path.join(".", "saved", "worlds")
-        os.makedirs(save_dir, exist_ok=True)
-
-        # Combine the directory with the provided path
-        full_path = os.path.join(save_dir, path)
-
-        def tuple_to_list(obj: Any) -> Any:
-            if isinstance(obj, tuple):
-                return list(obj)
-            elif isinstance(obj, dict):
-                return {k: tuple_to_list(v) for k, v in obj.items()}
-            return obj
-
-        properties = self._get_world_properties_for_save()
-        serializable_properties = tuple_to_list(properties)
-
-        with open(full_path, "w") as f:
-            json.dump(serializable_properties, f, indent=4)
-
-    def load_world_properties(self, path: str) -> None:
-        """Load the world properties from a JSON file.
-
-        Args:
-            path (str): The file path to load the world properties from.
-
-        Raises:
-            FileNotFoundError: If the specified file does not exist.
-            KeyError: If the loaded file is missing required properties.
-        """
-        # Construct the full path
-        full_path = os.path.join(".", "saved", "worlds", path)
-
-        # Load and parse the JSON file
-        with open(full_path) as f:
-            properties = json.load(f)
-
-        # Convert lists back to tuples for states
-        def list_to_tuple(obj: Any) -> Any:
-            if isinstance(obj, list):
-                return tuple(obj)
-            elif isinstance(obj, dict):
-                return {
-                    list_to_tuple(k) if isinstance(k, list) else k: list_to_tuple(v)
-                    for k, v in obj.items()
-                }
-            return obj
-
-        try:
-            # Load and convert the properties
-            self._MIN_ACTIONS = properties["minimum_actions"]
-            self._possible_states = [
-                list_to_tuple(state) for state in properties["possible_states"]
-            ]
-            self._min_action_transformation_matrix = list_to_tuple(
-                properties["min_action_transformation_matrix"]
-            )
-
-            # Load additional properties specific to the subclass
-            additional_properties = self._get_additional_properties_for_load(properties)
-            for key, value in additional_properties.items():
-                setattr(self, f"_{key.upper()}", list_to_tuple(value))
-
-        except KeyError as e:
-            raise KeyError(f"Missing required property in loaded file: {e}")
