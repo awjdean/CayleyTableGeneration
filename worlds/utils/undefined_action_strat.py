@@ -10,7 +10,7 @@ class UndefinedActionStrat(Enum):
 
     Attributes:
         IDENTITY: Returns the original state unchanged
-        MASKED: Returns a masked state (None,)
+        MASKED: Returns the undefined state
     """
 
     IDENTITY = "identity"
