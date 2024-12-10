@@ -72,8 +72,8 @@ class BaseWorld:
                 transformation_matrix[state] = {}
                 for min_action in self._MIN_ACTIONS:
                     # Undefined state is absorbing.
-                    if state == (None,):
-                        next_state = (None,)
+                    if state == UndefinedStates.BASIC.value:
+                        next_state = UndefinedStates.BASIC.value
                     else:
                         next_state = self.get_next_state(state, min_action)
                     transformation_matrix[state][min_action] = next_state
