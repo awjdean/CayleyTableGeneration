@@ -4,21 +4,21 @@ from worlds.base_world import BaseWorld
 
 class GraphWorld1(BaseWorld):
     def __init__(self) -> None:
-        super().__init__()
-        self._MIN_ACTIONS = ["1", "a", "b"]
+        min_actions = ["1", "a", "b"]
+        super().__init__(min_actions)
 
-    def get_possible_states(self) -> list[StateType]:
+    def generate_possible_states(self) -> list[StateType]:
         return [(1,), (2,), (3,)]
 
     def get_next_state(self, state: StateType, min_action: ActionType) -> StateType:
-        transitions = {
+        min_action_transitions = {
             "1": {(1,): (1,), (2,): (2,), (3,): (3,)},
             "a": {(1,): (2,), (2,): (3,), (3,): (1,)},
             "b": {(1,): (2,), (2,): (1,), (3,): (3,)},
         }
 
-        if min_action in transitions:
-            next_state = transitions[min_action].get(state)
+        if min_action in min_action_transitions:
+            next_state = min_action_transitions[min_action].get(state)
             if next_state is None:
                 raise ValueError(
                     f"Invalid state: '{state}' for action: '{min_action}'."

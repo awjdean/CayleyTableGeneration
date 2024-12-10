@@ -3,7 +3,7 @@ from worlds.graphworlds.graphworld1 import GraphWorld1
 
 world = GraphWorld1()
 world.generate_min_action_transformation_matrix()
-algebra = TransformationAlgebra(name="test")
+algebra = TransformationAlgebra(name="graphworld1")
 algebra.generate_cayley_table_states(world=world, initial_state=(1,))
 print(algebra.cayley_table_states)
 print(algebra.equiv_classes)

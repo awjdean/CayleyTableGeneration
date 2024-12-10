@@ -20,6 +20,7 @@ PRINT_INTERVAL = 100
 def generate_cayley_table_states_and_equiv_classes(
     world: BaseWorld, initial_state: StateType
 ) -> tuple[CayleyTableStates, EquivClasses]:
+    print("\n\tGenerating Cayley table states and equivalence classes.")
     # Initialise variables.
     min_actions: MinActionsType = world.get_min_actions()
 
@@ -34,7 +35,7 @@ def generate_cayley_table_states_and_equiv_classes(
         initial_state=initial_state,
         world=world,
     )
-    print("\n\tInitial Cayley table generated.")
+    print("\tInitial Cayley table generated.")
 
     candidate_elements: set[ActionType] = set()
     print_count = 0
@@ -116,4 +117,5 @@ def generate_cayley_table_states_and_equiv_classes(
         # Add new_equiv_classes to cayley_table_states.
         cayley_table_states.add_equiv_classes(new_equiv_classes, initial_state, world)
 
+    print("\n\tCayley table states and equivalence classes generated.")
     return cayley_table_states, equiv_classes

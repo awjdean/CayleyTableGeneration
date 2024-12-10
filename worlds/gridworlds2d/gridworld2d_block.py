@@ -1,4 +1,4 @@
-from utils.type_definitions import GridPosition2DType
+from utils.type_definitions import ActionType, GridPosition2DType, StateType
 from worlds.base_world import BaseWorld
 from worlds.gridworlds2d.utils.generate_2d_grid_positions import (
     generate_2d_grid_positions,
@@ -8,20 +8,24 @@ from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
 
 class Gridworld2DBlock(BaseWorld):
     def __init__(
-        self, grid_size: GridPosition2DType, block_position: GridPosition2DType
+        self, grid_shape: GridPosition2DType, block_position: GridPosition2DType
     ) -> None:
         """
         World states are of the form (agent_x, agent_y, (block_x, block_y)).
         """
-        super().__init__()
-        self._GRID_SIZE = grid_size
+        min_actions = ["1", "W", "E", "N", "S"]
+        super().__init__(min_actions)
+        self._GRID_SHAPE = grid_shape
         self._BLOCK_POSITION = block_position
 
-    def get_possible_states(self) -> list[GridPosition2DType]:
-        # TODO: Check this.
+    def generate_possible_states(self) -> list[StateType]:
         possible_states = []
-        possible_agent_positions = generate_2d_grid_positions(grid_size=self._GRID_SIZE)
-        possible_block_positions = generate_2d_grid_positions(grid_size=self._GRID_SIZE)
+        possible_agent_positions = generate_2d_grid_positions(
+            grid_size=self._GRID_SHAPE
+        )
+        possible_block_positions = generate_2d_grid_positions(
+            grid_size=self._GRID_SHAPE
+        )
         for agent_position in possible_agent_positions:
             for block_position in possible_block_positions:
                 if agent_position != block_position:
@@ -29,16 +33,15 @@ class Gridworld2DBlock(BaseWorld):
                     possible_states.append(state)
         return possible_states
 
-    # TODO: Check this.
-    def get_next_state(self, state, min_action):
+    def get_next_state(self, state: StateType, min_action: ActionType):
         agent_position = state[:2]
         block_position = state[2]
         new_agent_position = MoveObject2DGrid(min_action).apply(
-            object_position=agent_position, grid_shape=self._GRID_SIZE
+            object_position=agent_position, grid_shape=self._GRID_SHAPE
         )
         if new_agent_position == block_position:
             new_block_position = MoveObject2DGrid(min_action).apply(
-                object_position=block_position, grid_shape=self._GRID_SIZE
+                object_position=block_position, grid_shape=self._GRID_SHAPE
             )
         else:
             new_block_position = block_position
