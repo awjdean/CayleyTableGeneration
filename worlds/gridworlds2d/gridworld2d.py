@@ -42,6 +42,14 @@ class Gridworld2D(BaseWorld):
         # TODO: Implement this.
         pass
 
+    def _get_additional_properties_for_save(self) -> dict:
+        """Get additional properties specific to Gridworld2D.
+
+        Returns:
+            dict: Additional properties including grid shape.
+        """
+        return {"grid_shape": self._GRID_SHAPE}
+
 
 if __name__ == "__main__":
     grid = Gridworld2D(grid_shape=(2, 3))

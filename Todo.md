@@ -12,3 +12,4 @@
 # Smaller things
 
 - Change states set up so it's always ((agent_x, agent_y,...), (positions of other things),...).
+- Fix saving for worlds --> put in Saving class and inherit ?

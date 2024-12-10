@@ -7,16 +7,13 @@ from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
 
 
 class Gridworld2DBlock(BaseWorld):
-    def __init__(
-        self, grid_shape: GridPosition2DType, block_position: GridPosition2DType
-    ) -> None:
+    def __init__(self, grid_shape: GridPosition2DType) -> None:
         """
         World states are of the form (agent_x, agent_y, (block_x, block_y)).
         """
         min_actions = ["1", "W", "E", "N", "S"]
         super().__init__(min_actions)
         self._GRID_SHAPE = grid_shape
-        self._BLOCK_POSITION = block_position
 
     def generate_possible_states(self) -> list[StateType]:
         possible_states = []
@@ -51,3 +48,11 @@ class Gridworld2DBlock(BaseWorld):
 
     def draw(self):
         pass
+
+    def _get_additional_properties_for_save(self) -> dict:
+        """Get additional properties specific to Gridworld2DBlock.
+
+        Returns:
+            dict: Additional properties including grid shape.
+        """
+        return {"grid_shape": self._GRID_SHAPE}
