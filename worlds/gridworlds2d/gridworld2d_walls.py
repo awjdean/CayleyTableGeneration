@@ -126,6 +126,19 @@ class Gridworld2DWalls(Gridworld2D):
                 return True
         return False
 
+    def _get_additional_properties_for_save(self) -> dict:
+        """Get additional properties specific to Gridworld2DWalls.
+
+        Returns:
+            dict: Additional properties including grid shape, wall positions,
+             and wall strategy.
+        """
+        return {
+            "grid_shape": self._GRID_SHAPE,
+            "wall_positions": self._wall_positions,
+            "wall_strategy": self._wall_strategy,
+        }
+
 
 def check_walls(
     wall_positions: WallPositionsType, grid_shape: GridPosition2DType

@@ -90,6 +90,19 @@ class Gridworld2DConsumable(BaseWorld):
         # TODO: Implement this.
         pass
 
+    def _get_additional_properties_for_save(self) -> dict:
+        """Get additional properties specific to Gridworld2DConsumable.
+
+        Returns:
+            dict: Additional properties including grid shape, consumable positions,
+                 and consume strategy.
+        """
+        return {
+            "grid_shape": self._GRID_SHAPE,
+            "consumable_positions": self._CONSUMABLE_POSITIONS,
+            "consume_strategy": self._CONSUME_STRATEGY,
+        }
+
 
 def _apply_consume_action(state: StateType, consume_strategy: str) -> StateType:
     """
