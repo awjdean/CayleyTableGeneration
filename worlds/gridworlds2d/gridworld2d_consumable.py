@@ -6,7 +6,7 @@ from worlds.gridworlds2d.utils.generate_2d_grid_positions import (
     generate_2d_grid_positions,
 )
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
-from worlds.undefined_action_strat import UndefinedActionStrat
+from worlds.utils.undefined_action_strat import UndefinedActionStrat
 
 
 class Gridworld2DConsumable(BaseWorld):
