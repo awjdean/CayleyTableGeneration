@@ -11,6 +11,30 @@ HALF_INT = 0.5
 
 
 class Gridworld2DWalls(Gridworld2D):
+    """
+    Represents a 2D grid world with walls, allowing for movement and collision
+     detection.
+
+    This class extends the Gridworld2D class to include wall positions and strategies
+    for handling agent movement into walls. It provides methods to check for wall
+     collisions and to generate cyclical wall positions.
+
+    Attributes:
+        _wall_strategy (str): The strategy for handling wall interactions ('identity' or
+         'masked').
+        _wall_positions (WallPositionsType): The list of wall positions in the grid.
+
+    Args:
+        grid_shape (GridPosition2DType): The shape of the grid (max_x, max_y).
+        wall_positions (WallPositionsType): The initial positions of the walls.
+        wall_strategy (str): The strategy for wall interactions ('identity' or
+         'masked').
+
+    Raises:
+        ValueError: If wall_strategy is not 'identity' or 'masked'.
+        ValueError: If any wall position is out of bounds or invalid.
+    """
+
     def __init__(
         self,
         grid_shape: GridPosition2DType,

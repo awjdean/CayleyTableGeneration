@@ -17,20 +17,38 @@ class Gridworld2DConsumable(BaseWorld):
         consume_strategy: str,
     ):
         """
+        Initializes the Gridworld2DConsumable instance.
         States are of the form:
         (agent_x, agent_y, ((consumable1_x, consumable1_y),
           (consumable2_x, consumable2_y),
           ...))
+
+        Args:
+            grid_shape (GridPosition2DType): The shape of the grid.
+            consumable_positions (list[GridPosition2DType]): A list of positions where
+             consumables are located.
+            consume_strategy (str): The strategy for consuming items, must be either
+             'identity' or 'masked'.
+
+        Raises:
+            ValueError: If consume_strategy is not 'identity' or 'masked'.
         """
-        super().__init__()
+        min_actions = ["1", "W", "E", "N", "S", "C"]
+        super().__init__(min_actions)
         if consume_strategy not in ["identity", "masked"]:
             raise ValueError("wall_strategy must be either 'identity' or 'masked'")
         self._CONSUME_STRATEGY = consume_strategy
         self._GRID_SHAPE = grid_shape
         self._CONSUMABLE_POSITIONS = consumable_positions
-        self._MIN_ACTIONS = ["1", "W", "E", "N", "S", "C"]
 
-    def get_possible_states(self) -> list[StateType]:
+    def generate_possible_states(self) -> list[StateType]:
+        """
+        Generates all possible states of the grid based on agent and consumable
+         positions.
+
+        Returns:
+            list[StateType]: A list of possible states represented as tuples.
+        """
         possible_states = []
         agent_positions = generate_2d_grid_positions(grid_size=self._GRID_SHAPE)
         for agent_position in agent_positions:
@@ -43,6 +61,16 @@ class Gridworld2DConsumable(BaseWorld):
         return possible_states
 
     def get_next_state(self, state: StateType, min_action: ActionType) -> StateType:
+        """
+        Computes the next state based on the current state and the action taken.
+
+        Args:
+            state (StateType): The current state of the grid.
+            min_action (ActionType): The action to be performed.
+
+        Returns:
+            StateType: The next state after the action is applied.
+        """
         if min_action == "C":
             next_state = _apply_consume_action(state, self._CONSUME_STRATEGY)
         else:
@@ -56,10 +84,24 @@ class Gridworld2DConsumable(BaseWorld):
         return next_state
 
     def draw(self):
+        """
+        Draws the current state of the grid. (To be implemented)
+        """
+        # TODO: Implement this.
         pass
 
 
 def _apply_consume_action(state: StateType, consume_strategy: str) -> StateType:
+    """
+    Applies the consume action to the current state based on the consume strategy.
+
+    Args:
+        state (StateType): The current state of the grid.
+        consume_strategy (str): The strategy for consuming items.
+
+    Returns:
+        StateType: The new state after the consume action is applied.
+    """
     agent_position = state[:2]
     consumable_positions = state[2]
     if agent_position in consumable_positions:
@@ -76,6 +118,19 @@ def _remove_first_consumable(
     consumable_positions: tuple[GridPosition2DType, ...],
     agent_position: GridPosition2DType,
 ) -> tuple[GridPosition2DType, ...]:
+    """
+    Removes the first consumable from the list of consumable positions based on the
+    agent's position.
+
+    Args:
+        consumable_positions (tuple[GridPosition2DType, ...]): The current positions of
+          consumables.
+        agent_position (GridPosition2DType): The position of the agent.
+
+    Returns:
+        tuple[GridPosition2DType, ...]: The new tuple of consumable positions after
+         removal.
+    """
     consumable_positions_list = list(consumable_positions)
     idx = consumable_positions_list.index(agent_position)
     consumable_positions_list.pop(idx)

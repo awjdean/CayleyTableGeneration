@@ -1,6 +1,7 @@
 from enum import Enum
 
 from utils.type_definitions import StateType
+from worlds.undefined_state import UndefinedStates
 
 
 class UndefinedActionStrat(Enum):
@@ -35,6 +36,6 @@ class UndefinedActionStrat(Enum):
         if self == self.IDENTITY:
             return state
         elif self == self.MASKED:
-            return (None,)
+            return UndefinedStates.BASIC.value
         else:
             raise ValueError(f"Invalid undefined action strategy: {self}")
