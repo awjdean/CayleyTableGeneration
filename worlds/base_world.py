@@ -10,7 +10,7 @@ from utils.type_definitions import (
     StateType,
     TransformationMatrix,
 )
-from worlds.undefined_state import UndefinedStates
+from worlds.utils.undefined_state import UndefinedStates
 
 
 class BaseWorld:

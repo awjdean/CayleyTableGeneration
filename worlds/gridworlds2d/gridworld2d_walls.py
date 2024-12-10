@@ -2,7 +2,7 @@ from utils.type_definitions import ActionType, StateType
 from worlds.gridworlds2d.gridworld2d import GridPosition2DType, Gridworld2D
 from worlds.gridworlds2d.utils.make_world_cyclical import make_world_cyclical
 from worlds.gridworlds2d.utils.move_objects_2d import MoveObject2DGrid
-from worlds.undefined_action_strat import UndefinedActionStrat
+from worlds.utils.undefined_action_strat import UndefinedActionStrat
 
 WallPositionsType = list[tuple[float, float]]
 

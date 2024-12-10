@@ -1,7 +1,7 @@
 from enum import Enum
 
 from utils.type_definitions import StateType
-from worlds.undefined_state import UndefinedStates
+from worlds.utils.undefined_state import UndefinedStates
 
 
 class UndefinedActionStrat(Enum):
