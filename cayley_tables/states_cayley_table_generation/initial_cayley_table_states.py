@@ -1,5 +1,7 @@
-from cayley_table_generation.action_outcome import generate_action_outcome
-from cayley_table_generation.cayley_table_states import CayleyTableStates
+from cayley_tables.cayley_table_states import CayleyTableStates
+from cayley_tables.states_cayley_table_generation.action_outcome import (
+    generate_action_outcome,
+)
 from utils.type_definitions import StateType
 from worlds.base_world import BaseWorld
 

@@ -1,4 +1,6 @@
-from cayley_table_generation.action_outcome import generate_action_outcome
+from cayley_tables.states_cayley_table_generation.action_outcome import (
+    generate_action_outcome,
+)
 from utils.type_definitions import (
     ActionType,
     EquivClassesDataType,

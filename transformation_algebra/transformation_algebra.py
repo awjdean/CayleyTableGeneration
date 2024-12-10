@@ -1,12 +1,12 @@
 import copy
 
-from cayley_table_generation.cayley_table_actions import (
+from cayley_tables.cayley_table_actions import (
     CayleyTableActions,
     generate_cayley_table_actions,
 )
-from cayley_table_generation.cayley_table_states import CayleyTableStates
-from cayley_table_generation.equiv_classes import EquivClasses
-from cayley_table_generation.generate_cayley_table_states import (
+from cayley_tables.cayley_table_states import CayleyTableStates
+from cayley_tables.equiv_classes import EquivClasses
+from cayley_tables.states_cayley_table_generation.generate_cayley_table_states import (
     generate_cayley_table_states_and_equiv_classes,
 )
 from utils.type_definitions import (
@@ -43,7 +43,11 @@ class TransformationAlgebra:
         # )
 
     def generate_cayley_table_actions(self):
-        # TODO: if self.equiv_classes not defined, throw error.
+        if not hasattr(self, "equiv_classes") or self.equiv_classes is None:
+            raise ValueError(
+                "equiv_classes must be generated before generating Cayley table"
+                "actions. Call generate_cayley_table_states() first."
+            )
         self.cayley_table_actions = generate_cayley_table_actions(self.equiv_classes)
 
     def save_cayley_tables(self):

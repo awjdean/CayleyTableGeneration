@@ -1,5 +1,5 @@
-from cayley_table_generation.cayley_table_states import CayleyTableStates
-from cayley_table_generation.equiv_classes import EquivClasses
+from cayley_tables.cayley_table_states import CayleyTableStates
+from cayley_tables.equiv_classes import EquivClasses
 from utils.type_definitions import ActionType, StateType
 from worlds.base_world import BaseWorld
 

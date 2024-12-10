@@ -1,7 +1,9 @@
 import pandas as pd
 
-from cayley_table_generation.action_outcome import generate_action_outcome
-from cayley_table_generation.equiv_classes import EquivClasses
+from cayley_tables.equiv_classes import EquivClasses
+from cayley_tables.states_cayley_table_generation.action_outcome import (
+    generate_action_outcome,
+)
 from utils.type_definitions import (
     ActionType,
     CayleyTableStatesDataType,
