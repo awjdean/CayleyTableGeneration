@@ -2,6 +2,7 @@ from math import inf
 from typing import NamedTuple, TypedDict
 
 from cayley_tables.cayley_table_actions import CayleyTableActions
+from transformation_algebra.property_checkers.identity import IdentityResultType
 from utils.type_definitions import ActionType
 
 
@@ -33,7 +34,7 @@ class ElementOrderResultType(TypedDict):
 
 
 def calculate_element_orders(
-    cayley_table_actions: CayleyTableActions, identity_info: dict
+    cayley_table_actions: CayleyTableActions, identity_info: IdentityResultType
 ) -> ElementOrderResultType:
     """Find the order of each element in a transformation algebra.
 
