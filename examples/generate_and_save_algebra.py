@@ -30,8 +30,19 @@ def main():
     print("Generating Cayley table actions...")
     algebra.generate_cayley_table_actions()
 
-    # Save the algebra
-    print("Saving algebra...")
+    # Check algebraic properties
+    print("\nChecking algebraic properties...")
+    algebra.check_properties()
+
+    # Print results
+    print("\nAlgebraic Properties:")
+    print(f"- Associative: {algebra.associativity_info['is_associative_algebra']}")
+    print(f"- Has Identity: {algebra.identity_info['is_identity_algebra']}")
+    print(f"- Has Inverses: {algebra.inverse_info['is_inverse_algebra']}")
+    print(f"- Commutative: {algebra.commutativity_info['is_commutative_algebra']}")
+
+    # Save the algebra with properties
+    print("\nSaving algebra...")
     algebra.save(path=None)  # Will save to ./saved/algebra/gridworld_2x2_wall.pkl
 
     print("\nGenerated tables:")

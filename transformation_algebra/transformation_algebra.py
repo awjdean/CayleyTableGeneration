@@ -87,22 +87,26 @@ class TransformationAlgebra:
                  If None, saves to ./saved/algebra/{name}.pkl
         """
         if path is None:
-            # Create directory if it doesn't exist
             os.makedirs("./saved/algebra/", exist_ok=True)
             path = f"./saved/algebra/{self.name}.pkl"
 
         data = {
+            # Cayley tables
             "cayley_table_states": getattr(self, "cayley_table_states", None),
             "cayley_table_actions": getattr(self, "cayley_table_actions", None),
             "equiv_classes": getattr(self, "equiv_classes", None),
             "algebra_generation_parameters": getattr(
                 self, "_algebra_generation_parameters", None
             ),
+            # Algebraic properties
+            "associativity_info": getattr(self, "associativity_info", None),
+            "identity_info": getattr(self, "identity_info", None),
+            "inverse_info": getattr(self, "inverse_info", None),
+            "element_orders": getattr(self, "element_orders", None),
+            "commutativity_info": getattr(self, "commutativity_info", None),
         }
 
-        # Create directory if it doesn't exist
         os.makedirs(os.path.dirname(path), exist_ok=True)
-
         with open(path, "wb") as f:
             pickle.dump(data, f)
 
@@ -125,18 +129,27 @@ class TransformationAlgebra:
         with open(path, "rb") as f:
             data = pickle.load(f)
 
-        # Load the attributes if they exist in the saved data
+        # Load Cayley tables
         if "cayley_table_states" in data:
             self.cayley_table_states = data["cayley_table_states"]
-
         if "cayley_table_actions" in data:
             self.cayley_table_actions = data["cayley_table_actions"]
-
         if "equiv_classes" in data:
             self.equiv_classes = data["equiv_classes"]
-
         if "algebra_generation_parameters" in data:
             self._algebra_generation_parameters = data["algebra_generation_parameters"]
+
+        # Load algebraic properties
+        if "associativity_info" in data:
+            self.associativity_info = data["associativity_info"]
+        if "identity_info" in data:
+            self.identity_info = data["identity_info"]
+        if "inverse_info" in data:
+            self.inverse_info = data["inverse_info"]
+        if "element_orders" in data:
+            self.element_orders = data["element_orders"]
+        if "commutativity_info" in data:
+            self.commutativity_info = data["commutativity_info"]
 
     def _store_algebra_generation_paramenters(
         self, world: BaseWorld, initial_state: StateType
