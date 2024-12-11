@@ -32,7 +32,7 @@ class ElementOrderResultType(TypedDict):
     orders: dict[ActionType, ElementOrderInfo]
 
 
-def check_element_orders(
+def calculate_element_orders(
     cayley_table_actions: CayleyTableActions, identity_info: dict
 ) -> ElementOrderResultType:
     """Find the order of each element in a transformation algebra.
