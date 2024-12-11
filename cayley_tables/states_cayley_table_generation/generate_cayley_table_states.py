@@ -26,7 +26,7 @@ PRINT_INTERVAL = 100
 def generate_cayley_table_states_and_equiv_classes(
     world: BaseWorld, initial_state: StateType
 ) -> tuple[CayleyTableStates, EquivClasses]:
-    print("\n\tGenerating Cayley table states and equivalence classes.")
+    print("\nGenerating Cayley table states and equivalence classes.")
     # Initialise variables.
     min_actions: MinActionsType = world.get_min_actions()
 
