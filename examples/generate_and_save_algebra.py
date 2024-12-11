@@ -18,10 +18,10 @@ def main():
     world.generate_min_action_transformation_matrix()
 
     # Create initial state (starting position)
-    initial_state = (0, 0)
+    initial_state = (1, 0)
 
     # Create and name the transformation algebra
-    algebra = TransformationAlgebra(name="gridworld_2x2_wall")
+    algebra = TransformationAlgebra(name="gridworld_2x2_wall_2")
 
     # Generate the Cayley tables and equivalence classes
     print("Generating Cayley table states...")
