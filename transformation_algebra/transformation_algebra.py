@@ -11,6 +11,26 @@ from cayley_tables.equiv_classes import EquivClasses
 from cayley_tables.states_cayley_table_generation.generate_cayley_table_states import (
     generate_cayley_table_states_and_equiv_classes,
 )
+from transformation_algebra.property_checkers.associativity import (
+    AssociativityResultType,
+    check_associativity,
+)
+from transformation_algebra.property_checkers.commutativity import (
+    CommutativityResultType,
+    check_commutativity,
+)
+from transformation_algebra.property_checkers.elements_order import (
+    ElementOrderResultType,
+    calculate_element_orders,
+)
+from transformation_algebra.property_checkers.identity import (
+    IdentityResultType,
+    check_identity,
+)
+from transformation_algebra.property_checkers.inverse import (
+    InverseResultsType,
+    check_inverse,
+)
 from utils.type_definitions import (
     StateType,
 )
@@ -27,6 +47,13 @@ class TransformationAlgebra:
         self.cayley_table_states: CayleyTableStates
         self.cayley_table_actions: CayleyTableActions
         self.equiv_classes: EquivClasses
+
+        # Algebraic properties
+        self.associativity_info: AssociativityResultType
+        self.identity_info: IdentityResultType
+        self.inverse_info: InverseResultsType
+        self.element_orders: ElementOrderResultType
+        self.commutativity_info: CommutativityResultType
 
     def generate_cayley_table_states(self, world: BaseWorld, initial_state):
         self._store_algebra_generation_paramenters(world, initial_state)
@@ -118,3 +145,34 @@ class TransformationAlgebra:
             "world": copy.deepcopy(world),
             "initial_state": initial_state,
         }
+
+    def check_properties(self) -> None:
+        """Check all algebraic properties and store results."""
+        if not hasattr(self, "cayley_table_actions"):
+            raise ValueError(
+                "Cayley table must be generated before checking properties. "
+                "Call generate_cayley_table_actions() first."
+            )
+
+        # Compute properties in order, validating each result
+        self.associativity_info = check_associativity(self.cayley_table_actions)
+        if self.associativity_info is None:
+            raise ValueError("Failed to compute associativity")
+
+        self.identity_info = check_identity(self.cayley_table_actions)
+        if self.identity_info is None:
+            raise ValueError("Failed to compute identity elements")
+
+        self.inverse_info = check_inverse(self.cayley_table_actions, self.identity_info)
+        if self.inverse_info is None:
+            raise ValueError("Failed to compute inverses")
+
+        self.element_orders = calculate_element_orders(
+            self.cayley_table_actions, self.identity_info
+        )
+        if self.element_orders is None:
+            raise ValueError("Failed to compute element orders")
+
+        self.commutativity_info = check_commutativity(self.cayley_table_actions)
+        if self.commutativity_info is None:
+            raise ValueError("Failed to compute commutativity")

@@ -1,13 +1,7 @@
 from dataclasses import dataclass
 from typing import TypedDict
 
-from cayley_tables.cayley_table_actions import CayleyTableActions
-from transformation_algebra.property_checkers.associativity import check_associativity
-from transformation_algebra.property_checkers.commutativity import check_commutativity
-from transformation_algebra.property_checkers.elements_order import (
-    calculate_element_orders,
-)
-from transformation_algebra.property_checkers.identity import check_identity
+from transformation_algebra.transformation_algebra import TransformationAlgebra
 from utils.type_definitions import ActionType
 
 
@@ -28,7 +22,7 @@ class IsomorphismResult(TypedDict):
 
 
 def check_isomorphism(
-    algebra1: CayleyTableActions, algebra2: CayleyTableActions
+    algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
 ) -> IsomorphismResult:
     """Check if two transformation algebras are isomorphic.
 
@@ -36,8 +30,8 @@ def check_isomorphism(
     that preserves the algebraic structure: φ(x * y) = φ(x) * φ(y).
 
     Args:
-        algebra1: First algebra's Cayley table
-        algebra2: Second algebra's Cayley table
+        algebra1: First transformation algebra
+        algebra2: Second transformation algebra
 
     Returns:
         IsomorphismResult containing:
@@ -45,6 +39,18 @@ def check_isomorphism(
         - reason: Why algebras aren't isomorphic (if they aren't)
         - mapping: The isomorphism map (if one exists)
     """
+    # Ensure properties have been computed
+    try:
+        algebra1.check_properties()
+        algebra2.check_properties()
+    except ValueError as e:
+        return {
+            "is_isomorphic": False,
+            "reason": f"Property check failed: {e!s}",
+            "mapping": None,
+            "mapping_str": None,
+        }
+
     # First check basic properties that must match
     basic_check = _check_basic_properties(algebra1, algebra2)
     if not basic_check[0]:
@@ -77,7 +83,7 @@ def check_isomorphism(
 
 
 def _check_basic_properties(
-    algebra1: CayleyTableActions, algebra2: CayleyTableActions
+    algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
 ) -> tuple[bool, str | None]:
     """Check if basic properties match between two algebras.
 
@@ -87,8 +93,8 @@ def _check_basic_properties(
     3. Identity elements (two-sided, left, and right)
 
     Args:
-        algebra1: First algebra's Cayley table
-        algebra2: Second algebra's Cayley table
+        algebra1: First transformation algebra
+        algebra2: Second transformation algebra
 
     Returns:
         Tuple containing:
@@ -96,8 +102,8 @@ def _check_basic_properties(
         - str: Reason for mismatch if properties don't match, None otherwise
     """
     # Check cardinality
-    elements1 = set(algebra1.get_row_labels())
-    elements2 = set(algebra2.get_row_labels())
+    elements1 = set(algebra1.cayley_table_actions.get_row_labels())
+    elements2 = set(algebra2.cayley_table_actions.get_row_labels())
     if len(elements1) != len(elements2):
         return False, (
             f"Algebras have different sizes: |A₁| = {len(elements1)}, "
@@ -105,49 +111,65 @@ def _check_basic_properties(
         )
 
     # Check associativity
-    assoc1 = check_associativity(algebra1)
-    assoc2 = check_associativity(algebra2)
-    if assoc1["is_associative_algebra"] != assoc2["is_associative_algebra"]:
+    if (
+        algebra1.associativity_info["is_associative_algebra"]
+        != algebra2.associativity_info["is_associative_algebra"]
+    ):
+        algebra1_print_str = (
+            "is" if algebra1.associativity_info["is_associative_algebra"] else "is not"
+        )
+        algebra2_print_str = (
+            "is" if algebra2.associativity_info["is_associative_algebra"] else "is not"
+        )
         return False, (
             "One algebra is associative while the other is not: "
-            f"A₁ {'is' if assoc1['is_associative_algebra'] else 'is not'} associative, "
-            f"A₂ {'is' if assoc2['is_associative_algebra'] else 'is not'} associative"
+            f"A₁ {algebra1_print_str} associative, "
+            f"A₂ {algebra2_print_str} associative"
         )
 
     # Check identity elements
-    id1 = check_identity(algebra1)
-    id2 = check_identity(algebra2)
-
-    # Check two-sided identities
-    if id1["is_identity_algebra"] != id2["is_identity_algebra"]:
+    if (
+        algebra1.identity_info["is_identity_algebra"]
+        != algebra2.identity_info["is_identity_algebra"]
+    ):
+        algebra1_print_str = (
+            "has" if algebra1.identity_info["is_identity_algebra"] else "does not have"
+        )
+        algebra2_print_str = (
+            "has" if algebra2.identity_info["is_identity_algebra"] else "does not have"
+        )
         return False, (
             "One algebra has an identity while the other does not: "
-            f"A₁ {'has' if id1['is_identity_algebra'] else 'does not have'} an"
-            f" identity, A₂ {'has' if id2['is_identity_algebra'] else 'does not have'}"
+            f"A₁ {algebra1_print_str} an"
+            f" identity, A₂ {algebra2_print_str}"
             " an identity"
         )
 
     # Check left identities
-    if len(id1["left_identities"]) != len(id2["left_identities"]):
+    if len(algebra1.identity_info["left_identities"]) != len(
+        algebra2.identity_info["left_identities"]
+    ):
         return False, (
             "Algebras have different numbers of left identities: "
-            f"A₁ has {len(id1['left_identities'])}, "
-            f"A₂ has {len(id2['left_identities'])}"
+            f"A₁ has {len(algebra1.identity_info['left_identities'])}, "
+            f"A₂ has {len(algebra2.identity_info['left_identities'])}"
         )
 
     # Check right identities
-    if len(id1["right_identities"]) != len(id2["right_identities"]):
+    if len(algebra1.identity_info["right_identities"]) != len(
+        algebra2.identity_info["right_identities"]
+    ):
         return False, (
             "Algebras have different numbers of right identities: "
-            f"A₁ has {len(id1['right_identities'])}, "
-            f"A₂ has {len(id2['right_identities'])}"
+            f"A₁ has {len(algebra1.identity_info['right_identities'])}, "
+            f"A₂ has {len(algebra2.identity_info['right_identities'])}"
         )
 
     return True, None
 
 
 def _get_mapping_constraints(
-    algebra1: CayleyTableActions, algebra2: CayleyTableActions
+    algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
 ) -> dict[ActionType, set[ActionType]]:
     """Get constraints on possible element mappings based on algebraic properties.
 
@@ -159,8 +181,8 @@ def _get_mapping_constraints(
     4. Elements that commute must map to elements that commute
 
     Args:
-        algebra1: First algebra's Cayley table
-        algebra2: Second algebra's Cayley table
+        algebra1: First transformation algebra
+        algebra2: Second transformation algebra
 
     Returns:
         Dict mapping each element a ∈ A₁ to the set of elements in A₂ that it could
@@ -173,76 +195,67 @@ def _get_mapping_constraints(
         The constraints get more restrictive as each algebraic property is checked.
     """
     # Get all elements from both algebras
-    elements1 = set(algebra1.get_row_labels())
-    elements2 = set(algebra2.get_row_labels())
+    elements1 = set(algebra1.cayley_table_actions.get_row_labels())
+    elements2 = set(algebra2.cayley_table_actions.get_row_labels())
 
     # Start with all possible mappings for each element
     constraints = {a: elements2.copy() for a in elements1}
 
-    # Get algebraic properties
-    id1 = check_identity(algebra1)
-    id2 = check_identity(algebra2)
-
     # Apply identity element constraints
-    if id1["is_identity_algebra"]:
+    if algebra1.identity_info["is_identity_algebra"]:
         # Two-sided identities must map to each other
-        e1, e2 = id1["identities"][0], id2["identities"][0]
+        e1 = algebra1.identity_info["identities"][0]
+        e2 = algebra2.identity_info["identities"][0]
         constraints[e1] = {e2}
 
         # Left identities must map to left identities
-        left_ids2 = set(id2["left_identities"])
-        for a in id1["left_identities"]:
+        left_ids2 = set(algebra2.identity_info["left_identities"])
+        for a in algebra1.identity_info["left_identities"]:
             constraints[a] &= left_ids2
 
         # Right identities must map to right identities
-        right_ids2 = set(id2["right_identities"])
-        for a in id1["right_identities"]:
+        right_ids2 = set(algebra2.identity_info["right_identities"])
+        for a in algebra1.identity_info["right_identities"]:
             constraints[a] &= right_ids2
-
-    # Apply order constraints
-    ord1 = calculate_element_orders(algebra1, id1)
-    ord2 = calculate_element_orders(algebra2, id2)
 
     # Group elements by order for efficient lookup
     elements_by_order2 = {}
     for b in elements2:
-        order = ord2["orders"][b].order
+        order = algebra2.element_orders["orders"][b].order
         if order not in elements_by_order2:
             elements_by_order2[order] = set()
         elements_by_order2[order].add(b)
 
     # Apply order constraints
     for a in elements1:
-        order_a = ord1["orders"][a].order
+        order_a = algebra1.element_orders["orders"][a].order
         if order_a in elements_by_order2:
             constraints[a] &= elements_by_order2[order_a]
         else:
-            constraints[a] = set()  # No possible mappings if no elements of same order
+            constraints[a] = set()
 
     # Apply commutativity constraints
-    comm1 = check_commutativity(algebra1)
-    comm2 = check_commutativity(algebra2)
-
     # Elements that commute with all must map to elements that commute with all
-    commute_all2 = set(comm2["commute_with_all"])
-    for a in comm1["commute_with_all"]:
+    commute_all2 = set(algebra2.commutativity_info["commute_with_all"])
+    for a in algebra1.commutativity_info["commute_with_all"]:
         constraints[a] &= commute_all2
 
     # Elements must map to elements with same commuting structure
     for a in elements1:
-        num_commuting_a = len(comm1["commuting_elements"][a])
+        num_commuting_a = len(algebra1.commutativity_info["commuting_elements"][a])
         constraints[a] &= {
             b
-            for b in constraints[a]  # Only check remaining candidates
-            if len(comm2["commuting_elements"][b]) == num_commuting_a
+            for b in constraints[a]
+            if len(algebra2.commutativity_info["commuting_elements"][b])
+            == num_commuting_a
         }
 
     return constraints
 
 
 def _generate_candidate_mappings(
-    algebra1: CayleyTableActions,
-    algebra2: CayleyTableActions,
+    algebra1: TransformationAlgebra,
+    algebra2: TransformationAlgebra,
     constraints: dict[ActionType, set[ActionType]],
 ) -> list[dict[ActionType, ActionType]]:
     """Generate all possible bijective mappings that satisfy the constraints.
@@ -252,8 +265,8 @@ def _generate_candidate_mappings(
     constraints on which elements can map to which.
 
     Args:
-        algebra1: First algebra's Cayley table
-        algebra2: Second algebra's Cayley table
+        algebra1: First transformation algebra
+        algebra2: Second transformation algebra
         constraints: Dict mapping each element of A₁ to its allowed images in A₂
 
     Returns:
@@ -263,8 +276,8 @@ def _generate_candidate_mappings(
         If any element has no valid mappings (empty constraint set), returns empty list
         as no valid bijective mapping can exist.
     """
-    elements1 = algebra1.get_row_labels()
-    elements2 = set(algebra2.get_row_labels())
+    elements1 = algebra1.cayley_table_actions.get_row_labels()
+    elements2 = set(algebra2.cayley_table_actions.get_row_labels())
 
     # Verify we have same number of elements (needed for bijectivity)
     if len(elements1) != len(elements2):
@@ -325,8 +338,8 @@ def _generate_candidate_mappings(
 
 
 def _is_homomorphism(
-    algebra1: CayleyTableActions,
-    algebra2: CayleyTableActions,
+    algebra1: TransformationAlgebra,
+    algebra2: TransformationAlgebra,
     mapping: dict[ActionType, ActionType],
 ) -> bool:
     """Check if a mapping is a homomorphism between the algebras.
@@ -338,26 +351,28 @@ def _is_homomorphism(
     if it's a homomorphism then it's also an isomorphism.
 
     Args:
-        algebra1: First algebra's Cayley table
-        algebra2: Second algebra's Cayley table
+        algebra1: First transformation algebra
+        algebra2: Second transformation algebra
         mapping: Dict mapping elements of A₁ to elements of A₂
 
     Returns:
         True if mapping preserves algebraic structure, False otherwise
     """
-    elements1 = algebra1.get_row_labels()
+    elements1 = algebra1.cayley_table_actions.get_row_labels()
 
     # Check φ(x * y) = φ(x) * φ(y) for all pairs x,y
     for x in elements1:
         for y in elements1:
             # Compute x * y in A₁ and map the result
-            xy_in_a1 = algebra1.compose_actions(left_action=x, right_action=y)
+            xy_in_a1 = algebra1.cayley_table_actions.compose_actions(
+                left_action=x, right_action=y
+            )
             mapped_result = mapping[xy_in_a1]
 
             # Compute φ(x) * φ(y) in A₂
             mapped_x = mapping[x]
             mapped_y = mapping[y]
-            result_in_a2 = algebra2.compose_actions(
+            result_in_a2 = algebra2.cayley_table_actions.compose_actions(
                 left_action=mapped_x, right_action=mapped_y
             )
 

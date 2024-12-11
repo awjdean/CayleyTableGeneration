@@ -1,6 +1,7 @@
 from typing import NamedTuple, TypedDict
 
 from cayley_tables.cayley_table_actions import CayleyTableActions
+from transformation_algebra.property_checkers.identity import IdentityResultType
 from utils.type_definitions import ActionType
 
 
@@ -11,7 +12,7 @@ class InversePair(NamedTuple):
     identity: ActionType
 
 
-class InverseMapping(TypedDict):
+class InverseResultsType(TypedDict):
     """Maps elements to their inverse-identity pairs."""
 
     left_inverses: dict[ActionType, list[InversePair]]
@@ -21,8 +22,9 @@ class InverseMapping(TypedDict):
 
 
 def check_inverse(
-    cayley_table_actions: CayleyTableActions, identity_info: dict
-) -> InverseMapping:
+    cayley_table_actions: CayleyTableActions,
+    identity_info: IdentityResultType | None,  # Allow None
+) -> InverseResultsType:
     """Check if a transformation algebra has inverse elements.
 
     For an element a:
@@ -44,6 +46,9 @@ def check_inverse(
     Raises:
         ValueError: If an element has different identities for left/right inverses
     """
+    if identity_info is None:
+        raise ValueError("Identity info must be computed before checking inverses")
+
     # Find left and right inverses
     left_inverses = _find_left_inverses(
         cayley_table_actions, identity_info["right_identities"]
