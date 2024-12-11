@@ -34,7 +34,8 @@ class ElementOrderResultType(TypedDict):
 
 
 def calculate_element_orders(
-    cayley_table_actions: CayleyTableActions, identity_info: IdentityResultType
+    cayley_table_actions: CayleyTableActions,
+    identity_info: IdentityResultType | None,
 ) -> ElementOrderResultType:
     """Find the order of each element in a transformation algebra.
 
@@ -53,6 +54,9 @@ def calculate_element_orders(
     Raises:
         ValueError: If no identity element exists
     """
+    if identity_info is None:
+        raise ValueError("Identity info must be computed before calculating orders")
+
     identities = identity_info["identities"]
     if not identities:
         raise ValueError("Cannot calculate element orders: No identity element exists")
