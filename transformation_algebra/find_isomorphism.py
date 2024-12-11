@@ -52,6 +52,7 @@ def check_isomorphism(
         }
 
     # First check basic properties that must match
+    print("\tChecking basic properties...")
     basic_check = _check_basic_properties(algebra1, algebra2)
     if not basic_check[0]:
         return {
@@ -60,12 +61,18 @@ def check_isomorphism(
             "mapping": None,
             "mapping_str": None,
         }
+    print("\tBasic property checks passed.")
 
     # Get the constraints for possible mappings
+    print("\tCollecting mapping constraints...")
     constraints = _get_mapping_constraints(algebra1, algebra2)
+    print("\tMapping constraints collected.")
 
     # Try all possible mappings that satisfy the constraints
-    for mapping in _generate_candidate_mappings(algebra1, algebra2, constraints):
+    print("\tCalculating possible mappings...")
+    possible_mappings = _generate_candidate_mappings(algebra1, algebra2, constraints)
+    print(f"\tPossible mappings: {len(possible_mappings)}")
+    for mapping in possible_mappings:
         if _is_homomorphism(algebra1, algebra2, mapping):
             return {
                 "is_isomorphic": True,
@@ -171,37 +178,27 @@ def _check_basic_properties(
 def _get_mapping_constraints(
     algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
 ) -> dict[ActionType, set[ActionType]]:
-    """Get constraints on possible element mappings based on algebraic properties.
+    """Get constraints on possible element mappings."""
+    constraints = _init_basic_constraints(algebra1, algebra2)
+    constraints = _apply_identity_constraints(algebra1, algebra2, constraints)
+    constraints = _apply_order_constraints(algebra1, algebra2, constraints)
+    constraints = _apply_commutativity_constraints(algebra1, algebra2, constraints)
+    constraints = _apply_inverse_constraints(algebra1, algebra2, constraints)
+    return constraints
 
-    For each element in algebra1, finds the set of elements in algebra2 that it
-    could potentially map to, based on algebraic properties that must be preserved:
-    1. Identity elements must map to identity elements
-    2. Left/right identities must map to left/right identities
-    3. Elements must map to elements of the same order
-    4. Elements that commute must map to elements that commute
 
-    Args:
-        algebra1: First transformation algebra
-        algebra2: Second transformation algebra
-
-    Returns:
-        Dict mapping each element a ∈ A₁ to the set of elements in A₂ that it could
-        map to under an isomorphism. For example:
-        {
-            'a': {'x', 'y'},  # Element 'a' can only map to 'x' or 'y'
-            'b': {'z'},       # Element 'b' must map to 'z'
-            'c': {'x', 'y'}   # Element 'c' can map to 'x' or 'y'
-        }
-        The constraints get more restrictive as each algebraic property is checked.
-    """
-    # Get all elements from both algebras
+def _init_basic_constraints(algebra1, algebra2):
     elements1 = set(algebra1.cayley_table_actions.get_row_labels())
     elements2 = set(algebra2.cayley_table_actions.get_row_labels())
+    return {a: elements2.copy() for a in elements1}
 
-    # Start with all possible mappings for each element
-    constraints = {a: elements2.copy() for a in elements1}
 
-    # Apply identity element constraints
+def _apply_identity_constraints(
+    algebra1: TransformationAlgebra,
+    algebra2: TransformationAlgebra,
+    constraints: dict[ActionType, set[ActionType]],
+) -> dict[ActionType, set[ActionType]]:
+    """Apply constraints based on identity elements."""
     if algebra1.identity_info["is_identity_algebra"]:
         # Two-sided identities must map to each other
         e1 = algebra1.identity_info["identities"][0]
@@ -218,30 +215,47 @@ def _get_mapping_constraints(
         for a in algebra1.identity_info["right_identities"]:
             constraints[a] &= right_ids2
 
+    return constraints
+
+
+def _apply_order_constraints(
+    algebra1: TransformationAlgebra,
+    algebra2: TransformationAlgebra,
+    constraints: dict[ActionType, set[ActionType]],
+) -> dict[ActionType, set[ActionType]]:
+    """Apply constraints based on element orders."""
     # Group elements by order for efficient lookup
     elements_by_order2 = {}
-    for b in elements2:
+    for b in algebra2.cayley_table_actions.get_row_labels():
         order = algebra2.element_orders["orders"][b].order
         if order not in elements_by_order2:
             elements_by_order2[order] = set()
         elements_by_order2[order].add(b)
 
     # Apply order constraints
-    for a in elements1:
+    for a in algebra1.cayley_table_actions.get_row_labels():
         order_a = algebra1.element_orders["orders"][a].order
         if order_a in elements_by_order2:
             constraints[a] &= elements_by_order2[order_a]
         else:
             constraints[a] = set()
 
-    # Apply commutativity constraints
+    return constraints
+
+
+def _apply_commutativity_constraints(
+    algebra1: TransformationAlgebra,
+    algebra2: TransformationAlgebra,
+    constraints: dict[ActionType, set[ActionType]],
+) -> dict[ActionType, set[ActionType]]:
+    """Apply constraints based on commutativity."""
     # Elements that commute with all must map to elements that commute with all
     commute_all2 = set(algebra2.commutativity_info["commute_with_all"])
     for a in algebra1.commutativity_info["commute_with_all"]:
         constraints[a] &= commute_all2
 
     # Elements must map to elements with same commuting structure
-    for a in elements1:
+    for a in algebra1.cayley_table_actions.get_row_labels():
         num_commuting_a = len(algebra1.commutativity_info["commuting_elements"][a])
         constraints[a] &= {
             b
@@ -249,6 +263,44 @@ def _get_mapping_constraints(
             if len(algebra2.commutativity_info["commuting_elements"][b])
             == num_commuting_a
         }
+
+    return constraints
+
+
+def _apply_inverse_constraints(
+    algebra1: TransformationAlgebra,
+    algebra2: TransformationAlgebra,
+    constraints: dict[ActionType, set[ActionType]],
+) -> dict[ActionType, set[ActionType]]:
+    """Apply constraints based on inverses."""
+    if not algebra1.identity_info["is_identity_algebra"]:
+        return constraints
+
+    # Initialize mapping with known identity element mappings
+    mapping = {
+        e1: e2
+        for e1, e2 in zip(
+            algebra1.identity_info["identities"],
+            algebra2.identity_info["identities"],
+        )
+    }
+
+    # Apply left, right, and two-sided inverse constraints
+    for inverse_type in ["left_inverses", "right_inverses", "inverses"]:
+        for a in algebra1.inverse_info[inverse_type]:
+            for pair in algebra1.inverse_info[inverse_type][a]:
+                b, e = pair.inverse, pair.identity
+                for possible_a_prime in constraints[a]:
+                    constraints[b] &= {
+                        b_prime
+                        for b_prime in constraints[b]
+                        if any(
+                            p.inverse == b_prime and p.identity == mapping[e]
+                            for p in algebra2.inverse_info[inverse_type].get(
+                                possible_a_prime, []
+                            )
+                        )
+                    }
 
     return constraints
 
