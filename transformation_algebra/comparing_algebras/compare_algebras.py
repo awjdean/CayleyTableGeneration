@@ -1,12 +1,6 @@
-import os
-import sys
-
 from cayley_tables.cayley_table_actions import CayleyTableActions
 from cayley_tables.cayley_table_states import CayleyTableStates
 from transformation_algebra.transformation_algebra import TransformationAlgebra
-
-# Add the project root directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
 def compare_states_cayley_tables(

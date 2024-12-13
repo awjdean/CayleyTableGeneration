@@ -21,7 +21,7 @@ def main():
     initial_state = (1, 0)
 
     # Create and name the transformation algebra
-    algebra = TransformationAlgebra(name="gridworld_2x2_wall_3")
+    algebra = TransformationAlgebra(name="gridworld_2x2_wall_4")
 
     # Generate the Cayley tables and equivalence classes
     print("Generating Cayley table states...")

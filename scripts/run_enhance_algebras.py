@@ -17,7 +17,7 @@ from transformation_algebra.transformation_algebra import TransformationAlgebra
 
 def main():
     algebra1_name = "gridworld_2x2_wall_2"
-    algebra2_name = "gridworld_2x2_wall_3"
+    algebra2_name = "gridworld_2x2_wall_4"
 
     # Load algebras
     print("\nLoading algebras...")
