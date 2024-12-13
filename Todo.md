@@ -17,5 +17,5 @@
 
 # Maybe things
 
-- Json saving.
+- Json saving --> prevents annoying pickle issues (e.g., import issues).
 - Include a max time estimate for states Cayley table generation ?
