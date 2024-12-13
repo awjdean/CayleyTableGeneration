@@ -1,30 +1,66 @@
 import os
 import sys
 
+from cayley_tables.cayley_table_actions import CayleyTableActions
+from cayley_tables.cayley_table_states import CayleyTableStates
+from transformation_algebra.transformation_algebra import TransformationAlgebra
+
 # Add the project root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from transformation_algebra.transformation_algebra import TransformationAlgebra
 
+def compare_states_cayley_tables(
+    table1: CayleyTableStates, table2: CayleyTableStates
+) -> tuple[bool, str]:
+    """
+    Compare two state Cayley tables for equality.
 
-def compare_cayley_tables(table1, table2) -> bool:
-    """Compare two Cayley tables for equality."""
+    Args:
+        table1: First CayleyTableStates instance
+        table2: Second CayleyTableStates instance
+
+    Returns:
+        tuple[bool, str]: (whether they match, detailed comparison message)
+    """
     if table1 is None or table2 is None:
-        return False
+        return False, "One or both tables are None"
 
     # Check if tables have same number of elements
-    if hasattr(table1, "get_all_actions"):  # For CayleyTableActions
-        elements1 = table1.get_all_actions()
-        elements2 = table2.get_all_actions()
-        if len(elements1) != len(elements2):
-            return False
-    elif hasattr(table1, "get_row_labels"):  # For CayleyTableStates
-        elements1 = table1.get_row_labels()
-        elements2 = table2.get_row_labels()
-        if len(elements1) != len(elements2):
-            return False
+    elements1 = table1.get_row_labels()
+    elements2 = table2.get_row_labels()
+    if len(elements1) != len(elements2):
+        return False, (
+            f"Different number of elements: {len(elements1)} vs {len(elements2)}"
+        )
 
-    return table1 == table2
+    return table1.data == table2.data, "States Cayley tables are identical"
+
+
+def compare_actions_cayley_tables(
+    table1: CayleyTableActions, table2: CayleyTableActions
+) -> tuple[bool, str]:
+    """
+    Compare two action Cayley tables for equality.
+
+    Args:
+        table1: First CayleyTableActions instance
+        table2: Second CayleyTableActions instance
+
+    Returns:
+        tuple[bool, str]: (whether they match, detailed comparison message)
+    """
+    if table1 is None or table2 is None:
+        return False, "One or both tables are None"
+
+    # Check if tables have same number of elements
+    elements1 = table1.get_all_actions()
+    elements2 = table2.get_all_actions()
+    if len(elements1) != len(elements2):
+        return False, (
+            f"Different number of elements: {len(elements1)} vs {len(elements2)}"
+        )
+
+    return table1.data == table2.data, "Actions Cayley tables are identical"
 
 
 def compare_equiv_classes(equiv_classes1, equiv_classes2) -> tuple[bool, str]:
@@ -49,7 +85,7 @@ def compare_equiv_classes(equiv_classes1, equiv_classes2) -> tuple[bool, str]:
     if set(all_elements1) != set(all_elements2):
         diff1 = set(all_elements1) - set(all_elements2)
         diff2 = set(all_elements2) - set(all_elements1)
-        msg = "Elements differ between equivalence classes:\n"
+        msg = "\nElements differ between equivalence classes:\n"
         if diff1:
             msg += f"- Elements only in first algebra: {sorted(diff1)}\n"
         if diff2:
@@ -71,7 +107,7 @@ def compare_equiv_classes(equiv_classes1, equiv_classes2) -> tuple[bool, str]:
 
         if elements1 != elements2:
             differences.append(
-                f"Element '{element}' belongs to different groups:\n"
+                f"\nElement '{element}' belongs to different groups:\n"
                 f"- In first algebra: {sorted(elements1)} (labeled as '{class1}')\n"
                 f"- In second algebra: {sorted(elements2)} (labeled as '{class2}')"
             )
@@ -85,50 +121,36 @@ def compare_equiv_classes(equiv_classes1, equiv_classes2) -> tuple[bool, str]:
     return True, "Equivalence classes have same groupings but different labels"
 
 
-def compare_algebras(algebra1_name: str, algebra2_name: str) -> bool:
+def compare_algebras(
+    algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
+) -> bool:
     """
-    Load and compare two algebras to check if they are the same.
+    Compare two algebras to check if they are the same.
 
     Args:
-        algebra1_name: Name of the first algebra
-        algebra2_name: Name of the second algebra
+        algebra1: First TransformationAlgebra instance
+        algebra2: Second TransformationAlgebra instance
 
     Returns:
         bool: True if the algebras are the same, False otherwise
     """
-    # Create and load the first algebra
-    algebra1 = TransformationAlgebra(name=algebra1_name)
-    algebra1.load()
-
-    # Create and load the second algebra
-    algebra2 = TransformationAlgebra(name=algebra2_name)
-    algebra2.load()
-
-    print(f"\nComparing algebras: {algebra1_name} vs {algebra2_name}")
+    print(f"\nComparing algebras: {algebra1.name} vs {algebra2.name}")
 
     # Compare Cayley table states
-    states_match = compare_cayley_tables(
+    states_match, states_details = compare_states_cayley_tables(
         algebra1.cayley_table_states, algebra2.cayley_table_states
     )
     print(f"Cayley table states match: {states_match}")
+    if not states_match:
+        print(f"States table differences: {states_details}")
 
     # Compare Cayley table actions
-    actions_match = compare_cayley_tables(
+    actions_match, actions_details = compare_actions_cayley_tables(
         algebra1.cayley_table_actions, algebra2.cayley_table_actions
     )
-    if actions_match:
-        print(
-            f"Cayley table actions match: {actions_match}"
-            f" (both have {len(algebra1.cayley_table_actions.get_all_actions())}"
-            " elements)"
-        )
-    else:
-        print(f"Cayley table actions match: {actions_match}")
-        print(
-            "Number of elements:"
-            f" {len(algebra1.cayley_table_actions.get_all_actions())}"
-            f" vs {len(algebra2.cayley_table_actions.get_all_actions())}"
-        )
+    print(f"Cayley table actions match: {actions_match}")
+    if not actions_match:
+        print(f"Actions table differences: {actions_details}")
 
     # Compare equivalence classes
     equiv_match, equiv_details = compare_equiv_classes(
@@ -141,16 +163,3 @@ def compare_algebras(algebra1_name: str, algebra2_name: str) -> bool:
 
     # All components must match for algebras to be considered the same
     return states_match and actions_match and equiv_match
-
-
-def main():
-    # Example usage
-    algebra1_name = "gridworld_2x2_wall_2"
-    algebra2_name = "gridworld_2x2_wall_3"
-
-    are_same = compare_algebras(algebra1_name, algebra2_name)
-    print(f"\nAlgebras are {'the same' if are_same else 'different'}")
-
-
-if __name__ == "__main__":
-    main()

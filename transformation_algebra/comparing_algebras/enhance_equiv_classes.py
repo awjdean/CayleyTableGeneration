@@ -7,87 +7,118 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
+from cayley_tables.cayley_table_states import CayleyTableStates
 from cayley_tables.equiv_classes import EquivClasses
-from cayley_tables.states_cayley_table_generation.action_outcome import (
-    generate_action_outcome,
-)
 from transformation_algebra.comparing_algebras.compare_generation_parameters import (
     compare_generation_parameters,
 )
 from transformation_algebra.transformation_algebra import TransformationAlgebra
 
 
-def find_matching_class(
-    element: str,
-    source_algebra: TransformationAlgebra,
-    target_algebra: TransformationAlgebra,
-) -> str | None:
+def find_missing_elements(
+    algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
+) -> tuple[EquivClasses, EquivClasses]:
     """
-    Find which equivalence class in the target algebra an element from source algebra
-      belongs to.
+    Find elements missing from each algebra and create equivalence classes for them.
 
     Args:
-        element: The element to find a class for
-        source_algebra: The algebra containing the element
-        target_algebra: The algebra to find a matching class in
+        algebra1: First TransformationAlgebra instance
+        algebra2: Second TransformationAlgebra instance
 
     Returns:
-        The label of the matching equivalence class, or None if no match found
+        tuple[EquivClasses, EquivClasses]: Equivalence classes for elements missing from
+          each algebra
+
+    Raises:
+        ValueError: If the algebras have different generation parameters
     """
-    # Get the outcome of this element in the source algebra
-    world = source_algebra._algebra_generation_parameters["world"]
-    initial_state = source_algebra._algebra_generation_parameters["initial_state"]
-    element_outcome = generate_action_outcome(element, initial_state, world)
+    # First check if the algebras have the same generation parameters
+    params_match, details = compare_generation_parameters(algebra1, algebra2)
+    if not params_match:
+        raise ValueError(
+            "Cannot find missing elements: algebras have different generation"
+            f" parameters.\n\n{details}"
+        )
 
-    # Check each class in target algebra to find matching outcome
-    for class_label in target_algebra.equiv_classes.get_labels():
-        class_outcome = target_algebra.equiv_classes.get_class_outcome(class_label)
-        if element_outcome == class_outcome:
-            return class_label
+    # Compare elements between algebras
+    only_in_1, only_in_2 = compare_algebra_equiv_classes_elements(algebra1, algebra2)
 
-    return None
+    # Create new EquivClasses for elements missing from algebra1.
+    print(f"\nFinding elements from {algebra2.name} missing in {algebra1.name}...")
+    missing_elements_classes1 = sort_missing_elements_into_equiv_classes(
+        missing_elements=list(only_in_2), target_algebra=algebra1
+    )
+
+    # Create new EquivClasses for elements missing from algebra2.
+    print(f"\nFinding elements from {algebra1.name} missing in {algebra2.name}...")
+    missing_elements_classes2 = sort_missing_elements_into_equiv_classes(
+        missing_elements=list(only_in_1), target_algebra=algebra2
+    )
+
+    return missing_elements_classes1, missing_elements_classes2
 
 
-def create_missing_equiv_classes(
-    elements: list[str],
-    source_algebra: TransformationAlgebra,
-    target_algebra: TransformationAlgebra,
+def sort_missing_elements_into_equiv_classes(
+    missing_elements: list[str], target_algebra: TransformationAlgebra
 ) -> EquivClasses:
     """
-    Create new equivalence classes for missing elements based on their behavior in source
-      algebra.
+    Sort missing elements into equivalence classes based on their behavior.
 
     Args:
-        elements: List of elements to classify
-        source_algebra: The algebra containing the elements
+        missing_elements: List of elements to classify
         target_algebra: The algebra whose classes we're matching against
 
     Returns:
         New EquivClasses instance containing the classified elements
+
+    Raises:
+        ValueError: If an element has no equivalence class or multiple possible classes
     """
     missing_equiv_classes = EquivClasses()
 
-    for element in elements:
-        matching_class = find_matching_class(element, source_algebra, target_algebra)
-        if matching_class is not None:
-            # Get the outcome for this equivalence class
-            outcome = target_algebra.equiv_classes.get_class_outcome(matching_class)
+    cayley_table_states: CayleyTableStates = target_algebra.cayley_table_states
+    world = target_algebra._algebra_generation_parameters["world"]
+    initial_state = target_algebra._algebra_generation_parameters["initial_state"]
 
-            # If this class doesn't exist in our new classes yet, create it
-            if matching_class not in missing_equiv_classes.get_labels():
-                missing_equiv_classes.create_new_class(
-                    class_label=matching_class,
-                    outcome=outcome,
-                    elements=[matching_class, element],
-                )
-            else:
-                # Add element to existing class
-                missing_equiv_classes.add_element(element, matching_class)
+    for element in missing_elements:
+        # Find elements in target algebra that behave the same as this element
+        equiv_elements = cayley_table_states.find_equiv_elements(
+            element, initial_state=initial_state, world=world
+        )
+
+        # We expect exactly one equivalent element (the class label)
+        if not equiv_elements:
+            raise ValueError(
+                f"Element '{element}' has no equivalent elements in target algebra"
+            )
+        if len(equiv_elements) > 1:
+            raise ValueError(
+                f"Element '{element}' has multiple equivalent elements in target"
+                f" algebra: {sorted(equiv_elements.keys())}"
+            )
+
+        # Get the class label (the only equivalent element)
+        equiv_element_label = next(iter(equiv_elements.keys()))
+
+        # Create the class if it doesn't exist yet
+        if equiv_element_label not in missing_equiv_classes.get_labels():
+            missing_equiv_classes.create_new_class(
+                class_label=equiv_element_label,
+                outcome=target_algebra.equiv_classes.get_class_outcome(
+                    equiv_element_label
+                ),
+                elements=[equiv_element_label],
+            )
+
+        # Add the element to its class
+        missing_equiv_classes.add_element(
+            element=element, class_label=equiv_element_label
+        )
 
     return missing_equiv_classes
 
 
-def compare_algebra_elements(
+def compare_algebra_equiv_classes_elements(
     algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
 ) -> tuple[set[str], set[str]]:
     """
@@ -117,49 +148,6 @@ def compare_algebra_elements(
         print("\nNo differences in elements")
 
     return only_in_1, only_in_2
-
-
-def find_missing_elements(
-    algebra1: TransformationAlgebra, algebra2: TransformationAlgebra
-) -> tuple[EquivClasses, EquivClasses]:
-    """
-    Find elements missing from each algebra and create equivalence classes for them.
-
-    Args:
-        algebra1: First TransformationAlgebra instance
-        algebra2: Second TransformationAlgebra instance
-
-    Returns:
-        tuple[EquivClasses, EquivClasses]: Equivalence classes for elements missing from
-          each algebra
-
-    Raises:
-        ValueError: If the algebras have different generation parameters
-    """
-    # First check if the algebras have the same generation parameters
-    params_match, details = compare_generation_parameters(algebra1, algebra2)
-    if not params_match:
-        raise ValueError(
-            "Cannot find missing elements: algebras have different generation"
-            f" parameters.\n\n{details}"
-        )
-
-    # Compare elements between algebras
-    only_in_1, only_in_2 = compare_algebra_elements(algebra1, algebra2)
-
-    # Create new equiv classes for algebra1
-    print(f"\nFinding elements from {algebra2.name} missing in {algebra1.name}...")
-    missing_classes1 = create_missing_equiv_classes(
-        elements=list(only_in_2), source_algebra=algebra2, target_algebra=algebra1
-    )
-
-    # Create new equiv classes for algebra2
-    print(f"\nFinding elements from {algebra1.name} missing in {algebra2.name}...")
-    missing_classes2 = create_missing_equiv_classes(
-        elements=list(only_in_1), source_algebra=algebra1, target_algebra=algebra2
-    )
-
-    return missing_classes1, missing_classes2
 
 
 def merge_missing_elements(
@@ -269,7 +257,8 @@ def main():
     enhanced_algebra2.save(path=None)
 
     print(
-        f"\nEnhanced algebras saved as: {enhanced_algebra1.name} and {enhanced_algebra2.name}"
+        f"\nEnhanced algebras saved as: {enhanced_algebra1.name} and"
+        f" {enhanced_algebra2.name}"
     )
 
     print(f"\nFinal equivalence classes for {enhanced_algebra1.name}:")
@@ -279,7 +268,7 @@ def main():
 
     # Compare the two enhanced algebras
     print("\nComparing the two enhanced algebras:")
-    compare_algebra_elements(enhanced_algebra1, enhanced_algebra2)
+    compare_algebra_equiv_classes_elements(enhanced_algebra1, enhanced_algebra2)
 
 
 if __name__ == "__main__":
