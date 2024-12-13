@@ -1,45 +1,44 @@
 import pandas as pd
 
-from cayley_tables.equiv_classes import EquivClasses
 from utils.errors import CompositionError, ValidationError
 from utils.type_definitions import ActionType, CayleyTableActionsDataType
 
 
 class CayleyTableActions:
+    """
+    Represents a Cayley table mapping action compositions to their resulting actions.
+
+    The table is organized as a matrix where:
+    - Rows represent right actions (applied first)
+    - Columns represent left actions (applied second)
+    - Each cell contains the label of the equivalence class that results from
+      composing those actions
+
+    For actions a and b, the cell at position (b,a) contains the class label for
+    the action that results from applying b followed by a.
+
+    Attributes:
+        data (CayleyTableActionsDataType): Nested dictionary where:
+            - Outer keys are right actions (rows)
+            - Inner keys are left actions (columns)
+            - Values are the resulting action class labels
+    """
+
+    # --------------------------------------------------------------------------
+    # Initialization
+    # --------------------------------------------------------------------------
     def __init__(self):
         self.data: CayleyTableActionsDataType = {}
 
-    def __str__(self) -> str:
-        """Return a string representation of the Cayley table.
-
-        The table is displayed with:
-        - Row indices representing right actions (applied first)
-        - Column headers representing left actions (applied second)
-        - Each cell showing the result of left_action ∘ right_action
-
-        Returns:
-            A formatted string showing the Cayley table as a DataFrame
-        """
-        if not self.data:
-            return "\nCayleyTableActions = {}"
-
-        # Convert the nested dictionary to a pandas DataFrame
-        df = pd.DataFrame.from_dict(self.data, orient="index")
-
-        # Add a title row to explain the composition order
-        title = "\nCayley Table for Action Composition (a ∘ b):"
-        explanation = "- Rows (b): right action, applied first\n"
-        explanation += "- Columns (a): left action, applied second\n"
-        explanation += "- Cell values: result of composition (a ∘ b)\n"
-
-        return f"{title}\n{explanation}\n{df}"
-
+    # --------------------------------------------------------------------------
+    # Table Access
+    # --------------------------------------------------------------------------
     def get_row_labels(self) -> list[ActionType]:
-        """Return the row labels (actions) of the Cayley table."""
+        """Return the row labels (right actions) of the Cayley table."""
         return list(self.data.keys())
 
     def get_column_labels(self) -> list[ActionType]:
-        """Return the column labels (actions) of the Cayley table.
+        """Return the column labels (left actions) of the Cayley table.
 
         Note: In a well-formed Cayley table, column labels are the same as row labels.
         """
@@ -52,9 +51,13 @@ class CayleyTableActions:
 
         Returns:
             List of all actions that appear as either row or column labels.
+            In a well-formed table, these are the same.
         """
         return self.get_row_labels()
 
+    # --------------------------------------------------------------------------
+    # Action Composition
+    # --------------------------------------------------------------------------
     def compose_actions(
         self, left_action: ActionType, right_action: ActionType
     ) -> ActionType:
@@ -67,7 +70,7 @@ class CayleyTableActions:
             right_action: The action applied first (row)
 
         Returns:
-            The resulting action from the composition
+            The resulting action class label from the composition
 
         Raises:
             CompositionError: If either action is not found in the Cayley table
@@ -88,6 +91,9 @@ class CayleyTableActions:
         # - left_action is the column (applied second)
         return self.data[right_action][left_action]
 
+    # --------------------------------------------------------------------------
+    # Validation
+    # --------------------------------------------------------------------------
     def validate(self) -> None:
         """Validate that the Cayley table is well-formed.
 
@@ -124,56 +130,30 @@ class CayleyTableActions:
                         f"Must be one of: {sorted(all_actions)}"
                     )
 
+    # --------------------------------------------------------------------------
+    # String Representation
+    # --------------------------------------------------------------------------
+    def __str__(self) -> str:
+        """Return a string representation of the Cayley table.
 
-def generate_cayley_table_actions(equiv_classes: EquivClasses) -> CayleyTableActions:
-    """Generate a Cayley table for action composition from equivalence classes.
+        The table is displayed with:
+        - Row indices representing right actions (applied first)
+        - Column headers representing left actions (applied second)
+        - Each cell showing the result of left_action ∘ right_action
 
-    For actions a and b, the composition (a ∘ b) is found by:
-    1. Concatenating the actions (a + b)
-    2. Finding which equivalence class contains this concatenated action
-    3. Using that class's label as the outcome
+        Returns:
+            A formatted string showing the Cayley table as a DataFrame
+        """
+        if not self.data:
+            return "\nCayleyTableActions = {}"
 
-    The Cayley table is organized with:
-    - Rows representing the right action (applied first)
-    - Columns representing the left action (applied second)
+        # Convert the nested dictionary to a pandas DataFrame
+        df = pd.DataFrame.from_dict(self.data, orient="index")
 
-    Args:
-        equiv_classes: The equivalence classes containing action sequences
+        # Add a title row to explain the composition order
+        title = "\nCayley Table for Action Composition (a ∘ b):"
+        explanation = "- Rows (b): right action, applied first\n"
+        explanation += "- Columns (a): left action, applied second\n"
+        explanation += "- Cell values: result of composition (a ∘ b)\n"
 
-    Returns:
-        A Cayley table mapping action compositions to their outcomes
-
-    Raises:
-        CompositionError: If a composed action is not found in any equivalence class
-        ValidationError: If the generated table is not well-formed
-    """
-    cayley_table_actions = CayleyTableActions()
-
-    # For each pair of actions (a,b), compute their composition (a ∘ b)
-    for right_action in equiv_classes.get_labels():
-        cayley_table_actions.data[right_action] = {}
-        for left_action in equiv_classes.get_labels():
-            # For composition (left ∘ right), concatenate in reverse order
-            # since composition means "apply right_action, then left_action"
-            composed_action = left_action + right_action
-
-            # Find which equivalence class contains this composition
-            outcome_class_label = equiv_classes.find_element_class(composed_action)
-            if outcome_class_label is None:
-                raise CompositionError(
-                    f"Action composition '{composed_action}' not found in any "
-                    "equivalence class.\n"
-                    f"Left action: {left_action}\n"
-                    f"Right action: {right_action}\n"
-                    "This may indicate incomplete equivalence classes or "
-                    "an error in the relabeling process."
-                )
-
-            cayley_table_actions.data[right_action][left_action] = outcome_class_label
-
-    try:
-        cayley_table_actions.validate()
-    except ValidationError as e:
-        raise ValidationError(f"Generated Cayley table is invalid: {e}")
-
-    return cayley_table_actions
+        return f"{title}\n{explanation}\n{df}"

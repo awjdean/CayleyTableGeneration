@@ -2,15 +2,13 @@ import copy
 import os
 import pickle
 
+from cayley_tables.actions_cayley_table_generator import ActionsCayleyTableGenerator
 from cayley_tables.cayley_table_actions import (
     CayleyTableActions,
-    generate_cayley_table_actions,
 )
 from cayley_tables.cayley_table_states import CayleyTableStates
 from cayley_tables.equiv_classes import EquivClasses
-from cayley_tables.states_cayley_table_generation.generate_cayley_table_states import (
-    CayleyTableGenerator,
-)
+from cayley_tables.states_cayley_table_generator import StatesCayleyTableGenerator
 from transformation_algebra.property_checkers.associativity import (
     AssociativityResultType,
     check_associativity,
@@ -60,11 +58,7 @@ class TransformationAlgebra:
     ) -> None:
         self._store_algebra_generation_paramenters(world, initial_state)
 
-        generator = CayleyTableGenerator(
-            world=world,
-            initial_state=initial_state,
-            debug_mode=False,
-        )
+        generator = StatesCayleyTableGenerator(world=world, initial_state=initial_state)
 
         self.cayley_table_states, self.equiv_classes = generator.generate()
 
@@ -74,7 +68,8 @@ class TransformationAlgebra:
                 "equiv_classes must be generated before generating Cayley table"
                 "actions. Call generate_cayley_table_states() first."
             )
-        self.cayley_table_actions = generate_cayley_table_actions(self.equiv_classes)
+        generator = ActionsCayleyTableGenerator(self.equiv_classes)
+        self.cayley_table_actions = generator.generate()
 
     def save(self, path: str | None) -> None:
         """Save the transformation algebra data to a pickle file.
