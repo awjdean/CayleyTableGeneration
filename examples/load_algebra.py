@@ -25,6 +25,8 @@ def main():
     print(f"Initial state: {algebra._algebra_generation_parameters['initial_state']}")
     print(f"World config: {algebra._algebra_generation_parameters['world']}")
 
+    algebra.check_properties()
+
     pass
 
 
