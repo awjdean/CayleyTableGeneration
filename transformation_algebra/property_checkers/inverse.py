@@ -1,6 +1,6 @@
 from typing import NamedTuple, TypedDict
 
-from cayley_tables.cayley_table_actions import CayleyTableActions
+from cayley_tables.tables.cayley_table_actions import CayleyTableActions
 from transformation_algebra.property_checkers.identity import IdentityResultType
 from utils.type_definitions import ActionType
 
