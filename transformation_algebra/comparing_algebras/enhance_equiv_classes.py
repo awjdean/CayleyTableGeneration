@@ -7,8 +7,8 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-from cayley_tables.cayley_table_states import CayleyTableStates
-from cayley_tables.equiv_classes import EquivClasses
+from cayley_tables.tables.cayley_table_states import CayleyTableStates
+from cayley_tables.utils.equiv_classes import EquivClasses
 from transformation_algebra.comparing_algebras.compare_generation_parameters import (
     compare_generation_parameters,
 )

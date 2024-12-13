@@ -9,7 +9,7 @@ from transformation_algebra.comparing_algebras.enhance_equiv_classes import (
     find_missing_elements,
     merge_missing_elements,
 )
-from transformation_algebra.comparing_algebras.relabeling import (
+from transformation_algebra.comparing_algebras.relabelling import (
     relabel_algebra_components,
 )
 from transformation_algebra.transformation_algebra import TransformationAlgebra
@@ -17,7 +17,7 @@ from transformation_algebra.transformation_algebra import TransformationAlgebra
 
 def main():
     algebra1_name = "gridworld_2x2_wall_2"
-    algebra2_name = "gridworld_2x2_wall_4"
+    algebra2_name = "gridworld_2x2_wall_5"
 
     # Load algebras
     print("\nLoading algebras...")
