@@ -1,5 +1,6 @@
-from cayley_tables.cayley_table_actions import CayleyTableActions
-from cayley_tables.cayley_table_states import CayleyTableStates
+from cayley_tables.tables.cayley_table_actions import CayleyTableActions
+from cayley_tables.tables.cayley_table_states import CayleyTableStates
+from cayley_tables.utils.equiv_classes import EquivClasses
 from transformation_algebra.transformation_algebra import TransformationAlgebra
 
 
@@ -57,7 +58,9 @@ def compare_actions_cayley_tables(
     return table1.data == table2.data, "Actions Cayley tables are identical"
 
 
-def compare_equiv_classes(equiv_classes1, equiv_classes2) -> tuple[bool, str]:
+def compare_equiv_classes(
+    equiv_classes1: EquivClasses, equiv_classes2: EquivClasses
+) -> tuple[bool, str]:
     """
     Compare two equivalence class structures in detail.
 
@@ -89,8 +92,8 @@ def compare_equiv_classes(equiv_classes1, equiv_classes2) -> tuple[bool, str]:
     # Compare which elements are grouped together
     differences = []
     for element in all_elements1:
-        class1 = equiv_classes1.find_element_class(element)
-        class2 = equiv_classes2.find_element_class(element)
+        class1 = equiv_classes1.get_element_class(element)
+        class2 = equiv_classes2.get_element_class(element)
 
         if class1 is None or class2 is None:
             differences.append(f"Element '{element}' not found in one of the classes")

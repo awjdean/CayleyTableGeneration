@@ -2,13 +2,15 @@ import copy
 import os
 import pickle
 
-from cayley_tables.actions_cayley_table_generator import ActionsCayleyTableGenerator
-from cayley_tables.cayley_table_actions import (
-    CayleyTableActions,
+from cayley_tables.generators.actions_cayley_table_generator import (
+    ActionsCayleyTableGenerator,
 )
-from cayley_tables.cayley_table_states import CayleyTableStates
-from cayley_tables.equiv_classes import EquivClasses
-from cayley_tables.states_cayley_table_generator import StatesCayleyTableGenerator
+from cayley_tables.generators.states_cayley_table_generator import (
+    StatesCayleyTableGenerator,
+)
+from cayley_tables.tables.cayley_table_actions import CayleyTableActions
+from cayley_tables.tables.cayley_table_states import CayleyTableStates
+from cayley_tables.utils.equiv_classes import EquivClasses
 from transformation_algebra.property_checkers.associativity import (
     AssociativityResultType,
     check_associativity,
@@ -29,9 +31,7 @@ from transformation_algebra.property_checkers.inverse import (
     InverseResultsType,
     check_inverse,
 )
-from utils.type_definitions import (
-    StateType,
-)
+from utils.type_definitions import StateType
 from worlds.base_world import BaseWorld
 
 
