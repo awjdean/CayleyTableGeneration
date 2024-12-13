@@ -9,7 +9,7 @@ from cayley_tables.cayley_table_actions import (
 from cayley_tables.cayley_table_states import CayleyTableStates
 from cayley_tables.equiv_classes import EquivClasses
 from cayley_tables.states_cayley_table_generation.generate_cayley_table_states import (
-    generate_cayley_table_states_and_equiv_classes,
+    CayleyTableGenerator,
 )
 from transformation_algebra.property_checkers.associativity import (
     AssociativityResultType,
@@ -55,21 +55,18 @@ class TransformationAlgebra:
         self.element_orders: ElementOrderResultType
         self.commutativity_info: CommutativityResultType
 
-    def generate_cayley_table_states(self, world: BaseWorld, initial_state):
+    def generate_cayley_table_states(
+        self, world: BaseWorld, initial_state: StateType
+    ) -> None:
         self._store_algebra_generation_paramenters(world, initial_state)
-        self.cayley_table_states, self.equiv_classes = (
-            generate_cayley_table_states_and_equiv_classes(
-                world=world, initial_state=initial_state
-            )
+
+        generator = CayleyTableGenerator(
+            world=world,
+            initial_state=initial_state,
+            debug_mode=False,
         )
-        # self.equiv_classes, self.cayley_table_states = (
-        #     relabel_equiv_classes_and_state_cayley_table(
-        #         equiv_classes=self.equiv_classes,
-        #         cayley_table_states=self.cayley_table_states,
-        #         initial_state=initial_state,
-        #         world=world,
-        #     )
-        # )
+
+        self.cayley_table_states, self.equiv_classes = generator.generate()
 
     def generate_cayley_table_actions(self):
         if not hasattr(self, "equiv_classes") or self.equiv_classes is None:
