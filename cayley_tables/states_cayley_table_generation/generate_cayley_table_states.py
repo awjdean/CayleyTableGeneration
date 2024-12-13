@@ -68,8 +68,6 @@ class CayleyTableGenerator:
         max_cache_size: int = 10000,
         debug_mode: bool = False,
     ) -> None:
-        if not isinstance(world, BaseWorld):
-            raise TypeError("world must be an instance of BaseWorld")
         if not world.get_min_actions():
             raise ValueError("World must have minimum actions defined")
 
