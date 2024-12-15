@@ -11,7 +11,7 @@ from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 def main():
     # Create a simple gridworld with walls
     world = Gridworld2DWalls(
-        grid_shape=(2, 2),
+        grid_shape=(3, 2),
         wall_positions=[(0.5, 0)],  # Wall between (0,0) and (1,0)
         wall_strategy="identity",
     )
@@ -21,7 +21,7 @@ def main():
     initial_state = (1, 0)
 
     # Create and name the transformation algebra
-    algebra = TransformationAlgebra(name="gridworld_2x2_wall_5")
+    algebra = TransformationAlgebra(name=None)
 
     # Generate the Cayley tables and equivalence classes
     print("Generating Cayley table states...")
