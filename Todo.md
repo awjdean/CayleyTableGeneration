@@ -9,6 +9,10 @@
 - Make all gridworld_2d classes inherit from gridworld_2d.
   - Append additional min_actions in relevant classes (e.g., consume action).
 - Function that reduces action sequences down to a class labelling element.
+- States Cayley table checkers:
+  - Check there are no elements in more than one equivalence class.
+  - Check each processed element has the same state Cayley row and state Cayley column as its class labelling element.
+- Make code structure match pseudocode structure.
 
 # Smaller things
 
