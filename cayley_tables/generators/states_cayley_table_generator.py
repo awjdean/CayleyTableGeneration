@@ -64,7 +64,22 @@ class StatesCayleyTableGenerator:
         # Stats and logging
         self.logger = logger
         self.logger.setLevel(log_level)
-        self._stats = {"processed": 0, "breaks": 0, "added": 0, "time": 0.0}
+
+        # Add console handler if not already present
+        if not self.logger.handlers:
+            console_handler = logging.StreamHandler()
+            console_handler.setLevel(log_level)
+            formatter = logging.Formatter("%(message)s")
+            console_handler.setFormatter(formatter)
+            self.logger.addHandler(console_handler)
+
+        self._stats = {
+            "processed": 0,
+            "breaks": 0,
+            "added": 0,
+            "successful candidates": 0,
+            "time": 0.0,
+        }
         self._last_log_time: float | None = None
         self._start_time: float
 
@@ -92,7 +107,7 @@ class StatesCayleyTableGenerator:
             self._initialize_structures()
 
             while True:
-                if not self._find_new_candidates():
+                if not self._find_candidates():
                     break
 
                 while self.candidate_elements:
@@ -106,7 +121,8 @@ class StatesCayleyTableGenerator:
             return self.cayley_table_states, self.equiv_classes
 
         except Exception as e:
-            self.logger.error(f"Generation failed: {e}", exc_info=True)
+            self.logger.error(f"\n\tGeneration failed: {e!s}")
+            self.logger.error("\tFull traceback:", exc_info=True)
             raise
 
     # --------------------------------------------------------------------------
@@ -120,9 +136,19 @@ class StatesCayleyTableGenerator:
         1. Generates equivalence classes from minimal actions
         2. Creates initial Cayley table from these classes
         """
+        self.logger.info("\n\tInitializing structures...")
+        start = time.time()
+
         self.equiv_classes = self._generate_initial_equivalence_classes()
         self.cayley_table_states = self._generate_initial_cayley_table_states()
-        print("\tInitial Cayley table generated.")
+
+        elapsed = time.time() - start
+        self._stats["successful candidates"] = len(self.equiv_classes.get_labels())
+        self.logger.info(
+            "\tInitial Cayley table and equivalence classes generated (in"
+            f" {elapsed:.2f}s)"
+            f"\n\tSuccessful candidates: {self._stats["successful candidates"]}"
+        )
 
     def _generate_initial_equivalence_classes(self) -> EquivClasses:
         """
@@ -188,7 +214,7 @@ class StatesCayleyTableGenerator:
     # --------------------------------------------------------------------------
     # Candidate Finding and Processing
     # --------------------------------------------------------------------------
-    def _find_new_candidates(self) -> bool:
+    def _find_candidates(self) -> bool:
         """
         Search for and collect new candidate elements.
 
@@ -197,62 +223,25 @@ class StatesCayleyTableGenerator:
 
         Returns:
             bool: True if new candidates were found, False otherwise
-
-        Raises:
-            ValueError: If candidate finding process fails
         """
-        self.logger.info("\nSearching for new candidate elements")
+        self.logger.info("\n\tFinding new candidate elements...")
         start = time.time()
 
-        try:
-            self.candidate_elements = (
-                self._find_candidate_elements_in_states_cayley_table()
-            )
-            count = len(self.candidate_elements)
-
-            elapsed = time.time() - start
-            self.logger.info(f"Found {count} new candidates (in {elapsed:.2f}s)")
-            return bool(self.candidate_elements)
-
-        except Exception as e:
-            self.logger.error("Failed to find new candidates", exc_info=True)
-            raise ValueError(f"Failed to find new candidates: {e}") from e
-
-    def _find_candidate_elements_in_states_cayley_table(self) -> set[ActionType]:
-        """
-        Find new candidate elements by examining the Cayley table.
-
-        For each pair of elements in the table:
-        1. Composes them to create a potential candidate
-        2. Checks if it belongs to an existing class
-        3. Adds it to candidates if it's new
-
-        Returns:
-            set[ActionType]: Set of new candidate action sequences
-
-        Raises:
-            ValueError: If a candidate belongs to multiple classes
-        """
-        candidates = set()
-        for row_label in self.cayley_table_states.get_row_labels():
-            for col_label in self.cayley_table_states.get_row_labels():
+        self.candidate_elements.clear()
+        row_labels = self.equiv_classes.get_labels()
+        col_labels = self.equiv_classes.get_labels()
+        processed_elements = self.equiv_classes.get_all_elements()
+        for row_label in row_labels:
+            for col_label in col_labels:
                 candidate = col_label + row_label
-                equiv_elements = self.cayley_table_states.find_equiv_elements(
-                    element=candidate,
-                    initial_state=self.initial_state,
-                    world=self.world,
-                )
+                if candidate not in processed_elements:
+                    self.candidate_elements.add(candidate)
 
-                if len(equiv_elements) == 1:
-                    label = next(iter(equiv_elements.keys()))
-                    self.equiv_classes.add_element(element=candidate, class_label=label)
-                elif len(equiv_elements) == 0:
-                    candidates.add(candidate)
-                else:
-                    raise ValueError(
-                        "Candidate element is in multiple equivalence classes."
-                    )
-        return candidates
+        count = len(self.candidate_elements)
+        elapsed = time.time() - start
+        self.logger.info(f"\tFound {count} new candidates (in {elapsed:.2f}s)")
+
+        return bool(self.candidate_elements)
 
     def _process_candidate(self, candidate: ActionType) -> None:
         """
@@ -274,7 +263,6 @@ class StatesCayleyTableGenerator:
                 return
 
             self._handle_class_breaking(candidate)
-            self._stats["breaks"] += 1
 
         except Exception as e:
             raise ValueError(f"Error processing candidate {candidate}: {e}") from e
@@ -319,9 +307,11 @@ class StatesCayleyTableGenerator:
             candidate: The action sequence that breaks classes
         """
         new_classes = self._find_broken_equiv_classes(candidate)
+        self._stats["successful candidates"] += 1
 
         if new_classes.data:
-            print(f"\t{candidate} split classes:\n\t{new_classes.data}")
+            self.logger.info(f"\t{candidate} split classes:\n\t{new_classes.data}")
+            self._stats["breaks"] += 1
 
         self._update_structures(candidate, new_classes)
 
@@ -466,7 +456,7 @@ class StatesCayleyTableGenerator:
         - Number of candidates processed
         - Processing rate
         - Remaining candidates
-        - Number of classes broken
+        - Number of classes split
 
         Only logs if PROGRESS_LOG_INTERVAL seconds have passed since last log.
         """
@@ -479,9 +469,10 @@ class StatesCayleyTableGenerator:
             rate = self._stats["processed"] / elapsed if elapsed > 0 else 0
 
             self.logger.info(
-                f"Progress: Processed {self._stats['processed']} candidates "
+                f"\tProgress: Processed {self._stats['processed']} candidates "
                 f"({rate:.1f}/s). Remaining: {len(self.candidate_elements)}. "
-                f"Classes broken: {self._stats['breaks']}"
+                f"Successful candidates: {self._stats['successful candidates']}. "
+                f"Classes split: {self._stats['breaks']}"
             )
             self._last_log_time = current_time
 
@@ -496,16 +487,19 @@ class StatesCayleyTableGenerator:
         - Total processing time
         - Average processing rate
         """
-        self.logger.info("\nGeneration completed successfully")
-        self.logger.info("Final Statistics:")
-        self.logger.info(f"Total candidates processed: {self._stats['processed']}")
-        self.logger.info(f"Candidates added to existing: {self._stats['added']}")
-        self.logger.info(f"Classes broken: {self._stats['breaks']}")
-        self.logger.info(f"Total time: {self._stats['time']:.2f} seconds")
+        self.logger.info("\n\tGeneration completed successfully")
+        self.logger.info("\tFinal Statistics:")
+        self.logger.info(f"\tTotal candidates processed: {self._stats['processed']}")
+        self.logger.info(f"\tCandidates added to existing: {self._stats['added']}")
+        self.logger.info(f"\tClasses broken: {self._stats['breaks']}")
+        self.logger.info(
+            f"\tSuccessful candidates: {self._stats['successful candidates']}"
+        )
+        self.logger.info(f"\tTotal time: {self._stats['time']:.2f} seconds")
 
         rate = (
             self._stats["processed"] / self._stats["time"]
             if self._stats["time"] > 0
             else 0
         )
-        self.logger.info(f"Average processing rate: {rate:.1f} candidates/second")
+        self.logger.info(f"\tAverage processing rate: {rate:.1f} candidates/second")
