@@ -19,10 +19,8 @@
 
 - Change states set up so it's always ((agent_x, agent_y,...), (positions of other things),...).
 - Fix saving for worlds --> put in Saving class and inherit ?
-- During relabelling:
-  - If two minimum actions are equivalent, then go through table and replace all ther cases of one of those minimum actions with the other in the action sequence strings.
 
 # Maybe things
 
-- Json saving --> prevents annoying pickle issues (e.g., import when code has been changed).
+- Json saving --> prevents annoying pickle issues (e.g., import issues).
 - Include a max time estimate for states Cayley table generation ?
