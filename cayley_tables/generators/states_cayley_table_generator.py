@@ -13,7 +13,7 @@ PROGRESS_LOG_INTERVAL = 10  # seconds
 logger = logging.getLogger(__name__)
 
 
-class StatesCayleyTableGenerator:
+class StatesCayleyGenerator:
     """
     Generates Cayley table states and equivalence classes for a world's transformations.
 

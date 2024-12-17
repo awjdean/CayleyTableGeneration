@@ -4,7 +4,7 @@ from utils.errors import CompositionError, ValidationError
 from utils.type_definitions import ActionType
 
 
-class ActionsCayleyTableGenerator:
+class ActionsCayleyGenerator:
     """
     Generates a Cayley table mapping action compositions to their resulting actions.
 
