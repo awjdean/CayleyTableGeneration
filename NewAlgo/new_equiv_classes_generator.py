@@ -107,12 +107,12 @@ class NewEquivClassGenerator:
             self.distinct_actions.data
         )
 
-        new_actions = self.distinct_actions.get_num_actions() - 0
+        num_new_actions = self.distinct_actions.get_num_actions() - 0
         time_taken = time.time() - start_time
         print(
             f"\tAction length: 1,"
             f"\tDistinct actions: {self.distinct_actions.get_num_actions()}"
-            f" (+{new_actions}),"
+            f" (+{num_new_actions}),"
             f"\tTime: {time_taken:.2f}s"
         )
 
@@ -132,12 +132,14 @@ class NewEquivClassGenerator:
             for action in new_action_sequences:
                 self._process_action(action)
 
-            new_actions = self.distinct_actions.get_num_actions() - prev_distinct_count
+            num_new_actions = (
+                self.distinct_actions.get_num_actions() - prev_distinct_count
+            )
             time_taken = time.time() - iteration_start
             print(
                 f"\tAction length: {current_length},"
                 f"\tDistinct actions: {self.distinct_actions.get_num_actions()} "
-                f"(+{new_actions}), "
+                f"(+{num_new_actions}), "
                 f"\tTime: {time_taken:.2f}s"
             )
 
@@ -231,3 +233,10 @@ class NewEquivClassGenerator:
                 new_action = min_action + prev_action
                 new_actions.append(new_action)
         return new_actions
+
+
+def sort_elements(elements):
+    # Sort by length first, then alphabetically
+    sorted_elements = sorted(list(elements))
+    sorted_elements = sorted(sorted_elements, key=len)
+    return sorted_elements

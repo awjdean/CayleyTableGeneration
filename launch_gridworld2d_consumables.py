@@ -13,7 +13,7 @@ world = Gridworld2DConsumable(
 )
 world.generate_min_action_transformation_matrix()
 algebra = TransformationAlgebra(name="gridworld2DConsumable")
-algebra.generate_cayley_table_states(
+algebra.generate(
     world=world,
     initial_state=create_initial_state_gridworld2d_consumables(
         agent_position=initial_agent_position, consumable_positions=consumable_positions
@@ -21,5 +21,5 @@ algebra.generate_cayley_table_states(
 )
 print(algebra.cayley_table_states)
 print(algebra.equiv_classes)
-algebra.generate_cayley_table_actions()
+algebra._generate_cayley_table_actions()
 print(algebra.cayley_table_actions)

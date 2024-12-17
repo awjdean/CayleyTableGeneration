@@ -3,14 +3,16 @@ import os
 import pickle
 
 from cayley_tables.generators.actions_cayley_table_generator import (
-    ActionsCayleyTableGenerator,
+    ActionsCayleyGenerator,
 )
 from cayley_tables.generators.states_cayley_table_generator import (
-    StatesCayleyTableGenerator,
+    StatesCayleyGenerator,
 )
 from cayley_tables.tables.cayley_table_actions import CayleyTableActions
 from cayley_tables.tables.cayley_table_states import CayleyTableStates
 from cayley_tables.utils.equiv_classes import EquivClasses
+from NewAlgo.new_actions_cayley_generator import NewActionsCayleyGenerator
+from NewAlgo.new_equiv_classes_generator import NewEquivClassGenerator
 from transformation_algebra.property_checkers.associativity import (
     AssociativityResultType,
     check_associativity,
@@ -31,14 +33,13 @@ from transformation_algebra.property_checkers.inverse import (
     InverseResultsType,
     check_inverse,
 )
-from utils.type_definitions import StateType
+from utils.type_definitions import AlgebraGenerationMethod, StateType
 from worlds.base_world import BaseWorld
 
 
 class TransformationAlgebra:
     def __init__(self, name) -> None:
         self.name = name
-
         self._algebra_generation_parameters: dict
 
         # Cayley tables generation.
@@ -53,23 +54,66 @@ class TransformationAlgebra:
         self.element_orders: ElementOrderResultType
         self.commutativity_info: CommutativityResultType
 
-    def generate_cayley_table_states(
+    def generate(
+        self,
+        world: BaseWorld,
+        initial_state: StateType | None = None,
+        method: AlgebraGenerationMethod = AlgebraGenerationMethod.STATE_CAYLEY,
+    ) -> None:
+        """Generate the Cayley tables using the specified method.
+
+        Args:
+            world: The world to generate the algebra for
+            initial_state: The initial state to start from (required for STATE_CAYLEY
+              method)
+            method: Which method to use for generation (defaults to STATE_CAYLEY)
+
+        Raises:
+            ValueError: If using STATE_CAYLEY method and initial_state is not provided
+        """
+        if method == AlgebraGenerationMethod.STATE_CAYLEY and initial_state is None:
+            raise ValueError(
+                "initial_state must be provided when using the STATE_CAYLEY generation"
+                " method"
+            )
+
+        self._store_algebra_generation_paramenters(world, initial_state)  # type: ignore[arg-type]
+        self._generation_method = method  # Store for use by other methods
+
+        if method == AlgebraGenerationMethod.STATE_CAYLEY:
+            self._generate_using_states_cayley(world, initial_state)  # type: ignore[arg-type]
+        else:
+            self._generate_using_action_function(world)
+
+    def _generate_using_states_cayley(
         self, world: BaseWorld, initial_state: StateType
     ) -> None:
-        self._store_algebra_generation_paramenters(world, initial_state)
+        """Generate using the original state Cayley table method."""
+        # Generate states table and equiv classes
+        self._states_cayley_generator = StatesCayleyGenerator(
+            world=world, initial_state=initial_state
+        )
+        self.cayley_table_states, self.equiv_classes = (
+            self._states_cayley_generator.generate()
+        )
 
-        generator = StatesCayleyTableGenerator(world=world, initial_state=initial_state)
+        # Generate actions table
+        self._actions_cayley_generator = ActionsCayleyGenerator(self.equiv_classes)
+        self.cayley_table_actions = self._actions_cayley_generator.generate()
 
-        self.cayley_table_states, self.equiv_classes = generator.generate()
+    def _generate_using_action_function(self, world: BaseWorld) -> None:
+        """Generate using the new action function method."""
+        # Generate equiv classes using new method
+        self._equiv_classes_generator = NewEquivClassGenerator(world)
+        self._equiv_classes_generator.generate()
+        self.equiv_classes = self._equiv_classes_generator.get_equiv_classes()
 
-    def generate_cayley_table_actions(self):
-        if not hasattr(self, "equiv_classes") or self.equiv_classes is None:
-            raise ValueError(
-                "equiv_classes must be generated before generating Cayley table"
-                "actions. Call generate_cayley_table_states() first."
-            )
-        generator = ActionsCayleyTableGenerator(self.equiv_classes)
-        self.cayley_table_actions = generator.generate()
+        # Generate actions Cayley table using new method
+        self._actions_cayley_generator = NewActionsCayleyGenerator()
+        self._actions_cayley_generator.generate(self._equiv_classes_generator)
+        self.cayley_table_actions = (
+            self._actions_cayley_generator.get_actions_cayley_table()
+        )
 
     def save(self, path: str | None) -> None:
         """Save the transformation algebra data to a pickle file.
@@ -83,10 +127,24 @@ class TransformationAlgebra:
             path = f"./saved/algebra/{self.name}.pkl"
 
         data = {
-            # Cayley tables
-            "cayley_table_states": getattr(self, "cayley_table_states", None),
-            "cayley_table_actions": getattr(self, "cayley_table_actions", None),
+            # Generation method
+            "generation_method": getattr(self, "_generation_method", None),
+            # Generators
+            "states_cayley_generator": getattr(self, "_states_cayley_generator", None),
+            "actions_cayley_generator": getattr(
+                self, "_actions_cayley_generator", None
+            ),
+            "equiv_classes_generator": getattr(self, "_equiv_classes_generator", None),
+            # Cayley tables and classes
             "equiv_classes": getattr(self, "equiv_classes", None),
+            "cayley_table_actions": getattr(self, "cayley_table_actions", None),
+            "cayley_table_states": (
+                getattr(self, "cayley_table_states", None)
+                if getattr(self, "_generation_method", None)
+                == AlgebraGenerationMethod.STATE_CAYLEY
+                else None
+            ),
+            # Generation parameters
             "algebra_generation_parameters": getattr(
                 self, "_algebra_generation_parameters", None
             ),
@@ -103,12 +161,7 @@ class TransformationAlgebra:
             pickle.dump(data, f)
 
     def load(self, path: str | None = None) -> None:
-        """Load the transformation algebra data from a pickle file.
-
-        Args:
-            path: Optional path to the pickle file.
-                 If None, loads from ./saved/algebra/{name}.pkl
-        """
+        """Load the transformation algebra data from a pickle file."""
         if path is None:
             path = f"./saved/algebra/{self.name}.pkl"
 
@@ -121,17 +174,34 @@ class TransformationAlgebra:
         with open(path, "rb") as f:
             data = pickle.load(f)
 
-        # Load Cayley tables
-        if "cayley_table_states" in data:
-            self.cayley_table_states = data["cayley_table_states"]
-        if "cayley_table_actions" in data:
-            self.cayley_table_actions = data["cayley_table_actions"]
+        self._load_generation_data(data)
+        self._load_tables_and_classes(data)
+        self._load_algebraic_properties(data)
+
+    def _load_generation_data(self, data: dict) -> None:
+        """Load generation method and generators."""
+        if "generation_method" in data:
+            self._generation_method = data["generation_method"]
+        if "states_cayley_generator" in data:
+            self._states_cayley_generator = data["states_cayley_generator"]
+        if "actions_cayley_generator" in data:
+            self._actions_cayley_generator = data["actions_cayley_generator"]
+        if "equiv_classes_generator" in data:
+            self._equiv_classes_generator = data["equiv_classes_generator"]
+
+    def _load_tables_and_classes(self, data: dict) -> None:
+        """Load Cayley tables and equivalence classes."""
         if "equiv_classes" in data:
             self.equiv_classes = data["equiv_classes"]
+        if "cayley_table_actions" in data:
+            self.cayley_table_actions = data["cayley_table_actions"]
+        if "cayley_table_states" in data and data["cayley_table_states"] is not None:
+            self.cayley_table_states = data["cayley_table_states"]
         if "algebra_generation_parameters" in data:
             self._algebra_generation_parameters = data["algebra_generation_parameters"]
 
-        # Load algebraic properties
+    def _load_algebraic_properties(self, data: dict) -> None:
+        """Load algebraic properties."""
         if "associativity_info" in data:
             self.associativity_info = data["associativity_info"]
         if "identity_info" in data:
