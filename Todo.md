@@ -14,6 +14,11 @@
   - Check each processed element has the same state Cayley row and state Cayley column as its class labelling element.
 - Make code structure match pseudocode structure.
   - Replace action sequence strings with tuples (like pseudocode).
+- Restrucutre code to sepearate out the two different generation algorithms.
+  - Split equiv_classes into multiple classes that inherit.
+  - Reorganise directories.
+- Function that compares actions Cayley tables for the two methods.
+- Turn action_functions into a typed dict ?
 
 # Smaller things
 
