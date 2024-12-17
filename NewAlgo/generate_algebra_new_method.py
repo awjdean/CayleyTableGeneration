@@ -10,9 +10,9 @@ from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
 # Create a simple gridworld with walls
 world = Gridworld2DWalls(
-    grid_shape=(2, 2),
-    wall_positions=[(0.5, 0)],  # Wall between (0,0) and (1,0)
-    wall_strategy="identity",
+    grid_shape=(3, 3),
+    wall_positions=[(0.5, 0), (0, 0.5)],  # Wall between (0,0) and (1,0)
+    wall_strategy="masked",
 )
 world.generate_min_action_transformation_matrix()
 equiv_classes = NewEquivClassGenerator(world)
@@ -22,5 +22,3 @@ actions_cayley_table_generator = NewActionsCayleyGenerator()
 actions_cayley_table_generator.generate(equiv_classes)
 actions_cayley_table = actions_cayley_table_generator.get_actions_cayley_table()
 print(actions_cayley_table)
-
-pass

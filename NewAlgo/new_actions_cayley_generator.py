@@ -22,9 +22,18 @@ class NewActionsCayleyGenerator:
     The resulting table maps pairs of actions to their composition outcome.
     """
 
+    PROGRESS_UPDATE_INTERVAL = 10.0  # seconds
+
     def __init__(self) -> None:
         """Initialize the generator."""
         self.cayley_table_actions: CayleyTableActions
+        # Add tracking dictionary
+        self.progress_tracking = {
+            "total_elements": 0,
+            "completed_elements": 0,
+            "last_update_time": 0.0,
+            "start_time": 0.0,
+        }
 
     def generate(self, equiv_classes_generator: NewEquivClassGenerator) -> None:
         """
@@ -35,7 +44,10 @@ class NewActionsCayleyGenerator:
                 equivalence classes
         """
         print("\nGenerating actions Cayley table...")
-        start_time = time.time()
+        self.progress_tracking["start_time"] = time.time()
+        self.progress_tracking["last_update_time"] = self.progress_tracking[
+            "start_time"
+        ]
 
         self.cayley_table_actions = CayleyTableActions()
         equiv_classes: EquivClasses = equiv_classes_generator.get_equiv_classes()
@@ -44,9 +56,12 @@ class NewActionsCayleyGenerator:
             equiv_classes_generator.get_distinct_actions()
         )
 
+        # Calculate total elements
+        self.progress_tracking["total_elements"] = len(equiv_classes_labels) ** 2
+
         self._generate_composition_table(equiv_classes_labels, distinct_actions)
 
-        time_taken = time.time() - start_time
+        time_taken = time.time() - self.progress_tracking["start_time"]
         print(f"\tActions Cayley table generated (Total taken: {time_taken:.2f}s)")
 
     def get_actions_cayley_table(self) -> CayleyTableActions:
@@ -70,6 +85,8 @@ class NewActionsCayleyGenerator:
             equiv_classes_labels: Labels of equivalence classes to use as table indices
             distinct_actions: Collection of distinct actions and their functions
         """
+        current_time = time.time()
+
         for right_action in equiv_classes_labels:
             self.cayley_table_actions.data[right_action] = {}
             for left_action in equiv_classes_labels:
@@ -77,6 +94,16 @@ class NewActionsCayleyGenerator:
                     left_action, right_action, distinct_actions
                 )
                 self.cayley_table_actions.data[right_action][left_action] = result
+
+                # Update progress
+                self.progress_tracking["completed_elements"] += 1
+                current_time = time.time()
+                if (
+                    current_time - self.progress_tracking["last_update_time"]
+                    >= self.PROGRESS_UPDATE_INTERVAL
+                ):
+                    self._display_progress()
+                    self.progress_tracking["last_update_time"] = current_time
 
     def _compute_composition(
         self,
@@ -139,3 +166,25 @@ class NewActionsCayleyGenerator:
                     break
 
         return composed_action_function
+
+    def _display_progress(self) -> None:
+        """Display the current progress of table generation."""
+        completed = self.progress_tracking["completed_elements"]
+        total = self.progress_tracking["total_elements"]
+        elapsed_time = time.time() - self.progress_tracking["start_time"]
+
+        # Calculate percentage and rate
+        percentage = (completed / total) * 100
+        rate = completed / elapsed_time if elapsed_time > 0 else 0
+
+        # Estimate time remaining
+        remaining_elements = total - completed
+        time_remaining = remaining_elements / rate if rate > 0 else 0
+
+        print(
+            f"\r\tProgress: {percentage:.1f}% ({completed}/{total} elements) "
+            f"| Rate: {rate:.1f} elements/sec "
+            f"| Est. remaining: {time_remaining:.1f}s",
+            end="",
+            flush=True,
+        )
