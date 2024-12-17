@@ -21,6 +21,7 @@
 - Function that compares actions Cayley tables for the two methods.
 - Turn action_functions into a typed dict ?
 - Sort elements in new generation method.
+- New generation method, actions Cayley table: Check if elements in equiv_classes (if so, can fill table entry with class label), and add elements to relevant equiv_class if not in one.
 
 # Smaller things
 
