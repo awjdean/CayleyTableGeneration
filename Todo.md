@@ -22,6 +22,8 @@
 - Turn action_functions into a typed dict ?
 - Sort elements in new generation method.
 - New generation method, actions Cayley table: Check if elements in equiv_classes (if so, can fill table entry with class label), and add elements to relevant equiv_class if not in one.
+- New generation method:
+  - Hashing action functions might speed lookups.
 
 # Smaller things
 

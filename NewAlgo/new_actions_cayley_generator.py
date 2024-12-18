@@ -62,7 +62,7 @@ class NewActionsCayleyGenerator:
         self._generate_composition_table(equiv_classes_labels, distinct_actions)
 
         time_taken = time.time() - self.progress_tracking["start_time"]
-        print(f"\tActions Cayley table generated (Total taken: {time_taken:.2f}s)")
+        print(f"\nActions Cayley table generated (Total taken: {time_taken:.2f}s)")
 
     def get_actions_cayley_table(self) -> CayleyTableActions:
         """Return the generated Cayley table for actions."""
