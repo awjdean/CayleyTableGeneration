@@ -1,13 +1,44 @@
+"""
+Module for generating Cayley tables of action compositions.
+"""
+
 import time
 
 from cayley_tables.tables.cayley_table_actions import CayleyTableActions
 from cayley_tables.utils.equiv_classes import EquivClasses
-from NewAlgo.new_equiv_classes_generator import (
+from NewAlgo.actions_to_action_functions_map import (
     ActionFunctionType,
-    ActionsActionFunctionsMap,
-    NewEquivClassGenerator,
 )
+from NewAlgo.new_equiv_classes_generator import NewEquivClassGenerator
 from utils.type_definitions import ActionType
+
+
+def compose_action_functions(
+    left_action_function: ActionFunctionType,
+    right_action_function: ActionFunctionType,
+) -> ActionFunctionType:
+    """
+    Compose two action functions into a single function.
+
+    Args:
+        left_action_function: Function applied second
+        right_action_function: Function applied first
+
+    Returns:
+        The composed function mapping states to their final states
+    """
+    composed_action_function: ActionFunctionType = {}
+    for r_initial_state in right_action_function.keys():
+        r_final_state = right_action_function[r_initial_state]
+        # In left_action_function, find the final state with the initial state of
+        #  r_final_state.
+        for l_initial_state in left_action_function.keys():
+            if l_initial_state == r_final_state:
+                l_final_state = left_action_function[l_initial_state]
+                composed_action_function[r_initial_state] = l_final_state
+                break
+
+    return composed_action_function
 
 
 class NewActionsCayleyGenerator:
@@ -27,6 +58,7 @@ class NewActionsCayleyGenerator:
     def __init__(self) -> None:
         """Initialize the generator."""
         self.cayley_table_actions: CayleyTableActions
+        self.equiv_classes_generator: NewEquivClassGenerator
         # Add tracking dictionary
         self.progress_tracking = {
             "total_elements": 0,
@@ -49,17 +81,16 @@ class NewActionsCayleyGenerator:
             "start_time"
         ]
 
+        self.equiv_classes_generator = equiv_classes_generator
         self.cayley_table_actions = CayleyTableActions()
+
         equiv_classes: EquivClasses = equiv_classes_generator.get_equiv_classes()
         equiv_classes_labels = equiv_classes.get_labels()
-        distinct_actions: ActionsActionFunctionsMap = (
-            equiv_classes_generator.get_distinct_actions()
-        )
 
         # Calculate total elements
         self.progress_tracking["total_elements"] = len(equiv_classes_labels) ** 2
 
-        self._generate_composition_table(equiv_classes_labels, distinct_actions)
+        self._generate_composition_table(equiv_classes_labels)
 
         time_taken = time.time() - self.progress_tracking["start_time"]
         print(f"\nActions Cayley table generated (Total taken: {time_taken:.2f}s)")
@@ -71,7 +102,6 @@ class NewActionsCayleyGenerator:
     def _generate_composition_table(
         self,
         equiv_classes_labels: list[ActionType],
-        distinct_actions: ActionsActionFunctionsMap,
     ) -> None:
         """
         Generate the composition table entries.
@@ -83,16 +113,13 @@ class NewActionsCayleyGenerator:
 
         Args:
             equiv_classes_labels: Labels of equivalence classes to use as table indices
-            distinct_actions: Collection of distinct actions and their functions
         """
         current_time = time.time()
 
         for right_action in equiv_classes_labels:
             self.cayley_table_actions.data[right_action] = {}
             for left_action in equiv_classes_labels:
-                result = self._compute_composition(
-                    left_action, right_action, distinct_actions
-                )
+                result = self._compute_composition(left_action, right_action)
                 self.cayley_table_actions.data[right_action][left_action] = result
 
                 # Update progress
@@ -109,7 +136,6 @@ class NewActionsCayleyGenerator:
         self,
         left_action: ActionType,
         right_action: ActionType,
-        distinct_actions: ActionsActionFunctionsMap,
     ) -> ActionType:
         """
         Compute a single composition of two actions.
@@ -117,53 +143,37 @@ class NewActionsCayleyGenerator:
         Args:
             left_action: The action applied second
             right_action: The action applied first
-            distinct_actions: Collection of distinct actions and their functions
 
         Returns:
             The action that represents the composition result
         """
-        # Get action_function for right_action and left_action.
-        right_action_function = distinct_actions.get_action_function_from_action(
-            right_action
+
+        composed_action_function = self._compute_composition_action_function(
+            left_action, right_action
         )
-        left_action_function = distinct_actions.get_action_function_from_action(
-            left_action
-        )
-        # Compose the action functions.
-        composed_action_function = self._compose_action_functions(
-            left_action_function, right_action_function
-        )
-        # Find action in distinct_actions that has the composed_action_function.
-        composed_action = distinct_actions.get_action_from_action_function(
+
+        action_functions_maps = self.equiv_classes_generator.get_action_functions_maps()
+        # Find action in distinct_actions that has the composed_action_function
+        composed_action = action_functions_maps.get_action_from_action_function(
             composed_action_function
         )
         return composed_action
 
-    def _compose_action_functions(
-        self,
-        left_action_function: ActionFunctionType,
-        right_action_function: ActionFunctionType,
+    def _compute_composition_action_function(
+        self, left_action: ActionType, right_action: ActionType
     ) -> ActionFunctionType:
-        """
-        Compose two action functions into a single function.
-
-        Args:
-            left_action_function: Function applied second
-            right_action_function: Function applied first
-
-        Returns:
-            The composed function mapping states to their final states
-        """
-        composed_action_function: ActionFunctionType = {}
-        for r_initial_state in right_action_function.keys():
-            r_final_state = right_action_function[r_initial_state]
-            # In left_action_function, find the final state with the initial state of
-            #  r_final_state.
-            for l_initial_state in left_action_function.keys():
-                if l_initial_state == r_final_state:
-                    l_final_state = left_action_function[l_initial_state]
-                    composed_action_function[r_initial_state] = l_final_state
-                    break
+        action_functions_maps = self.equiv_classes_generator.get_action_functions_maps()
+        # Get action_function for right_action and left_action
+        right_action_function = action_functions_maps.get_action_function_from_action(
+            right_action
+        )
+        left_action_function = action_functions_maps.get_action_function_from_action(
+            left_action
+        )
+        # Compose the action functions
+        composed_action_function = compose_action_functions(
+            left_action_function, right_action_function
+        )
 
         return composed_action_function
 
