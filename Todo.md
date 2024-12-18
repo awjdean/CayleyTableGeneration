@@ -24,6 +24,8 @@
 - New generation method, actions Cayley table: Check if elements in equiv_classes (if so, can fill table entry with class label), and add elements to relevant equiv_class if not in one.
 - New generation method:
   - Hashing action functions might speed lookups.
+- Sort inheritance for generators of local vs method 2.
+  - Create base classes with shared methods + variables.
 
 # Smaller things
 
