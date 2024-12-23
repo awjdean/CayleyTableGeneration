@@ -25,10 +25,10 @@ def main():
 
     # Generate the Cayley tables and equivalence classes
     print("Generating Cayley table states...")
-    algebra.generate_cayley_table_states(world=world, initial_state=initial_state)
+    algebra.generate(world=world, initial_state=initial_state)
 
     print("Generating Cayley table actions...")
-    algebra.generate_cayley_table_actions()
+    algebra._generate_cayley_table_actions()
 
     # Check algebraic properties
     print("\nChecking algebraic properties...")

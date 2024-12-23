@@ -1,6 +1,8 @@
 from transformation_algebra.transformation_algebra import TransformationAlgebra
-from utils.create_initial_state import create_initial_state_gridworld2d_consumables
 from worlds.gridworlds2d.gridworld2d_consumable import Gridworld2DConsumable
+from worlds.utils.create_initial_state import (
+    create_initial_state_gridworld2d_consumables,
+)
 
 consumable_positions = [(0, 0)]
 initial_agent_position = (0, 0)
@@ -13,7 +15,7 @@ world = Gridworld2DConsumable(
 )
 world.generate_min_action_transformation_matrix()
 algebra = TransformationAlgebra(name="gridworld2DConsumable")
-algebra.generate_cayley_table_states(
+algebra.generate(
     world=world,
     initial_state=create_initial_state_gridworld2d_consumables(
         agent_position=initial_agent_position, consumable_positions=consumable_positions
@@ -21,5 +23,5 @@ algebra.generate_cayley_table_states(
 )
 print(algebra.cayley_table_states)
 print(algebra.equiv_classes)
-algebra.generate_cayley_table_actions()
+algebra._generate_cayley_table_actions()
 print(algebra.cayley_table_actions)
