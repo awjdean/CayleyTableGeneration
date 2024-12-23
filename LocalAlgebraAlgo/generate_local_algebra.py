@@ -4,8 +4,13 @@ import sys
 # Add the project root directory to the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from LocalAlgebraAlgo.local_cayley_generator import LocalActionsCayleyGenerator
-from LocalAlgebraAlgo.local_equiv_classes_generator import LocalEquivClassGenerator
+
+from LocalAlgebraAlgo.generation.local_cayley_generator import (
+    LocalActionsCayleyGenerator,
+)
+from LocalAlgebraAlgo.generation.local_equiv_classes_generator import (
+    LocalEquivClassGenerator,
+)
 from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
 # Create a simple gridworld with walls

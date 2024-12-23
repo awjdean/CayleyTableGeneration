@@ -2,10 +2,15 @@ import os
 import sys
 
 # Add the project root directory to the Python path
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+sys.path.append(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+)
 
-from NewAlgo.new_actions_cayley_generator import NewActionsCayleyGenerator
-from NewAlgo.new_equiv_classes_generator import NewEquivClassGenerator
+
+from ActionFunctionsAlgo.generation.af_cayley_generator import AFCayleyGenerator
+from ActionFunctionsAlgo.generation.af_equiv_classes_generator import (
+    AFEquivClassGenerator,
+)
 from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
 # Create a simple gridworld with walls
@@ -15,10 +20,10 @@ world = Gridworld2DWalls(
     wall_strategy="identity",
 )
 world.generate_min_action_transformation_matrix()
-equiv_classes_generator = NewEquivClassGenerator(world)
+equiv_classes_generator = AFEquivClassGenerator(world)
 equiv_classes_generator.generate()
 
-actions_cayley_table_generator = NewActionsCayleyGenerator()
+actions_cayley_table_generator = AFCayleyGenerator()
 actions_cayley_table_generator.generate(equiv_classes_generator)
 actions_cayley_table = actions_cayley_table_generator.get_actions_cayley_table()
 print(actions_cayley_table)
