@@ -34,6 +34,7 @@ class EquivElementsRowColumnDictType(TypedDict):
 GridPosition2DType = tuple[int, int]
 
 
-class AlgebraGenerationMethod(Enum):
-    STATE_CAYLEY = "state_cayley"  # Current method using state Cayley tables
-    ACTION_FUNCTION = "action_function"  # New method using action functions
+class AlgebraGenerationMethod(str, Enum):
+    STATE_CAYLEY = "state_cayley"
+    ACTION_FUNCTION = "action_function"
+    LOCAL_ACTION_FUNCTION = "local_action_function"

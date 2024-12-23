@@ -65,25 +65,37 @@ class TransformationAlgebra:
         Args:
             world: The world to generate the algebra for
             initial_state: The initial state to start from (required for STATE_CAYLEY
-              method)
+             and LOCAL_ACTION_FUNCTION methods)
             method: Which method to use for generation (defaults to STATE_CAYLEY)
 
         Raises:
-            ValueError: If using STATE_CAYLEY method and initial_state is not provided
+            ValueError: If using STATE_CAYLEY or LOCAL_ACTION_FUNCTION method and
+             initial_state is not provided
         """
-        if method == AlgebraGenerationMethod.STATE_CAYLEY and initial_state is None:
+        if (
+            method
+            in [
+                AlgebraGenerationMethod.STATE_CAYLEY,
+                AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION,
+            ]
+            and initial_state is None
+        ):
             raise ValueError(
-                "initial_state must be provided when using the STATE_CAYLEY generation"
+                f"initial_state must be provided when using the {method} generation"
                 " method"
             )
 
-        self._store_algebra_generation_paramenters(world, initial_state)  # type: ignore[arg-type]
-        self._generation_method = method  # Store for use by other methods
+        self._store_algebra_generation_paramenters(world, initial_state)
+        self._generation_method = method
 
         if method == AlgebraGenerationMethod.STATE_CAYLEY:
             self._generate_using_states_cayley(world, initial_state)  # type: ignore[arg-type]
-        else:
+        elif method == AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION:
+            self._generate_using_local_action_function(world, initial_state)  # type: ignore[arg-type]
+        elif method == AlgebraGenerationMethod.ACTION_FUNCTION:
             self._generate_using_action_function(world)
+        else:
+            raise ValueError(f"Invalid generation method: {method}")
 
     def _generate_using_states_cayley(
         self, world: BaseWorld, initial_state: StateType
@@ -110,6 +122,27 @@ class TransformationAlgebra:
 
         # Generate actions Cayley table using new method
         self._actions_cayley_generator = NewActionsCayleyGenerator()
+        self._actions_cayley_generator.generate(self._equiv_classes_generator)
+        self.cayley_table_actions = (
+            self._actions_cayley_generator.get_actions_cayley_table()
+        )
+
+    def _generate_using_local_action_function(
+        self, world: BaseWorld, initial_state: StateType
+    ) -> None:
+        """Generate using the local action function method."""
+        from LocalAlgebraAlgo.local_cayley_generator import LocalActionsCayleyGenerator
+        from LocalAlgebraAlgo.local_equiv_classes_generator import (
+            LocalEquivClassGenerator,
+        )
+
+        # Generate equiv classes using local method
+        self._equiv_classes_generator = LocalEquivClassGenerator(world)
+        self._equiv_classes_generator.generate(initial_state)
+        self.equiv_classes = self._equiv_classes_generator.get_equiv_classes()
+
+        # Generate actions Cayley table using local method
+        self._actions_cayley_generator = LocalActionsCayleyGenerator()
         self._actions_cayley_generator.generate(self._equiv_classes_generator)
         self.cayley_table_actions = (
             self._actions_cayley_generator.get_actions_cayley_table()
@@ -214,7 +247,7 @@ class TransformationAlgebra:
             self.commutativity_info = data["commutativity_info"]
 
     def _store_algebra_generation_paramenters(
-        self, world: BaseWorld, initial_state: StateType
+        self, world: BaseWorld, initial_state: StateType | None
     ):
         self._algebra_generation_parameters = {
             "world": copy.deepcopy(world),
@@ -251,3 +284,108 @@ class TransformationAlgebra:
         self.commutativity_info = check_commutativity(self.cayley_table_actions)
         if self.commutativity_info is None:
             raise ValueError("Failed to compute commutativity")
+
+    def print_properties(self, details: bool = False) -> None:
+        """Print all algebraic properties in a formatted way.
+
+        Args:
+            details: If True, prints full property information. If False, prints only
+                    whether each property holds.
+        """
+        if not hasattr(self, "cayley_table_actions"):
+            raise ValueError(
+                "Cayley table must be generated before printing properties. "
+                "Call generate() first."
+            )
+
+        print(f"\n{self.name} Results")
+        print("=" * (len(self.name) + 8))
+
+        if details:
+            if hasattr(self, "cayley_table_actions"):
+                print("\nCayley Table:")
+                print(self.cayley_table_actions)
+
+            print("\nAlgebraic Properties:")
+            print("-" * 20)
+
+            print("\nAssociativity:")
+            for k, v in getattr(self, "associativity_info", {"-": "-"}).items():
+                if k == "violations" and v:
+                    print(f"  {k}:")
+                    for violation in v:
+                        print(f"    {violation}")
+                else:
+                    print(f"  {k}: {v}")
+
+            print("\nIdentity:")
+            for k, v in getattr(self, "identity_info", {"-": "-"}).items():
+                print(f"  {k}: {v}")
+
+            print("\nInverses:")
+            inverse_info = getattr(self, "inverse_info", {"-": "-"})
+            if isinstance(inverse_info, dict):
+                print(
+                    f"  is_inverse_algebra: {inverse_info.get('is_inverse_algebra', '-')}"
+                )
+
+                for k, v in inverse_info.items():
+                    if k == "is_inverse_algebra":
+                        continue
+                    print(f"  {k}:")
+                    if isinstance(v, dict):
+                        for element, pairs in v.items():
+                            print(f"    {element}:")
+                            for pair in pairs:
+                                print(f"      {pair}")
+                    else:
+                        print(f"    {v}")
+            else:
+                print(f"  {inverse_info}")
+
+            print("\nCommutativity:")
+            comm_info = getattr(self, "commutativity_info", {"-": "-"})
+            if isinstance(comm_info, dict):
+                print(
+                    f"  is_commutative_algebra: {comm_info.get('is_commutative_algebra', '-')}"
+                )
+                print(f"  commute_with_all: {comm_info.get('commute_with_all', '-')}")
+
+                if "commuting_elements" in comm_info:
+                    print("  commuting_elements:")
+                    for element, commutes_with in comm_info[
+                        "commuting_elements"
+                    ].items():
+                        print(f"    {element}: {commutes_with}")
+
+                if "non_commuting_elements" in comm_info:
+                    print("  non_commuting_elements:")
+                    for element, non_commutes_with in comm_info[
+                        "non_commuting_elements"
+                    ].items():
+                        print(f"    {element}: {non_commutes_with}")
+            else:
+                print(f"  {comm_info}")
+
+            print("\nElement Orders:")
+            orders = getattr(self, "element_orders", {"-": "-"})
+            if isinstance(orders, dict) and "orders" in orders:
+                for element, info in orders["orders"].items():
+                    print(f"  {element}: {info}")
+            else:
+                print(f"  {orders}")
+        else:
+            print("\nProperties:")
+            print(
+                f"{'Associative':12} {getattr(self, 'associativity_info', {}).get('is_associative_algebra', '-')}"
+            )
+            print(
+                f"{'Identity':12} {getattr(self, 'identity_info', {}).get('is_identity_algebra', '-')}"
+            )
+            print(
+                f"{'Inverses':12} {getattr(self, 'inverse_info', {}).get('is_inverse_algebra', '-')}"
+            )
+            print(
+                f"{'Commutative':12} {getattr(self, 'commutativity_info', {}).get('is_commutative_algebra', '-')}"
+            )
+        print("")

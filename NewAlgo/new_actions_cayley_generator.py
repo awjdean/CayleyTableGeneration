@@ -13,7 +13,7 @@ from NewAlgo.new_equiv_classes_generator import NewEquivClassGenerator
 from utils.type_definitions import ActionType
 
 
-def compose_action_functions(
+def _compose_action_functions(
     left_action_function: ActionFunctionType,
     right_action_function: ActionFunctionType,
 ) -> ActionFunctionType:
@@ -119,8 +119,10 @@ class NewActionsCayleyGenerator:
         for right_action in equiv_classes_labels:
             self.cayley_table_actions.data[right_action] = {}
             for left_action in equiv_classes_labels:
-                result = self._compute_composition(left_action, right_action)
-                self.cayley_table_actions.data[right_action][left_action] = result
+                composed_action = self._compute_composition(left_action, right_action)
+                self.cayley_table_actions.data[right_action][left_action] = (
+                    composed_action
+                )
 
                 # Update progress
                 self.progress_tracking["completed_elements"] += 1
@@ -171,7 +173,7 @@ class NewActionsCayleyGenerator:
             left_action
         )
         # Compose the action functions
-        composed_action_function = compose_action_functions(
+        composed_action_function = _compose_action_functions(
             left_action_function, right_action_function
         )
 
