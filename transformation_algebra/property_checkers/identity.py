@@ -69,7 +69,7 @@ def _find_left_identities(cayley_table_actions: CayleyTableActions) -> list[Acti
         # Must satisfy e_l ∘ a = a for all a
         for a in actions:
             if (
-                cayley_table_actions.compose_actions(left_action=e_l, right_action=a)
+                cayley_table_actions.compose_actions(right_action=e_l, left_action=a)
                 != a
             ):
                 is_left_identity = False
@@ -96,7 +96,7 @@ def _find_right_identities(
         # Must satisfy a ∘ e_r = a for all a
         for a in actions:
             if (
-                cayley_table_actions.compose_actions(left_action=a, right_action=e_r)
+                cayley_table_actions.compose_actions(right_action=a, left_action=e_r)
                 != a
             ):
                 is_right_identity = False

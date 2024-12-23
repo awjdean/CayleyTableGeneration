@@ -417,7 +417,7 @@ def _is_homomorphism(
         for y in elements1:
             # Compute x * y in A₁ and map the result
             xy_in_a1 = algebra1.cayley_table_actions.compose_actions(
-                left_action=x, right_action=y
+                right_action=x, left_action=y
             )
             mapped_result = mapping[xy_in_a1]
 
@@ -425,7 +425,7 @@ def _is_homomorphism(
             mapped_x = mapping[x]
             mapped_y = mapping[y]
             result_in_a2 = algebra2.cayley_table_actions.compose_actions(
-                left_action=mapped_x, right_action=mapped_y
+                right_action=mapped_x, left_action=mapped_y
             )
 
             # Check if the results match

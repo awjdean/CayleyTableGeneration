@@ -290,118 +290,126 @@ class TransformationAlgebra:
             raise ValueError("Failed to compute commutativity")
 
     def print_properties(self, details: bool = False) -> None:
-        """Print all algebraic properties in a formatted way.
-
-        Args:
-            details: If True, prints full property information. If False, prints only
-                    whether each property holds.
-        """
-        if not hasattr(self, "cayley_table_actions"):
-            raise ValueError(
-                "Cayley table must be generated before printing properties. "
-                "Call generate() first."
-            )
-
+        """Print all algebraic properties in a formatted way."""
         print(f"\n{self.name} Results")
         print("=" * (len(self.name) + 8))
 
         if details:
-            if hasattr(self, "cayley_table_actions"):
-                print("\nCayley Table:")
-                print(self.cayley_table_actions)
+            self._print_detailed_properties()
+        else:
+            self._print_summary_properties()
+        print("")
 
-            print("\nAlgebraic Properties:")
-            print("-" * 20)
+    def _print_detailed_properties(self) -> None:
+        """Print detailed property information."""
+        if hasattr(self, "cayley_table_actions"):
+            print("\nCayley Table:")
+            print(self.cayley_table_actions)
 
-            print("\nAssociativity:")
-            for k, v in getattr(self, "associativity_info", {"-": "-"}).items():
-                if k == "violations" and v:
-                    print(f"  {k}:")
-                    for violation in v:
-                        print(f"    {violation}")
-                else:
-                    print(f"  {k}: {v}")
+        print("\nAlgebraic Properties:")
+        print("-" * 20)
 
-            print("\nIdentity:")
-            for k, v in getattr(self, "identity_info", {"-": "-"}).items():
+        self._print_associativity_details()
+        self._print_identity_details()
+        self._print_inverse_details()
+        self._print_commutativity_details()
+        self._print_element_orders_details()
+
+    def _print_summary_properties(self) -> None:
+        """Print summary of properties."""
+        print("\nProperties:")
+        print(
+            f"{'Associative':12}"
+            f" {getattr(self, 'associativity_info', {}).get(
+                'is_associative_algebra', '-')
+                }"
+        )
+        print(
+            f"{'Identity':12}"
+            f" {getattr(self, 'identity_info', {}).get('is_identity_algebra', '-')}"
+        )
+        print(
+            f"{'Inverses':12}"
+            f" {getattr(self, 'inverse_info', {}).get('is_inverse_algebra', '-')}"
+        )
+        print(
+            f"{'Commutative':12}"
+            f" {getattr(self, 'commutativity_info', {}).get(
+                'is_commutative_algebra', '-'
+                )}"
+        )
+
+    def _print_associativity_details(self) -> None:
+        """Print detailed associativity information."""
+        print("\nAssociativity:")
+        for k, v in getattr(self, "associativity_info", {"-": "-"}).items():
+            if k == "violations" and v:
+                print(f"  {k}:")
+                for violation in v:
+                    print(f"    {violation}")
+            else:
                 print(f"  {k}: {v}")
 
-            print("\nInverses:")
-            inverse_info = getattr(self, "inverse_info", {"-": "-"})
-            if isinstance(inverse_info, dict):
-                print(
-                    "  is_inverse_algebra:"
-                    f" {inverse_info.get('is_inverse_algebra', '-')}"
-                )
+    def _print_identity_details(self) -> None:
+        """Print detailed identity information."""
+        print("\nIdentity:")
+        for k, v in getattr(self, "identity_info", {"-": "-"}).items():
+            print(f"  {k}: {v}")
 
-                for k, v in inverse_info.items():
-                    if k == "is_inverse_algebra":
-                        continue
-                    print(f"  {k}:")
-                    if isinstance(v, dict):
-                        for element, pairs in v.items():
-                            print(f"    {element}:")
-                            for pair in pairs:
-                                print(f"      {pair}")
-                    else:
-                        print(f"    {v}")
-            else:
-                print(f"  {inverse_info}")
-
-            print("\nCommutativity:")
-            comm_info = getattr(self, "commutativity_info", {"-": "-"})
-            if isinstance(comm_info, dict):
-                print(
-                    "  is_commutative_algebra:"
-                    f" {comm_info.get('is_commutative_algebra', '-')}"
-                )
-                print(f"  commute_with_all: {comm_info.get('commute_with_all', '-')}")
-
-                if "commuting_elements" in comm_info:
-                    print("  commuting_elements:")
-                    for element, commutes_with in comm_info[
-                        "commuting_elements"
-                    ].items():
-                        print(f"    {element}: {commutes_with}")
-
-                if "non_commuting_elements" in comm_info:
-                    print("  non_commuting_elements:")
-                    for element, non_commutes_with in comm_info[
-                        "non_commuting_elements"
-                    ].items():
-                        print(f"    {element}: {non_commutes_with}")
-            else:
-                print(f"  {comm_info}")
-
-            print("\nElement Orders:")
-            orders = getattr(self, "element_orders", {"-": "-"})
-            if isinstance(orders, dict) and "orders" in orders:
-                for element, info in orders["orders"].items():
-                    print(f"  {element}: {info}")
-            else:
-                print(f"  {orders}")
+    def _print_inverse_details(self) -> None:
+        """Print detailed inverse information."""
+        print("\nInverses:")
+        inverse_info = getattr(self, "inverse_info", {"-": "-"})
+        if isinstance(inverse_info, dict):
+            print(
+                f"  is_inverse_algebra: {inverse_info.get('is_inverse_algebra', '-')}"
+            )
+            for k, v in inverse_info.items():
+                if k == "is_inverse_algebra":
+                    continue
+                print(f"  {k}:")
+                if isinstance(v, dict):
+                    for element, pairs in v.items():
+                        print(f"    {element}:")
+                        for pair in pairs:
+                            print(f"      {pair}")
+                else:
+                    print(f"    {v}")
         else:
-            print("\nProperties:")
+            print(f"  {inverse_info}")
+
+    def _print_commutativity_details(self) -> None:
+        """Print detailed commutativity information."""
+        print("\nCommutativity:")
+        comm_info = getattr(self, "commutativity_info", {"-": "-"})
+        if isinstance(comm_info, dict):
             print(
-                f"{'Associative':12}"
-                f" {getattr(self, 'associativity_info', {}).get(
-                    'is_associative_algebra', '-'
-                    )}"
-            )
-            print(
-                f"{'Identity':12}"
-                f" {getattr(self, 'identity_info', {}).get(
-                    'is_identity_algebra', '-'
-                    )}"
-            )
-            print(
-                f"{'Inverses':12}"
-                f" {getattr(self, 'inverse_info', {}).get('is_inverse_algebra', '-')}"
-            )
-            print(
-                f"{'Commutative':12}"
-                f" {getattr(self, 'commutativity_info', {}).get(
+                f"  is_commutative_algebra: {comm_info.get(
                     'is_commutative_algebra', '-'
                     )}"
             )
-        print("")
+            print(f"  commute_with_all: {comm_info.get('commute_with_all', '-')}")
+
+            if "commuting_elements" in comm_info:
+                print("  commuting_elements:")
+                for element, commutes_with in comm_info["commuting_elements"].items():
+                    print(f"    {element}: {commutes_with}")
+
+            if "non_commuting_elements" in comm_info:
+                print("  non_commuting_elements:")
+                for element, non_commutes_with in comm_info[
+                    "non_commuting_elements"
+                ].items():
+                    print(f"    {element}: {non_commutes_with}")
+        else:
+            print(f"  {comm_info}")
+
+    def _print_element_orders_details(self) -> None:
+        """Print detailed element order information."""
+        print("\nElement Orders:")
+        orders = getattr(self, "element_orders", {"-": "-"})
+        if isinstance(orders, dict) and "orders" in orders:
+            for element, info in orders["orders"].items():
+                print(f"  {element}: {info}")
+        else:
+            print(f"  {orders}")

@@ -94,7 +94,7 @@ def _find_left_inverses(
         for b in actions:
             # Calculate b ∘ a
             outcome = cayley_table_actions.compose_actions(
-                left_action=b, right_action=a
+                right_action=b, left_action=a
             )
 
             # Check if outcome is a right identity e_r
@@ -128,7 +128,7 @@ def _find_right_inverses(
         for b in actions:
             # Calculate a ∘ b
             outcome = cayley_table_actions.compose_actions(
-                left_action=a, right_action=b
+                right_action=a, left_action=b
             )
 
             # Check if outcome is a left identity e_l

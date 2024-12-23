@@ -108,7 +108,7 @@ def _find_element_order(
     for n in range(2, max_order + 1):
         # Calculate next power: a^n = a * a^(n-1)
         current_power = cayley_table_actions.compose_actions(
-            left_action=element, right_action=current_power
+            right_action=element, left_action=current_power
         )
         power_sequence.append(current_power)
 
