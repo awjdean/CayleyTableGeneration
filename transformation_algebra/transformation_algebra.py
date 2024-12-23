@@ -2,17 +2,23 @@ import copy
 import os
 import pickle
 
-from cayley_tables.generators.actions_cayley_table_generator import (
+from ActionFunctionsAlgo.generation.af_cayley_generator import AFCayleyGenerator
+from ActionFunctionsAlgo.generation.af_equiv_classes_generator import (
+    AFEquivClassGenerator,
+)
+from CayleyStatesAlgo.generation.actions_cayley_table_generator import (
     ActionsCayleyGenerator,
 )
-from cayley_tables.generators.states_cayley_table_generator import (
+from CayleyStatesAlgo.generation.cayley_table_states import CayleyTableStates
+from CayleyStatesAlgo.generation.states_cayley_table_generator import (
     StatesCayleyGenerator,
 )
-from cayley_tables.tables.cayley_table_actions import CayleyTableActions
-from cayley_tables.tables.cayley_table_states import CayleyTableStates
-from cayley_tables.utils.equiv_classes import EquivClasses
-from NewAlgo.new_actions_cayley_generator import NewActionsCayleyGenerator
-from NewAlgo.new_equiv_classes_generator import NewEquivClassGenerator
+from LocalAlgebraAlgo.generation.local_cayley_generator import (
+    LocalActionsCayleyGenerator,
+)
+from LocalAlgebraAlgo.generation.local_equiv_classes_generator import (
+    LocalEquivClassGenerator,
+)
 from transformation_algebra.property_checkers.associativity import (
     AssociativityResultType,
     check_associativity,
@@ -33,6 +39,8 @@ from transformation_algebra.property_checkers.inverse import (
     InverseResultsType,
     check_inverse,
 )
+from utils.cayley_table_actions import CayleyTableActions
+from utils.equiv_classes import EquivClasses
 from utils.type_definitions import AlgebraGenerationMethod, StateType
 from worlds.base_world import BaseWorld
 
@@ -58,7 +66,7 @@ class TransformationAlgebra:
         self,
         world: BaseWorld,
         initial_state: StateType | None = None,
-        method: AlgebraGenerationMethod = AlgebraGenerationMethod.STATE_CAYLEY,
+        method: AlgebraGenerationMethod = AlgebraGenerationMethod.STATES_CAYLEY,
     ) -> None:
         """Generate the Cayley tables using the specified method.
 
@@ -75,7 +83,7 @@ class TransformationAlgebra:
         if (
             method
             in [
-                AlgebraGenerationMethod.STATE_CAYLEY,
+                AlgebraGenerationMethod.STATES_CAYLEY,
                 AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION,
             ]
             and initial_state is None
@@ -88,7 +96,7 @@ class TransformationAlgebra:
         self._store_algebra_generation_paramenters(world, initial_state)
         self._generation_method = method
 
-        if method == AlgebraGenerationMethod.STATE_CAYLEY:
+        if method == AlgebraGenerationMethod.STATES_CAYLEY:
             self._generate_using_states_cayley(world, initial_state)  # type: ignore[arg-type]
         elif method == AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION:
             self._generate_using_local_action_function(world, initial_state)  # type: ignore[arg-type]
@@ -116,12 +124,12 @@ class TransformationAlgebra:
     def _generate_using_action_function(self, world: BaseWorld) -> None:
         """Generate using the new action function method."""
         # Generate equiv classes using new method
-        self._equiv_classes_generator = NewEquivClassGenerator(world)
+        self._equiv_classes_generator = AFEquivClassGenerator(world)
         self._equiv_classes_generator.generate()
         self.equiv_classes = self._equiv_classes_generator.get_equiv_classes()
 
         # Generate actions Cayley table using new method
-        self._actions_cayley_generator = NewActionsCayleyGenerator()
+        self._actions_cayley_generator = AFCayleyGenerator()
         self._actions_cayley_generator.generate(self._equiv_classes_generator)
         self.cayley_table_actions = (
             self._actions_cayley_generator.get_actions_cayley_table()
@@ -131,10 +139,6 @@ class TransformationAlgebra:
         self, world: BaseWorld, initial_state: StateType
     ) -> None:
         """Generate using the local action function method."""
-        from LocalAlgebraAlgo.local_cayley_generator import LocalActionsCayleyGenerator
-        from LocalAlgebraAlgo.local_equiv_classes_generator import (
-            LocalEquivClassGenerator,
-        )
 
         # Generate equiv classes using local method
         self._equiv_classes_generator = LocalEquivClassGenerator(world)
@@ -174,7 +178,7 @@ class TransformationAlgebra:
             "cayley_table_states": (
                 getattr(self, "cayley_table_states", None)
                 if getattr(self, "_generation_method", None)
-                == AlgebraGenerationMethod.STATE_CAYLEY
+                == AlgebraGenerationMethod.STATES_CAYLEY
                 else None
             ),
             # Generation parameters
@@ -326,7 +330,8 @@ class TransformationAlgebra:
             inverse_info = getattr(self, "inverse_info", {"-": "-"})
             if isinstance(inverse_info, dict):
                 print(
-                    f"  is_inverse_algebra: {inverse_info.get('is_inverse_algebra', '-')}"
+                    "  is_inverse_algebra:"
+                    f" {inverse_info.get('is_inverse_algebra', '-')}"
                 )
 
                 for k, v in inverse_info.items():
@@ -347,7 +352,8 @@ class TransformationAlgebra:
             comm_info = getattr(self, "commutativity_info", {"-": "-"})
             if isinstance(comm_info, dict):
                 print(
-                    f"  is_commutative_algebra: {comm_info.get('is_commutative_algebra', '-')}"
+                    "  is_commutative_algebra:"
+                    f" {comm_info.get('is_commutative_algebra', '-')}"
                 )
                 print(f"  commute_with_all: {comm_info.get('commute_with_all', '-')}")
 
@@ -377,15 +383,25 @@ class TransformationAlgebra:
         else:
             print("\nProperties:")
             print(
-                f"{'Associative':12} {getattr(self, 'associativity_info', {}).get('is_associative_algebra', '-')}"
+                f"{'Associative':12}"
+                f" {getattr(self, 'associativity_info', {}).get(
+                    'is_associative_algebra', '-'
+                    )}"
             )
             print(
-                f"{'Identity':12} {getattr(self, 'identity_info', {}).get('is_identity_algebra', '-')}"
+                f"{'Identity':12}"
+                f" {getattr(self, 'identity_info', {}).get(
+                    'is_identity_algebra', '-'
+                    )}"
             )
             print(
-                f"{'Inverses':12} {getattr(self, 'inverse_info', {}).get('is_inverse_algebra', '-')}"
+                f"{'Inverses':12}"
+                f" {getattr(self, 'inverse_info', {}).get('is_inverse_algebra', '-')}"
             )
             print(
-                f"{'Commutative':12} {getattr(self, 'commutativity_info', {}).get('is_commutative_algebra', '-')}"
+                f"{'Commutative':12}"
+                f" {getattr(self, 'commutativity_info', {}).get(
+                    'is_commutative_algebra', '-'
+                    )}"
             )
         print("")

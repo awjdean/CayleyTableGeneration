@@ -2,12 +2,14 @@
 Module for generating Cayley tables for local action compositions.
 """
 
-from NewAlgo.actions_to_action_functions_map import ActionFunctionType
-from NewAlgo.new_actions_cayley_generator import NewActionsCayleyGenerator
+from ActionFunctionsAlgo.generation.actions_to_action_functions_map import (
+    ActionFunctionType,
+)
+from ActionFunctionsAlgo.generation.af_cayley_generator import AFCayleyGenerator
 from utils.type_definitions import ActionType
 
 
-class LocalActionsCayleyGenerator(NewActionsCayleyGenerator):
+class LocalActionsCayleyGenerator(AFCayleyGenerator):
     """
     Generates a Cayley table for action compositions using the local algorithm.
 

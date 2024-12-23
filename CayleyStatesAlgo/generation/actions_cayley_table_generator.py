@@ -1,5 +1,5 @@
-from cayley_tables.tables.cayley_table_actions import CayleyTableActions
-from cayley_tables.utils.equiv_classes import EquivClasses
+from utils.cayley_table_actions import CayleyTableActions
+from utils.equiv_classes import EquivClasses
 from utils.errors import CompositionError, ValidationError
 from utils.type_definitions import ActionType
 

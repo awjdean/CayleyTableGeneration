@@ -35,6 +35,6 @@ GridPosition2DType = tuple[int, int]
 
 
 class AlgebraGenerationMethod(str, Enum):
-    STATE_CAYLEY = "state_cayley"
+    STATES_CAYLEY = "states_cayley"
     ACTION_FUNCTION = "action_function"
     LOCAL_ACTION_FUNCTION = "local_action_function"

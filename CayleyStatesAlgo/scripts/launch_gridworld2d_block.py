@@ -1,6 +1,6 @@
 from transformation_algebra.transformation_algebra import TransformationAlgebra
-from utils.create_initial_state import create_initial_state_gridworld2d_block
 from worlds.gridworlds2d.gridworld2d_block import Gridworld2DBlock
+from worlds.utils.create_initial_state import create_initial_state_gridworld2d_block
 
 initial_agent_position = (0, 0)
 initial_block_position = (1, 0)

@@ -1,6 +1,8 @@
 from transformation_algebra.transformation_algebra import TransformationAlgebra
-from utils.create_initial_state import create_initial_state_gridworld2d_consumables
 from worlds.gridworlds2d.gridworld2d_consumable import Gridworld2DConsumable
+from worlds.utils.create_initial_state import (
+    create_initial_state_gridworld2d_consumables,
+)
 
 consumable_positions = [(0, 0)]
 initial_agent_position = (0, 0)

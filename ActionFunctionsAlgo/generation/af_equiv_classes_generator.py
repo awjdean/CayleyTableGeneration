@@ -11,18 +11,18 @@ import copy
 import itertools
 import time
 
-from cayley_tables.utils.action_outcome import generate_action_outcome
-from cayley_tables.utils.equiv_classes import EquivClasses
-from NewAlgo.actions_to_action_functions_map import (
+from ActionFunctionsAlgo.generation.actions_to_action_functions_map import (
     ActionFunctionType,
     ActionsActionFunctionsMap,
     DistinctActionsDataType,
 )
+from utils.action_outcome import generate_action_outcome
+from utils.equiv_classes import EquivClasses
 from utils.type_definitions import ActionType, MinActionsType
 from worlds.base_world import BaseWorld
 
 
-class NewEquivClassGenerator:
+class AFEquivClassGenerator:
     """
     Generates equivalence classes of actions based on their effects on states.
 

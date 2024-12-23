@@ -1,7 +1,7 @@
-from cayley_tables.tables.cayley_table_actions import CayleyTableActions
-from cayley_tables.tables.cayley_table_states import CayleyTableStates
-from cayley_tables.utils.equiv_classes import EquivClasses
+from CayleyStatesAlgo.generation.cayley_table_states import CayleyTableStates
 from transformation_algebra.transformation_algebra import TransformationAlgebra
+from utils.cayley_table_actions import CayleyTableActions
+from utils.equiv_classes import EquivClasses
 from utils.type_definitions import ActionType
 
 

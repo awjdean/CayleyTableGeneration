@@ -4,12 +4,14 @@ Module for generating Cayley tables of action compositions.
 
 import time
 
-from cayley_tables.tables.cayley_table_actions import CayleyTableActions
-from cayley_tables.utils.equiv_classes import EquivClasses
-from NewAlgo.actions_to_action_functions_map import (
+from ActionFunctionsAlgo.generation.actions_to_action_functions_map import (
     ActionFunctionType,
 )
-from NewAlgo.new_equiv_classes_generator import NewEquivClassGenerator
+from ActionFunctionsAlgo.generation.af_equiv_classes_generator import (
+    AFEquivClassGenerator,
+)
+from utils.cayley_table_actions import CayleyTableActions
+from utils.equiv_classes import EquivClasses
 from utils.type_definitions import ActionType
 
 
@@ -41,7 +43,7 @@ def _compose_action_functions(
     return composed_action_function
 
 
-class NewActionsCayleyGenerator:
+class AFCayleyGenerator:
     """
     Generates a Cayley table for action compositions using the new algorithm.
 
@@ -58,7 +60,7 @@ class NewActionsCayleyGenerator:
     def __init__(self) -> None:
         """Initialize the generator."""
         self.cayley_table_actions: CayleyTableActions
-        self.equiv_classes_generator: NewEquivClassGenerator
+        self.equiv_classes_generator: AFEquivClassGenerator
         # Add tracking dictionary
         self.progress_tracking = {
             "total_elements": 0,
@@ -67,7 +69,7 @@ class NewActionsCayleyGenerator:
             "start_time": 0.0,
         }
 
-    def generate(self, equiv_classes_generator: NewEquivClassGenerator) -> None:
+    def generate(self, equiv_classes_generator: AFEquivClassGenerator) -> None:
         """
         Generate the complete Cayley table for action compositions.
 

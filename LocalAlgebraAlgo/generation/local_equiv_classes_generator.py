@@ -7,14 +7,18 @@ This module provides functionality to find distinct actions in a world by analys
  grouped into equivalence classes.
 """
 
-from cayley_tables.utils.action_outcome import generate_action_outcome
-from NewAlgo.actions_to_action_functions_map import ActionFunctionType
-from NewAlgo.new_equiv_classes_generator import NewEquivClassGenerator
+from ActionFunctionsAlgo.generation.actions_to_action_functions_map import (
+    ActionFunctionType,
+)
+from ActionFunctionsAlgo.generation.af_equiv_classes_generator import (
+    AFEquivClassGenerator,
+)
+from utils.action_outcome import generate_action_outcome
 from utils.type_definitions import ActionType, StateType
 from worlds.base_world import BaseWorld
 
 
-class LocalEquivClassGenerator(NewEquivClassGenerator):
+class LocalEquivClassGenerator(AFEquivClassGenerator):
     """
     Generates equivalence classes of actions based on their effects on a single initial
      state.
