@@ -1,9 +1,9 @@
 import logging
 import time
 
-from cayley_tables.tables.cayley_table_states import CayleyTableStates
-from cayley_tables.utils.action_outcome import generate_action_outcome
-from cayley_tables.utils.equiv_classes import (
+from CayleyStatesAlgo.generation.cayley_table_states import CayleyTableStates
+from utils.action_outcome import generate_action_outcome
+from utils.equiv_classes import (
     EquivClasses,
 )
 from utils.type_definitions import ActionType, StateType
@@ -13,7 +13,7 @@ PROGRESS_LOG_INTERVAL = 10  # seconds
 logger = logging.getLogger(__name__)
 
 
-class StatesCayleyTableGenerator:
+class StatesCayleyGenerator:
     """
     Generates Cayley table states and equivalence classes for a world's transformations.
 
