@@ -9,18 +9,18 @@ class CayleyTableActions:
     Represents a Cayley table mapping action compositions to their resulting actions.
 
     The table is organized as a matrix where:
-    - Rows represent right actions (applied first)
-    - Columns represent left actions (applied second)
+    - Rows represent left actions (applied second)
+    - Columns represent right actions (applied first)
     - Each cell contains the label of the equivalence class that results from
       composing those actions
 
-    For actions a and b, the cell at position (b,a) contains the class label for
-    the action that results from applying b followed by a.
+    For actions a and b, the cell at position (b, a) contains the class label for
+    the action that results from applying a followed by b on a world state.
 
     Attributes:
         data (CayleyTableActionsDataType): Nested dictionary where:
-            - Outer keys are right actions (rows)
-            - Inner keys are left actions (columns)
+            - Outer keys are left actions (rows)
+            - Inner keys are right actions (columns)
             - Values are the resulting action class labels
     """
 
@@ -34,11 +34,11 @@ class CayleyTableActions:
     # Table Access
     # --------------------------------------------------------------------------
     def get_row_labels(self) -> list[ActionType]:
-        """Return the row labels (right actions) of the Cayley table."""
+        """Return the row labels (left actions) of the Cayley table."""
         return list(self.data.keys())
 
     def get_column_labels(self) -> list[ActionType]:
-        """Return the column labels (left actions) of the Cayley table.
+        """Return the column labels (right actions) of the Cayley table.
 
         Note: In a well-formed Cayley table, column labels are the same as row labels.
         """
@@ -59,15 +59,15 @@ class CayleyTableActions:
     # Action Composition
     # --------------------------------------------------------------------------
     def compose_actions(
-        self, left_action: ActionType, right_action: ActionType
+        self, right_action: ActionType, left_action: ActionType
     ) -> ActionType:
         """Compose two actions in sequence: left_action ∘ right_action.
 
         The composition means "apply right_action, then apply left_action".
 
         Args:
-            left_action: The action applied second (column)
-            right_action: The action applied first (row)
+            left_action: The action applied second (row)
+            right_action: The action applied first (column)
 
         Returns:
             The resulting action class label from the composition
@@ -75,21 +75,18 @@ class CayleyTableActions:
         Raises:
             CompositionError: If either action is not found in the Cayley table
         """
-        if right_action not in self.data:
-            raise CompositionError(
-                f"Cannot compose actions: '{right_action}' not found in Cayley table"
-                " rows"
-            )
-        if left_action not in self.data[right_action]:
+        if left_action not in self.data:
             raise CompositionError(
                 f"Cannot compose actions: '{left_action}' not found in Cayley table"
+                " rows"
+            )
+        if right_action not in self.data[left_action]:
+            raise CompositionError(
+                f"Cannot compose actions: '{right_action}' not found in Cayley table"
                 " columns"
             )
 
-        # For composition (left ∘ right):
-        # - right_action is the row (applied first)
-        # - left_action is the column (applied second)
-        return self.data[right_action][left_action]
+        return self.data[left_action][right_action]
 
     # --------------------------------------------------------------------------
     # Validation
@@ -121,12 +118,12 @@ class CayleyTableActions:
 
         # Check that all outcomes are valid actions
         all_actions = row_labels
-        for right_action in self.data:
-            for left_action, outcome in self.data[right_action].items():
+        for left_action in self.data:
+            for right_action, outcome in self.data[left_action].items():
                 if outcome not in all_actions:
                     raise ValidationError(
                         f"Invalid outcome '{outcome}' in Cayley table at "
-                        f"position ({right_action}, {left_action}). "
+                        f"position ({left_action}, {right_action}). "
                         f"Must be one of: {sorted(all_actions)}"
                     )
 
@@ -152,8 +149,8 @@ class CayleyTableActions:
 
         # Add a title row to explain the composition order
         title = "\nCayley Table for Action Composition (a ∘ b):"
-        explanation = "- Rows (b): right action, applied first\n"
-        explanation += "- Columns (a): left action, applied second\n"
+        explanation = "- Rows (a): left action, applied second\n"
+        explanation += "- Columns (b): right action, applied first\n"
         explanation += "- Cell values: result of composition (a ∘ b)\n"
 
         return f"{title}\n{explanation}\n{df}"

@@ -77,8 +77,8 @@ def _find_commuting_pairs(
         non_commuting[a] = []
         for b in actions:
             # Check if a ∘ b = b ∘ a
-            a_b = cayley_table_actions.compose_actions(left_action=a, right_action=b)
-            b_a = cayley_table_actions.compose_actions(left_action=b, right_action=a)
+            a_b = cayley_table_actions.compose_actions(right_action=a, left_action=b)
+            b_a = cayley_table_actions.compose_actions(right_action=b, left_action=a)
 
             if a_b == b_a:
                 commuting[a].append(b)

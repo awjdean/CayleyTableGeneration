@@ -26,7 +26,7 @@ algebra.generate(world=world, method=AlgebraGenerationMethod.ACTION_FUNCTION)
 
 # Check and print the algebraic properties
 algebra.check_properties()
-algebra.print_properties(details=False)
+algebra.print_properties(details=True)
 
 # Optionally save the algebra
 algebra.save(None)  # This will save to ./saved/algebra/2x2_gridworld_with_wall.pkl
