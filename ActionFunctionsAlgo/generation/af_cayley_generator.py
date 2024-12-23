@@ -118,11 +118,11 @@ class AFCayleyGenerator:
         """
         current_time = time.time()
 
-        for right_action in equiv_classes_labels:
-            self.cayley_table_actions.data[right_action] = {}
-            for left_action in equiv_classes_labels:
+        for left_action in equiv_classes_labels:
+            self.cayley_table_actions.data[left_action] = {}
+            for right_action in equiv_classes_labels:
                 composed_action = self._compute_composition(left_action, right_action)
-                self.cayley_table_actions.data[right_action][left_action] = (
+                self.cayley_table_actions.data[left_action][right_action] = (
                     composed_action
                 )
 
@@ -145,8 +145,8 @@ class AFCayleyGenerator:
         Compute a single composition of two actions.
 
         Args:
-            left_action: The action applied second
-            right_action: The action applied first
+            left_action: The action applied to a world state second
+            right_action: The action applied to a world state first
 
         Returns:
             The action that represents the composition result
