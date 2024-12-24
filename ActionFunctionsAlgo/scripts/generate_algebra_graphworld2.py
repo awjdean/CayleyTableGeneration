@@ -26,8 +26,8 @@ print("\n" + "=" * 80 + "\n")
 # Create and generate local transformation algebra starting from state (1,)
 local_algebra = TransformationAlgebra("graphworld2_local")
 local_algebra.generate(
-    world, initial_state=(1,), method=AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION
+    world, initial_state=(3,), method=AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION
 )
 local_algebra.check_properties()
-local_algebra.print_properties(True)
+local_algebra.print_properties()
 local_algebra.save(None)

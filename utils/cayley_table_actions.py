@@ -59,11 +59,14 @@ class CayleyTableActions:
     # Action Composition
     # --------------------------------------------------------------------------
     def compose_actions(
-        self, right_action: ActionType, left_action: ActionType
+        self,
+        left_action: ActionType,
+        right_action: ActionType,
     ) -> ActionType:
         """Compose two actions in sequence: left_action ∘ right_action.
 
-        The composition means "apply right_action, then apply left_action".
+        The composition means "apply right_action to a world state, then apply
+         left_action to world state".
 
         Args:
             left_action: The action applied second (row)
