@@ -8,7 +8,9 @@ sys.path.append(
 
 
 from transformation_algebra.transformation_algebra import TransformationAlgebra
-from utils.type_definitions import AlgebraGenerationMethod
+from transformation_algebra.utils.algebra_generation_methods import (
+    AlgebraGenerationMethod,
+)
 from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
 world = Gridworld2DWalls(

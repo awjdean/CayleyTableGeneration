@@ -39,9 +39,12 @@ from transformation_algebra.property_checkers.inverse import (
     InverseResultsType,
     check_inverse,
 )
+from transformation_algebra.utils.algebra_generation_methods import (
+    AlgebraGenerationMethod,
+)
 from utils.cayley_table_actions import CayleyTableActions
 from utils.equiv_classes import EquivClasses
-from utils.type_definitions import AlgebraGenerationMethod, StateType
+from utils.type_definitions import StateType
 from worlds.base_world import BaseWorld
 
 
