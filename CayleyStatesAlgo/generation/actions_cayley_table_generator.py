@@ -59,13 +59,13 @@ class ActionsCayleyGenerator:
             CompositionError: If any composed action is not found in a class
         """
         # For each pair of actions (a, b), compute their composition (a ∘ b)
-        for right_action in self.equiv_classes.get_labels():
-            self.cayley_table_actions.data[right_action] = {}
-            for left_action in self.equiv_classes.get_labels():
+        for left_action in self.equiv_classes.get_labels():
+            self.cayley_table_actions.data[left_action] = {}
+            for right_action in self.equiv_classes.get_labels():
                 outcome_class_label = self._compute_composition(
                     left_action, right_action
                 )
-                self.cayley_table_actions.data[right_action][left_action] = (
+                self.cayley_table_actions.data[left_action][right_action] = (
                     outcome_class_label
                 )
 
