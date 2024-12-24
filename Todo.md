@@ -27,7 +27,8 @@
 - Sort inheritance for generators of local vs method 2.
   - Create base classes with shared methods + variables.
 - Directory refactor.
-- Simiplify imports using **init**.py files ?
+- Simplify imports using init.py files ?
+- Comparison between actions Cayley tables generated using the two methods.
 
 # Smaller things
 

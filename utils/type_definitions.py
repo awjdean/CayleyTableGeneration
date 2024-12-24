@@ -1,5 +1,6 @@
-from enum import Enum
 from typing import Any, TypedDict
+
+import networkx as nx
 
 # Base world.
 ActionType = str
@@ -34,7 +35,11 @@ class EquivElementsRowColumnDictType(TypedDict):
 GridPosition2DType = tuple[int, int]
 
 
-class AlgebraGenerationMethod(str, Enum):
-    STATES_CAYLEY = "states_cayley"
-    ACTION_FUNCTION = "action_function"
-    LOCAL_ACTION_FUNCTION = "local_action_function"
+class EdgeDrawingParams(TypedDict):
+    graph: nx.DiGraph
+    pos: dict
+    edge: tuple
+    action: str
+    color: str
+    is_bidirectional: bool
+    processed_edges: set

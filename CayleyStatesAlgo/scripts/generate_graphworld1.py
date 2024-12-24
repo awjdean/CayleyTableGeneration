@@ -6,23 +6,24 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-
 from transformation_algebra.transformation_algebra import TransformationAlgebra
 from transformation_algebra.utils.algebra_generation_methods import (
     AlgebraGenerationMethod,
 )
-from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
+from worlds.graphworlds.graphworld1 import GraphWorld1
 
-world = Gridworld2DWalls(
-    grid_shape=(2, 2),
-    wall_positions=[(0.5, 0)],
-    wall_strategy="identity",
-)
+# Create and initialize the world
+world = GraphWorld1()
 world.generate_min_action_transformation_matrix()
-algebra = TransformationAlgebra(name="gridworld2D_walls")
+
+# Create and generate the algebra
+algebra = TransformationAlgebra(name="graphworld1")
 algebra.generate(
-    world=world, initial_state=(0, 0), method=AlgebraGenerationMethod.STATES_CAYLEY
+    world=world,
+    initial_state=(1,),
+    method=AlgebraGenerationMethod.STATES_CAYLEY,
 )
-print(algebra.cayley_table_states)
-print(algebra.equiv_classes)
-print(algebra.cayley_table_actions)
+
+# Check and display properties
+algebra.check_properties()
+algebra.print_properties(False)

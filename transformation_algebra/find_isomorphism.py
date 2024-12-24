@@ -412,20 +412,18 @@ def _is_homomorphism(
     """
     elements1 = algebra1.cayley_table_actions.get_row_labels()
 
-    # Check φ(x * y) = φ(x) * φ(y) for all pairs x,y
+    # Check φ(x ∘ y) = φ(x) ∘ φ(y) for all pairs x,y
     for x in elements1:
         for y in elements1:
-            # Compute x * y in A₁ and map the result
-            xy_in_a1 = algebra1.cayley_table_actions.compose_actions(
-                left_action=x, right_action=y
-            )
+            # Compute x ∘ y in A₁ and map the result
+            xy_in_a1 = algebra1.cayley_table_actions.compose_actions(x, y)
             mapped_result = mapping[xy_in_a1]
 
-            # Compute φ(x) * φ(y) in A₂
+            # Compute φ(x) ∘ φ(y) in A₂
             mapped_x = mapping[x]
             mapped_y = mapping[y]
             result_in_a2 = algebra2.cayley_table_actions.compose_actions(
-                left_action=mapped_x, right_action=mapped_y
+                mapped_x, mapped_y
             )
 
             # Check if the results match

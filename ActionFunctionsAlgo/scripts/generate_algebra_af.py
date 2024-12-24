@@ -6,10 +6,9 @@ sys.path.append(
     os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 )
 
-
-from ActionFunctionsAlgo.generation.af_cayley_generator import AFCayleyGenerator
-from ActionFunctionsAlgo.generation.af_equiv_classes_generator import (
-    AFEquivClassGenerator,
+from transformation_algebra.transformation_algebra import TransformationAlgebra
+from transformation_algebra.utils.algebra_generation_methods import (
+    AlgebraGenerationMethod,
 )
 from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
@@ -17,13 +16,19 @@ from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 world = Gridworld2DWalls(
     grid_shape=(2, 2),
     wall_positions=[(0.5, 0)],  # Wall between (0,0) and (1,0)
-    wall_strategy="identity",
+    wall_strategy="masked",
 )
 world.generate_min_action_transformation_matrix()
-equiv_classes_generator = AFEquivClassGenerator(world)
-equiv_classes_generator.generate()
 
-actions_cayley_table_generator = AFCayleyGenerator()
-actions_cayley_table_generator.generate(equiv_classes_generator)
-actions_cayley_table = actions_cayley_table_generator.get_actions_cayley_table()
-print(actions_cayley_table)
+# Create and initialize the transformation algebra
+algebra = TransformationAlgebra(name="2x2_gridworld_with_wall")
+
+# Generate the algebra using the action function method
+algebra.generate(world=world, method=AlgebraGenerationMethod.ACTION_FUNCTION)
+
+# Check and print the algebraic properties
+algebra.check_properties()
+algebra.print_properties(details=False)
+
+# Optionally save the algebra
+algebra.save(None)  # This will save to ./saved/algebra/2x2_gridworld_with_wall.pkl
