@@ -289,10 +289,21 @@ class TransformationAlgebra:
         if self.commutativity_info is None:
             raise ValueError("Failed to compute commutativity")
 
-    def print_properties(self, details: bool = False) -> None:
-        """Print all algebraic properties in a formatted way."""
+    def print_properties(
+        self, details: bool = False, cayley_table: bool = True
+    ) -> None:
+        """Print all algebraic properties in a formatted way.
+
+        Args:
+            details: If True, prints detailed information about each property
+            cayley_table: If True, prints the Cayley table
+        """
         print(f"\n{self.name} Results")
         print("=" * (len(self.name) + 8))
+
+        if cayley_table and hasattr(self, "cayley_table_actions"):
+            print("\nCayley Table:")
+            print(self.cayley_table_actions)
 
         if details:
             self._print_detailed_properties()
@@ -302,10 +313,6 @@ class TransformationAlgebra:
 
     def _print_detailed_properties(self) -> None:
         """Print detailed property information."""
-        if hasattr(self, "cayley_table_actions"):
-            print("\nCayley Table:")
-            print(self.cayley_table_actions)
-
         print("\nAlgebraic Properties:")
         print("-" * 20)
 

@@ -29,5 +29,5 @@ local_algebra.generate(
     world, initial_state=(3,), method=AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION
 )
 local_algebra.check_properties()
-local_algebra.print_properties()
+local_algebra.print_properties(True)
 local_algebra.save(None)
