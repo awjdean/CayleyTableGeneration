@@ -1,5 +1,7 @@
 from typing import Any, TypedDict
 
+import networkx as nx
+
 # Base world.
 ActionType = str
 MinActionsType = list[ActionType]
@@ -31,3 +33,13 @@ class EquivElementsRowColumnDictType(TypedDict):
 
 # Gridworlds2d.
 GridPosition2DType = tuple[int, int]
+
+
+class EdgeDrawingParams(TypedDict):
+    graph: nx.DiGraph
+    pos: dict
+    edge: tuple
+    action: str
+    color: str
+    is_bidirectional: bool
+    processed_edges: set
