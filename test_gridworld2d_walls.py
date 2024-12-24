@@ -4,10 +4,8 @@ from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 def main():
     # Create a 3x3 grid with some walls
     grid_shape = (3, 3)
-    wall_positions = [
-        (0.0, 0.5),
-    ]
-    wall_strategy = "identity"
+    wall_positions = [(0.0, 0.5), (1.0, 0.5)]
+    wall_strategy = "masked"
 
     # Create the world
     world = Gridworld2DWalls(
@@ -20,7 +18,9 @@ def main():
     world.generate_min_action_transformation_matrix()
 
     # Draw the graph
-    world.draw_graph(include_undefined_state=True)
+    world.draw_graph(
+        include_undefined_state=True, show_edge_labels=False, show_legend=True
+    )
 
 
 if __name__ == "__main__":

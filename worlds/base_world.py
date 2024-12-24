@@ -3,14 +3,12 @@ Features present in any world class.
 """
 
 from abc import abstractmethod
+from itertools import zip_longest
 
-import matplotlib.pyplot as plt
-import networkx as nx
-from matplotlib.lines import Line2D
+import pygraphviz as pgv
 
 from utils.type_definitions import (
     ActionType,
-    EdgeDrawingParams,
     MinActionsType,
     StateType,
     TransformationMatrix,
@@ -199,292 +197,253 @@ class BaseWorld:
         include_undefined_state: bool = False,
         save_path: str | None = None,
         show_edge_labels: bool = False,
+        show_legend: bool = True,
+        dpi: int = 300,
     ) -> None:
         """Draw a visualization of the world's state space and transitions."""
-        graph = self._create_graph(include_undefined_state)
-        pos = self._setup_graph_layout(graph)
-        state_labels = self._create_state_labels(graph)
+        import tempfile
+        import webbrowser
+        from pathlib import Path
 
-        plt.figure(figsize=(10, 8))
-        self._draw_nodes_and_labels(graph, pos, state_labels)
-
-        color_map = self._create_color_map(graph)
-        self._draw_edges(graph, pos, color_map)
-
-        if show_edge_labels:
-            self._draw_edge_labels(graph, pos)
-
-        self._add_legend(graph, state_labels, color_map)
-        self._finalize_plot(save_path)
-
-    def _create_graph(self, include_undefined_state: bool) -> nx.DiGraph:
-        """Create directed graph with nodes and edges."""
-        graph = nx.DiGraph()
-        undefined_state = UndefinedStates.BASIC.value
-
-        # Add nodes
-        for state in self.get_possible_states():
-            if state != undefined_state or include_undefined_state:
-                graph.add_node(state)
-
-        # Add edges with curvature
-        bidirectional_pairs = self._identify_bidirectional_pairs(
-            include_undefined_state
+        graph = self._create_and_layout_graph(
+            include_undefined_state, show_edge_labels, show_legend
         )
 
-        for state, actions in self._min_action_transformation_matrix.items():
-            if state != undefined_state or include_undefined_state:
-                self._add_edges_for_state(
-                    graph, state, actions, bidirectional_pairs, include_undefined_state
-                )
+        with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
+            graph.draw(tmp.name, format="png", args=f"-Gdpi={dpi}")
+            output_path = Path(save_path if save_path else tmp.name)
 
+            if save_path:
+                Path(tmp.name).rename(output_path)
+
+            webbrowser.open(f"file://{output_path.absolute()}")
+
+    def _create_and_layout_graph(
+        self,
+        include_undefined_state: bool,
+        show_edge_labels: bool = False,
+        show_legend: bool = True,
+    ) -> pgv.AGraph:
+        """Create and layout the graph."""
+        graph = pgv.AGraph(
+            directed=True,
+            strict=False,
+            overlap="false",
+            splines="spline",
+            concentrate="false",
+            rankdir="LR",
+            label=self._create_legend_label() if show_legend else "",
+            labelloc="t",
+            labeljust="r",
+            fontname="Computer Modern Math",
+            start="random",
+        )
+
+        # Set default node and edge attributes
+        graph.node_attr.update(
+            shape="circle",
+            style="filled",
+            fillcolor="lightblue",
+            width="0.75",
+            fontname="Computer Modern Math",
+            fontsize="18",
+            margin="0.2",
+            layer="back",  # Put nodes in back layer
+        )
+        graph.edge_attr.update(
+            fontsize="10",
+            arrowsize="0.8",
+            fontname="Computer Modern Math",
+            penwidth="1.5",
+            weight="1.0",
+            layer="front",  # Put edges in front layer
+        )
+
+        self._add_nodes_and_edges(graph, include_undefined_state, show_edge_labels)
+        graph.layout(prog="neato")
         return graph
 
-    def _identify_bidirectional_pairs(self, include_undefined_state: bool) -> set:
-        """Identify pairs of states with bidirectional edges."""
-        undefined_state = UndefinedStates.BASIC.value
-        bidirectional_pairs = set()
-        edge_counts = {}
+    def _create_color_map(self) -> dict[str, str]:
+        """Create a color map for actions."""
+        colors = [
+            "#1f77b4",  # Steel blue
+            "#d62728",  # Crimson
+            "#2ca02c",  # Forest green
+            "#9467bd",  # Medium purple
+            "#ff7f0e",  # Dark orange
+            "#17becf",  # Light blue
+            "#e377c2",  # Pink
+            "#8c564b",  # Brown
+            "#7f7f7f",  # Gray
+            "#bcbd22",  # Olive
+        ]
+        return {
+            action: colors[i % len(colors)]
+            for i, action in enumerate(sorted(self._MIN_ACTIONS))
+        }
 
+    def _create_legend_label(self) -> str:
+        """Create HTML-like label for the legend."""
+        color_map = self._create_color_map()
+        undefined_state = UndefinedStates.BASIC.value
+
+        # Build legend table with two columns
+        legend = ['<<TABLE BORDER="0" CELLBORDER="0">']
+        legend.append("<TR><TD>Actions</TD><TD>States</TD></TR>")
+
+        # Get states ready
+        states = self.get_possible_states()
+        nodes = sorted((s for s in states if s != undefined_state), key=str)
+        if undefined_state in states:
+            nodes.append(undefined_state)
+
+        # Create subscript translator
+        subscripts = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+
+        # Add actions and states side by side
+        for i, (action_pair, state) in enumerate(
+            zip_longest(sorted(color_map.items()), nodes, fillvalue=(None, None))
+        ):
+            # Create action cell
+            action_cell = (
+                f'<TD><FONT COLOR="{action_pair[1]}">{action_pair[0]} →</FONT></TD>'
+                if action_pair[0] is not None
+                else "<TD></TD>"
+            )
+
+            # Create state cell
+            if state is not None:
+                if state == undefined_state:
+                    label = "⊥"
+                else:
+                    subscript = str(i).translate(subscripts)
+                    label = f"w{subscript}"
+                state_cell = f"<TD>{label} = {state}</TD>"
+            else:
+                state_cell = "<TD></TD>"
+
+            # Add row
+            legend.append(f"<TR>{action_cell}{state_cell}</TR>")
+
+        legend.append("</TABLE>>")
+        return "".join(legend)
+
+    def _add_nodes_and_edges(
+        self, graph: pgv.AGraph, include_undefined_state: bool, show_edge_labels: bool
+    ) -> None:
+        """Add nodes and edges to the graph."""
+        # Unicode subscript digits mapping
+        subscripts = str.maketrans("0123456789", "₀₁₂₃₄₅₆₇₈₉")
+
+        undefined_state = UndefinedStates.BASIC.value
+        color_map = self._create_color_map()
+
+        # Track self-loops per node to position them
+        self_loop_counts = {}
+
+        # Port positions with angles
+        port_configs = [
+            ("n", "0"),  # North at 0°
+            ("ne", "45"),  # Northeast at 45°
+            ("e", "0"),  # East at 0°
+            ("se", "-45"),  # Southeast at -45°
+            ("s", "0"),  # South at 0°
+            ("sw", "-45"),  # Southwest at -45°
+            ("w", "0"),  # West at 0°
+            ("nw", "45"),  # Northwest at 45°
+        ]
+
+        # Add nodes with labels
+        states = self.get_possible_states()
+        nodes = sorted((s for s in states if s != undefined_state), key=str)
+        if include_undefined_state:
+            nodes.append(undefined_state)
+
+        # Add regular state nodes
+        for i, state in enumerate(nodes):
+            if state == undefined_state:
+                graph.add_node(state, label="⊥")
+            else:
+                # Convert number to subscript
+                subscript = str(i).translate(subscripts)
+                graph.add_node(state, label=f"w{subscript}")
+
+        # Add edges
         for state, actions in self._min_action_transformation_matrix.items():
             if state != undefined_state or include_undefined_state:
                 for action, next_state in actions.items():
                     if next_state != undefined_state or include_undefined_state:
                         if state == next_state == undefined_state:
                             continue
-                        edge_key = (state, next_state)
-                        reverse_key = (next_state, state)
-                        if reverse_key in edge_counts:
-                            ordered_pair = (
-                                (state, next_state)
-                                if str(state) <= str(next_state)
-                                else (next_state, state)
+
+                        edge_color = color_map[action]
+                        edge_attrs = {
+                            "color": edge_color,
+                            "fontcolor": edge_color,
+                        }
+                        if show_edge_labels:
+                            edge_attrs["label"] = action
+
+                        if state == next_state:
+                            # Count self-loops for this node
+                            self_loop_counts[state] = self_loop_counts.get(state, 0) + 1
+                            count = self_loop_counts[state]
+
+                            # Get port and angle
+                            port, angle = port_configs[count % len(port_configs)]
+
+                            edge_attrs.update(
+                                {
+                                    "dir": "both",
+                                    "arrowhead": "normal",
+                                    "arrowtail": "none",
+                                    "headport": port,
+                                    "tailport": port,
+                                    "headclip": "false",
+                                    "tailclip": "false",
+                                    "labelangle": angle,
+                                    "len": "1.0",
+                                    "weight": "0.1",
+                                    "constraint": "false",
+                                }
                             )
-                            bidirectional_pairs.add(ordered_pair)
-                        edge_counts[edge_key] = edge_counts.get(edge_key, 0) + 1
+                        else:
+                            edge_attrs.update(
+                                {
+                                    "dir": "forward",
+                                    "arrowhead": "normal",
+                                }
+                            )
 
-        return bidirectional_pairs
+                        graph.add_edge(state, next_state, **edge_attrs)
 
-    def _add_edges_for_state(
+    def _add_edge(
         self,
-        graph: nx.DiGraph,
-        state: StateType,
-        actions: dict,
-        bidirectional_pairs: set,
-        include_undefined_state: bool,
+        graph: pgv.AGraph,
+        source: StateType,
+        target: StateType,
+        action: str,
+        color: str,
     ) -> None:
-        """Add edges for a given state to the graph."""
-        undefined_state = UndefinedStates.BASIC.value
+        """Add a single edge to the graph."""
+        edge_attrs = {
+            "label": action,
+            "color": color,
+            "fontcolor": color,
+            "dir": "both" if source == target else "forward",
+            "arrowhead": "normal",
+            "arrowtail": "none" if source == target else None,
+        }
+        graph.add_edge(source, target, **edge_attrs)
 
-        for action, next_state in actions.items():
-            if next_state != undefined_state or include_undefined_state:
-                if state == next_state == undefined_state:
-                    continue
-
-                rad = self._calculate_edge_curvature(
-                    state, next_state, bidirectional_pairs
-                )
-                graph.add_edge(
-                    state,
-                    next_state,
-                    action=f"${action}$",
-                    connectionstyle=f"arc3,rad={rad}",
-                )
-
-    def _calculate_edge_curvature(
+    def _add_node(
         self,
+        graph: pgv.AGraph,
         state: StateType,
-        next_state: StateType,
-        bidirectional_pairs: set,
-    ) -> float:
-        """Calculate the curvature for an edge."""
-        if state == next_state:
-            return 0.2  # Smaller curve for self-loops
-        elif (state, next_state) in bidirectional_pairs or (
-            next_state,
-            state,
-        ) in bidirectional_pairs:
-            return 0.3 if str(state) <= str(next_state) else -0.3
-        return 0.0  # For one-way edges
-
-    def _setup_graph_layout(
-        self, graph: nx.DiGraph
-    ) -> dict[StateType, tuple[float, float]]:
-        """Create the graph layout."""
-        return dict(nx.spring_layout(graph, k=2, iterations=50))
-
-    def _create_state_labels(self, graph: nx.DiGraph) -> dict:
-        """Create labels for states in the graph."""
-        state_labels = {}
-        undefined_state = UndefinedStates.BASIC.value
-
-        for i, state in enumerate(sorted(graph.nodes(), key=str)):
-            if state == undefined_state:
-                state_labels[state] = r"$\bot$"  # Use ⊥ for undefined state
-            else:
-                state_labels[state] = f"$w_{{{i}}}$"
-
-        return state_labels
-
-    def _draw_nodes_and_labels(
-        self, graph: nx.DiGraph, pos: dict, state_labels: dict
+        index: int,
+        subscripts: dict[int, int],
     ) -> None:
-        """Draw nodes and their labels."""
-        nx.draw_networkx_nodes(
-            graph, pos, node_color="lightblue", node_size=1000, alpha=1.0
-        )
-        nx.draw_networkx_labels(graph, pos, state_labels)
-
-    def _create_color_map(self, graph: nx.DiGraph) -> dict:
-        """Create a color map for different actions."""
-        unique_actions = set(
-            action.strip("$")
-            for action in nx.get_edge_attributes(graph, "action").values()
-        )
-        return {action: f"C{i}" for i, action in enumerate(sorted(unique_actions))}
-
-    def _draw_edges(self, graph: nx.DiGraph, pos: dict, color_map: dict) -> None:
-        """Draw edges with proper styling."""
-        processed_edges = set()
-
-        for edge in graph.edges():
-            if edge in processed_edges:
-                continue
-
-            action = graph.edges[edge]["action"].strip("$")
-            reverse_edge = (edge[1], edge[0])
-            is_bidirectional = (
-                reverse_edge in graph.edges()
-                and graph.edges[reverse_edge]["action"].strip("$") == action
-            )
-
-            self._draw_single_edge(
-                {
-                    "graph": graph,
-                    "pos": pos,
-                    "edge": edge,
-                    "action": action,
-                    "color": color_map[action],
-                    "is_bidirectional": is_bidirectional,
-                    "processed_edges": processed_edges,
-                }
-            )
-
-    def _draw_single_edge(self, params: EdgeDrawingParams) -> None:
-        """Draw a single edge with proper styling."""
-        reverse_edge = (params["edge"][1], params["edge"][0])
-        connectionstyle = params["graph"].edges[params["edge"]]["connectionstyle"]
-
-        if params["is_bidirectional"]:
-            nx.draw_networkx_edges(
-                params["graph"],
-                params["pos"],
-                edgelist=[params["edge"]],
-                edge_color=params["color"],
-                arrowsize=20,
-                arrows=True,
-                node_size=1000,
-                min_source_margin=20,
-                min_target_margin=20,
-                connectionstyle=connectionstyle,
-                arrowstyle="<|-|>" if params["edge"][0] != params["edge"][1] else "-|>",
-            )
-            params["processed_edges"].add(params["edge"])
-            params["processed_edges"].add(reverse_edge)
-        else:
-            nx.draw_networkx_edges(
-                params["graph"],
-                params["pos"],
-                edgelist=[params["edge"]],
-                edge_color=params["color"],
-                arrowsize=20,
-                arrows=True,
-                node_size=1000,
-                min_source_margin=20,
-                min_target_margin=20,
-                connectionstyle=connectionstyle,
-            )
-
-    def _draw_edge_labels(self, graph: nx.DiGraph, pos: dict) -> None:
-        """Draw labels for edges."""
-        edge_labels = {}
-        processed_label_edges = set()
-
-        for edge in graph.edges():
-            if edge in processed_label_edges:
-                continue
-
-            action = graph.edges[edge]["action"]
-            reverse_edge = (edge[1], edge[0])
-
-            if (
-                reverse_edge in graph.edges()
-                and graph.edges[reverse_edge]["action"] == action
-            ):
-                processed_label_edges.add(edge)
-                processed_label_edges.add(reverse_edge)
-
-            edge_labels[edge] = action
-
-        nx.draw_networkx_edge_labels(
-            graph,
-            pos,
-            edge_labels,
-            label_pos=0.3,
-            rotate=False,
-            bbox=dict(
-                facecolor="white",
-                edgecolor="none",
-                alpha=0.8,
-                pad=2.0,
-            ),
-            font_size=10,
-        )
-
-    def _add_legend(
-        self, graph: nx.DiGraph, state_labels: dict, color_map: dict
-    ) -> None:
-        """Add legend showing actions and state mappings."""
-        # Create legend entries for actions
-        action_entries = [
-            (action, color) for action, color in sorted(color_map.items())
-        ]
-
-        # Create legend entries for states
-        state_entries = [
-            (f"{state_labels[state]} = {state}", "none")
-            for state in sorted(graph.nodes(), key=str)
-        ]
-
-        # Add legend using Line2D from matplotlib.lines
-        plt.legend(
-            handles=[
-                Line2D([], [], color=color, label=f"${action}$")
-                for action, color in action_entries
-            ]
-            + [
-                Line2D([], [], color=color, label=label)
-                for label, color in state_entries
-            ],
-            title="Actions and States",
-            loc="center left",
-            bbox_to_anchor=(1, 0.5),
-            title_fontsize=10,
-            framealpha=1,
-        )
-
-    def _finalize_plot(self, save_path: str | None) -> None:
-        """Finalize and optionally save the plot."""
-        plt.title(f"{self.__class__.__name__} State Transitions")
-        plt.axis("off")
-        plt.tight_layout()
-
-        if save_path is not None:
-            plt.savefig(
-                save_path,
-                format="png",
-                bbox_inches="tight",
-                dpi=300,
-            )
-
-        plt.show()
+        """Add a single node to the graph."""
+        is_undefined = state == UndefinedStates.BASIC.value
+        label = "⊥" if is_undefined else f"w{str(index).translate(subscripts)}"
+        graph.add_node(state, label=label)
