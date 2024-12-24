@@ -199,6 +199,7 @@ class BaseWorld:
         show_edge_labels: bool = False,
         show_legend: bool = True,
         dpi: int = 300,
+        layout_engine: str = "dot",
     ) -> None:
         """Draw a visualization of the world's state space and transitions."""
         import tempfile
@@ -206,7 +207,10 @@ class BaseWorld:
         from pathlib import Path
 
         graph = self._create_and_layout_graph(
-            include_undefined_state, show_edge_labels, show_legend
+            include_undefined_state,
+            show_edge_labels,
+            show_legend,
+            layout_engine,
         )
 
         with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as tmp:
@@ -223,13 +227,38 @@ class BaseWorld:
         include_undefined_state: bool,
         show_edge_labels: bool = False,
         show_legend: bool = True,
+        layout_engine: str = "dot",
     ) -> pgv.AGraph:
         """Create and layout the graph."""
+        # Layout engine specific settings
+        layout_settings = {
+            "dot": {
+                "overlap": "false",
+                "splines": "spline",
+            },
+            "neato": {
+                "overlap": "false",
+                "splines": "curved",
+            },
+            "fdp": {
+                "overlap": "prism",
+                "splines": "curved",
+            },
+            "circo": {
+                "overlap": "false",
+                "splines": "curved",
+            },
+            "twopi": {
+                "overlap": "false",
+                "splines": "curved",
+            },
+        }
+
+        settings = layout_settings.get(layout_engine, layout_settings["dot"])
+
         graph = pgv.AGraph(
             directed=True,
             strict=False,
-            overlap="false",
-            splines="spline",
             concentrate="false",
             rankdir="LR",
             label=self._create_legend_label() if show_legend else "",
@@ -237,6 +266,7 @@ class BaseWorld:
             labeljust="r",
             fontname="Computer Modern Math",
             start="random",
+            **settings,
         )
 
         # Set default node and edge attributes
@@ -260,7 +290,7 @@ class BaseWorld:
         )
 
         self._add_nodes_and_edges(graph, include_undefined_state, show_edge_labels)
-        graph.layout(prog="neato")
+        graph.layout(prog=layout_engine)
         return graph
 
     def _create_color_map(self) -> dict[str, str]:
