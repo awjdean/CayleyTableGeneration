@@ -1,4 +1,3 @@
-from enum import Enum
 from typing import Any, TypedDict
 
 # Base world.
@@ -32,9 +31,3 @@ class EquivElementsRowColumnDictType(TypedDict):
 
 # Gridworlds2d.
 GridPosition2DType = tuple[int, int]
-
-
-class AlgebraGenerationMethod(str, Enum):
-    STATES_CAYLEY = "states_cayley"
-    ACTION_FUNCTION = "action_function"
-    LOCAL_ACTION_FUNCTION = "local_action_function"

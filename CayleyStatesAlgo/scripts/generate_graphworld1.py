@@ -7,7 +7,9 @@ sys.path.append(
 )
 
 from transformation_algebra.transformation_algebra import TransformationAlgebra
-from utils.type_definitions import AlgebraGenerationMethod
+from transformation_algebra.utils.algebra_generation_methods import (
+    AlgebraGenerationMethod,
+)
 from worlds.graphworlds.graphworld1 import GraphWorld1
 
 # Create and initialize the world
