@@ -46,19 +46,15 @@ def check_associativity(
 
     actions = cayley_table_actions.get_row_labels()
 
-    # Test all possible triples (a,b,c)
+    # Test all possible triples (a, b, c)
     for a, b, c in product(actions, repeat=3):
         # Calculate (a ∘ b) ∘ c
-        ab = cayley_table_actions.compose_actions(right_action=a, left_action=b)
-        lhs_outcome = cayley_table_actions.compose_actions(
-            right_action=ab, left_action=c
-        )
+        ab = cayley_table_actions.compose_actions(a, b)
+        lhs_outcome = cayley_table_actions.compose_actions(ab, c)
 
         # Calculate a ∘ (b ∘ c)
-        bc = cayley_table_actions.compose_actions(right_action=b, left_action=c)
-        rhs_outcome = cayley_table_actions.compose_actions(
-            right_action=a, left_action=bc
-        )
+        bc = cayley_table_actions.compose_actions(b, c)
+        rhs_outcome = cayley_table_actions.compose_actions(a, bc)
 
         # Check if associativity holds for this triple
         if lhs_outcome != rhs_outcome:

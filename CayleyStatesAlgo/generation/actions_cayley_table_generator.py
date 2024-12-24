@@ -50,8 +50,8 @@ class ActionsCayleyGenerator:
     def _generate_composition_table(self) -> None:
         """Generate the composition table entries.
 
-        For each pair of actions (a,b), computes their composition (a ∘ b) by:
-        1. Concatenating the actions (a + b)
+        For each pair of actions (a, b), computes their composition (a ∘ b) by:
+        1. Concatenating the actions by concatinating their strings (a + b)
         2. Finding which equivalence class contains this concatenated action
         3. Using that class's label as the outcome
 
