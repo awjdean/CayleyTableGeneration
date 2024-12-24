@@ -17,17 +17,17 @@ class CayleyTableStates:
     Represents a Cayley table mapping action compositions to their outcome states.
 
     The table is organized as a matrix where:
-    - Rows represent right actions (applied first)
-    - Columns represent left actions (applied second)
+    - Rows represent left actions (applied second to a world state)
+    - Columns represent right actions (applied first to a world state)
     - Each cell contains the state that results from composing those actions
 
-    For actions a and b, the cell at position (b,a) contains the state that results
-    from applying action b followed by action a.
+    For actions a and b, the cell at position (a, b) contains the state that results
+    from applying action b followed by action a to a world state.
 
     Attributes:
         data (CayleyTableStatesDataType): Nested dictionary where:
-            - Outer keys are right actions (rows)
-            - Inner keys are left actions (columns)
+            - Outer keys are left actions (rows)
+            - Inner keys are right actions (columns)
             - Values are the resulting states from composing those actions
     """
 
@@ -44,11 +44,11 @@ class CayleyTableStates:
         """Get all outcomes for a specific right action.
 
         Args:
-            row_label: The right action whose outcomes to retrieve
+            row_label: The left action whose outcomes to retrieve
 
         Returns:
-            Dictionary mapping left actions to their outcome states when composed
-            with this right action
+            Dictionary mapping right actions to their outcome states when composed
+            with this left action
 
         Raises:
             KeyError: If row_label is not found in the table
@@ -64,11 +64,11 @@ class CayleyTableStates:
         """Get all outcomes for a specific left action.
 
         Args:
-            column_label: The left action whose outcomes to retrieve
+            column_label: The right action whose outcomes to retrieve
 
         Returns:
-            Dictionary mapping right actions to their outcome states when composed
-            with this left action
+            Dictionary mapping left actions to their outcome states when composed
+            with this right action
 
         Raises:
             KeyError: If column_label is not found in the table
@@ -84,7 +84,7 @@ class CayleyTableStates:
         }
 
     def get_row_labels(self) -> list[ActionType]:
-        """Return the row labels (right actions) of the Cayley table."""
+        """Return the row labels (left actions) of the Cayley table."""
         return list(self.data.keys())
 
     # --------------------------------------------------------------------------
@@ -100,8 +100,8 @@ class CayleyTableStates:
         """Find elements that have equivalent behavior to the given element.
 
         Two elements are considered equivalent if they:
-        1. Produce the same outcomes when used as a right action (same row)
-        2. Produce the same outcomes when used as a left action (same column)
+        1. Produce the same outcomes when used as a left action (same row)
+        2. Produce the same outcomes when used as a right action (same column)
 
         Args:
             element: The action to find equivalents for
@@ -140,20 +140,20 @@ class CayleyTableStates:
     ) -> CayleyTableStatesRowType:
         """Generate a new row for an element.
 
-        Computes outcomes for the element when used as a right action (applied first)
-        in composition with all existing left actions.
+        Computes outcomes for the element when used as a left action (applied second)
+        in composition with all existing right actions.
 
         Args:
-            element: The right action to generate outcomes for
+            element: The left action to generate outcomes for
             initial_state: Starting state for computing outcomes
             world: World in which actions are applied
 
         Returns:
-            Dictionary mapping left actions to outcome states
+            Dictionary mapping right actions to outcome states
         """
         element_row = {}
         for col_label in self.get_row_labels():
-            action_sequence = col_label + element
+            action_sequence = element + col_label
             outcome = generate_action_outcome(
                 action=action_sequence,
                 initial_state=initial_state,
@@ -168,20 +168,20 @@ class CayleyTableStates:
     ) -> CayleyTableStatesRowType:
         """Generate a new column for an element.
 
-        Computes outcomes for the element when used as a left action (applied second)
+        Computes outcomes for the element when used as a right action (applied first)
         in composition with all existing right actions.
 
         Args:
-            element: The left action to generate outcomes for
+            element: The right action to generate outcomes for
             initial_state: Starting state for computing outcomes
             world: World in which actions are applied
 
         Returns:
-            Dictionary mapping right actions to outcome states
+            Dictionary mapping left actions to outcome states
         """
         element_column = {}
         for row_label in self.get_row_labels():
-            action_sequence = element + row_label
+            action_sequence = row_label + element
             outcome = generate_action_outcome(
                 action=action_sequence,
                 initial_state=initial_state,
@@ -222,8 +222,8 @@ class CayleyTableStates:
         """Add a new element to the table.
 
         Adds both:
-        - A new row (outcomes when element is right action)
-        - A new column (outcomes when element is left action)
+        - A new row (outcomes when element is left action)
+        - A new column (outcomes when element is right action)
 
         Args:
             element: The action to add to the table

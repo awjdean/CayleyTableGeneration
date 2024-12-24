@@ -202,7 +202,7 @@ class StatesCayleyGenerator:
         for row_label in labels:
             cayley_table_states.data[row_label] = {}
             for col_label in labels:
-                action = col_label + row_label
+                action = row_label + col_label
                 outcome = generate_action_outcome(
                     action=action,
                     initial_state=self.initial_state,
@@ -233,7 +233,7 @@ class StatesCayleyGenerator:
         processed_elements = self.equiv_classes.get_all_elements()
         for row_label in row_labels:
             for col_label in col_labels:
-                candidate = col_label + row_label
+                candidate = row_label + col_label
                 if candidate not in processed_elements:
                     self.candidate_elements.add(candidate)
 
