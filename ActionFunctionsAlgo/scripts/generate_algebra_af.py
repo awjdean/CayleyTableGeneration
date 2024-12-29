@@ -14,8 +14,8 @@ from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
 
 # Create a simple gridworld with walls
 world = Gridworld2DWalls(
-    grid_shape=(3, 3),
-    wall_positions=[(0.5, 0), (0, 0.5)],  # Wall between (0,0) and (1,0)
+    grid_shape=(2, 2),
+    wall_positions=[(0.5, 0.0)],  # Wall between (0,0) and (1,0)
     wall_strategy="identity",
 )
 world.generate_min_action_transformation_matrix()
