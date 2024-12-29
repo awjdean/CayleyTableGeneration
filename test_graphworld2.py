@@ -9,7 +9,7 @@ def main():
     world.generate_min_action_transformation_matrix()
 
     # Draw the graph
-    world.draw_graph()
+    world.draw_graph(show_edge_labels=False)
 
 
 if __name__ == "__main__":
