@@ -31,5 +31,6 @@ local_algebra.generate(
     world, initial_state=(0,), method=AlgebraGenerationMethod.LOCAL_ACTION_FUNCTION
 )
 local_algebra.check_properties()
-local_algebra.print_properties(True)
-local_algebra.save(None)
+local_algebra.print_properties(False)
+# local_algebra.save(None)
+# print(local_algebra.cayley_table_actions.data)

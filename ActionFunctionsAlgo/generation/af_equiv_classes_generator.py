@@ -7,14 +7,12 @@ This module provides functionality to find distinct actions in a world by analys
  grouped into equivalence classes.
 """
 
-import copy
 import itertools
 import time
 
 from ActionFunctionsAlgo.generation.actions_to_action_functions_map import (
     ActionFunctionType,
     ActionsActionFunctionsMap,
-    DistinctActionsDataType,
 )
 from utils.action_outcome import generate_action_outcome
 from utils.equiv_classes import EquivClasses
@@ -63,9 +61,6 @@ class AFEquivClassGenerator:
         print("\nGenerating equivalence classes.")
         start_time = time.time()
         self._find_distinct_min_actions()
-        distinct_min_actions: DistinctActionsDataType = copy.deepcopy(
-            self.distinct_actions.data
-        )
 
         num_new_actions = self.distinct_actions.get_num_actions() - 0
         time_taken = time.time() - start_time
@@ -80,12 +75,12 @@ class AFEquivClassGenerator:
             iteration_start = time.time()
             prev_distinct_count = self.distinct_actions.get_num_actions()
 
-            # Generate all actions of length current_length by composing
-            #  distinct_min_actions to each element of length current_length - 1.
+            # Generate all actions of length current_length by composing each min_action
+            #  to each element of length current_length - 1.
             prev_actions = self.distinct_actions.get_actions_from_length(
                 length=current_length - 1
             )
-            candidates = self._generate_candidates(prev_actions, distinct_min_actions)
+            candidates = self._generate_candidates(prev_actions, self.min_actions)
             # Check if any of the new actions are distinct.
             for candidate in candidates:
                 self._process_candidate(candidate)
@@ -172,7 +167,7 @@ class AFEquivClassGenerator:
     def _generate_candidates(
         self,
         prev_actions: list[ActionType],
-        distinct_min_actions: DistinctActionsDataType,
+        min_actions: MinActionsType,
     ) -> list[ActionType]:
         """
         Generate new action sequences by composing previous actions with minimal
@@ -187,7 +182,7 @@ class AFEquivClassGenerator:
         """
         new_actions: list[ActionType] = []
         for prev_action in prev_actions:
-            for min_action in distinct_min_actions:
+            for min_action in min_actions:
                 new_action = min_action + prev_action
                 new_actions.append(new_action)
         return new_actions
