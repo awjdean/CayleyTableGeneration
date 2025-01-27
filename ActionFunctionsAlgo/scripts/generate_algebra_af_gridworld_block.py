@@ -1,7 +1,7 @@
 import os
 import sys
 
-from worlds.gridworlds2d.gridworld2d_walls import Gridworld2DWalls
+from worlds.gridworlds2d.gridworld2d_block import Gridworld2DBlock
 
 # Add the project root directory to the Python path
 sys.path.append(
@@ -14,16 +14,11 @@ from transformation_algebra.utils.algebra_generation_methods import (
 )
 
 # Create a simple gridworld with walls
-world = Gridworld2DWalls(
-    grid_shape=(2, 2),
-    wall_positions=[(1, 0.5)],  # Wall between (0,0) and (1,0)
-    wall_strategy="identity",
-)
-
+world = Gridworld2DBlock(grid_shape=(4, 1))
 world.generate_min_action_transformation_matrix()
 
 # Create and initialize the transformation algebra
-algebra = TransformationAlgebra(name="2x2_gridworld_with_wall_identity")
+algebra = TransformationAlgebra(name="4x1_gridworld_with_block")
 
 # Generate the algebra using the action function method
 algebra.generate(world=world, method=AlgebraGenerationMethod.ACTION_FUNCTION)

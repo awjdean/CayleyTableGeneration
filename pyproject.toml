@@ -5,7 +5,31 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "jinja2>=3.1.5",
+    "networkx>=3.4.2",
+    "pandas>=2.2.3",
     "ruff",
+    "pygraphviz>=1.14",
+]
+
+[build-system]
+requires = ["setuptools", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = [
+    "worlds",
+    "worlds.gridworlds2d",
+    "CayleyStatesAlgo",
+    "CayleyStatesAlgo.generation",
+    "CayleyStatesAlgo.scripts",
+    "LocalAlgebraAlgo",
+    "ActionFunctionsAlgo",
+    "ActionFunctionsAlgo.generation",
+    "ActionFunctionsAlgo.scripts",
+    "transformation_algebra",
+    "transformation_algebra.property_checkers",
+    "utils"
 ]
 
 [tool.ruff]

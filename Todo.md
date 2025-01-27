@@ -34,6 +34,11 @@
 
 - Change states set up so it's always ((agent_x, agent_y,...), (positions of other things),...).
 - Fix saving for worlds --> put in Saving class and inherit ?
+- Function to return number of elements in Cayley table.
+- Print number of elements in Cayley table.
+- Make properties tables print like in thesis.
+- No outcome in EquivClasses if action functions method used.
+  - Or write function that gets the outcomes that can be used for the old method ?
 
 # Maybe things
 

@@ -130,6 +130,52 @@ class CayleyTableActions:
                         f"Must be one of: {sorted(all_actions)}"
                     )
 
+    def to_latex(self) -> str:
+        """Convert the Cayley table to a LaTeX longtable format.
+
+        Returns:
+            str: LaTeX representation of the Cayley table
+        """
+        if not self.data:
+            return "\\begin{tabular}{c}\nEmpty Cayley Table\\\\\n\\end{tabular}"
+
+        # Convert the nested dictionary to a pandas DataFrame
+        df = pd.DataFrame.from_dict(self.data, orient="index")
+
+        # Add dollar signs around all elements
+        df = df.astype(str)  # Convert all elements to strings first
+        df = df.apply(lambda x: "$" + x + "$")
+        df.rename(index={idx: f"${idx}$" for idx in df.index}, inplace=True)
+        df.rename(columns={col: f"${col}$" for col in df.columns}, inplace=True)
+
+        # Configure the LaTeX output
+        latex_str = df.to_latex(
+            longtable=True,  # Use longtable for multi-page tables
+            index=True,  # Include row labels
+            escape=False,  # Don't escape special LaTeX characters
+            column_format="l|"  # Left-align first column with vertical line
+            + "l" * len(df.columns),  # Left-align other columns
+            caption="Insert caption here",  # Add a caption
+            position="H",  # Try to place table here
+            bold_rows=True,  # Make row headers bold
+        )
+
+        # Remove top and bottom rules, move caption to bottom
+        latex_str = latex_str.replace("\\toprule\n", "")
+        latex_str = latex_str.replace("\\bottomrule\n", "")
+
+        # Move caption to bottom by:
+        # 1. Remove existing caption
+        latex_str = latex_str.replace(
+            "\\caption{Insert caption here} \\\\ \\hline\n", "\\hline\n"
+        )
+        # 2. Add caption at the end (before \end{longtable})
+        latex_str = latex_str.replace(
+            "\\end{longtable}", "\\caption{Insert caption here}\n\\end{longtable}"
+        )
+
+        return latex_str
+
     # --------------------------------------------------------------------------
     # String Representation
     # --------------------------------------------------------------------------

@@ -10,6 +10,7 @@ class Gridworld2DBlock(BaseWorld):
     def __init__(self, grid_shape: GridPosition2DType) -> None:
         """
         World states are of the form (agent_x, agent_y, (block_x, block_y)).
+        grid_shape (GridPosition2DType): The shape of the grid (max_x, max_y).
         """
         min_actions = ["1", "W", "E", "N", "S"]
         super().__init__(min_actions)
