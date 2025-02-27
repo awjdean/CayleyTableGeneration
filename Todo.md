@@ -3,6 +3,7 @@
 - Write readme.
 - Set up all experiments in thesis in a launch.json equivalent.
 - Fix issues with world_saver.
+- Find number of Cayley table constructions for local Cayley table by working out which global equivalence classes are in each local equivalence class.
 
 # Bigger things
 
